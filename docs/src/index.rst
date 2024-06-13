@@ -38,15 +38,15 @@
 
 .. toctree::
   :maxdepth: 2
-  :caption: Package name
+  :caption: ska_sdp_spectral_line_imaging
   :hidden:
 
-  package/guide
+  ska_sdp_spectral_line_imaging/guide
 
 
-Project-name documentation HEADING
-==================================
+SKA SDP Spectral Line Imaging Pipeline
+======================================
 
 These are all the packages, functions and scripts that form part of the project.
 
-- :doc:`package/guide`
+- :doc:`ska_sdp_spectral_line_imaging/guide`
