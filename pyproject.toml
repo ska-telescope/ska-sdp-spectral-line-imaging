@@ -5,7 +5,7 @@ description = "SKA SDP Spectral Line Imaging Pipeline"
 authors = ["DHRUVA <DHRUVA-team@SKA>"]
 license = "BSD-3-Clause"
 packages = [
-    { include = "spectral_line_imaging", from = "src" }
+    { include = "ska_sdp_spectral_line_imaging", from = "src" }
 ]
 
 [tool.poetry.dependencies]
@@ -27,7 +27,6 @@ markupsafe = "^2.1.3"
 pygments = "^2.15.1"
 python-dotenv = ">=0.5.1"
 sphinx = ">=1.6,<7"
-sphinx-rtd-theme = "^1.2.2"
 sphinx-autobuild = "^2021.3.14"
 sphinxcontrib-websupport = "^1.2.4"
 pipdeptree = "^2.10.2"
@@ -37,6 +36,12 @@ pytest-pylint = "^0.21.0"
 pylint-junit = "^0.3.4"
 pytest-json = "^0.4.0"
 pytest-json-report = "^1.5.0"
+
+
+
+[tool.poetry.group.docs.dependencies]
+recommonmark = "^0.7.1"
+sphinx-rtd-theme = "^2.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

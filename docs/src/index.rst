@@ -22,7 +22,15 @@
    :maxdepth: 2
    :caption: Readme
 
-   ../../README
+   README.md
+
+.. CHANGELOG =============================================================   
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Releases
+
+   CHANGELOG.rst   
 
 .. COMMUNITY SECTION ==================================================
 
