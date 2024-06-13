@@ -1,0 +1,7 @@
+.coverage*
+/.eggs/
+/build/
+/coverage.xml
+/*/**/__pycache__/
+*.egg-info
+/htmlcov

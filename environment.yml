@@ -1,0 +1,8 @@
+name: spec_line
+channels:
+  - defaults
+dependencies:
+  - pip=24.0=py310hecd8cb5_0
+  - python=3.10.14=h5ee71fb_1
+  - pip:
+      - poetry==1.8.3
