@@ -41,6 +41,22 @@ The pre-commit hook is defined for the main branch and is present in the `.githo
 git config --local core.hooksPath .githooks/
 ```
 
+**GPG signing the commits**
+
+Enable GPG signing for commits by setting the `commit.gpgsign` config variable to `true`
+
+```bash
+git config commit.gpgsign true
+```
+
+To use the ssh-key to sign the commits set `gpg.format` to ssh, and update `user.signingkey` to the path of the ssh public key 
+
+```bash
+git config gpg.format ssh
+git config user.signingkey ~/.ssh/id_rsa.pub
+```
+
+
 The current pre-commit hook runs the following 
 1. Tests on `src` folder
 2. `pylint` set to fail on warnings. **[To be enabled once code is added]**
