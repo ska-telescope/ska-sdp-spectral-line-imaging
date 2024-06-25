@@ -16,6 +16,7 @@ if [ "$BRANCH" == "main" ]; then
     flake8 tests
     isort --check-only --profile black --line-length 79 src
     isort --check-only --profile black --line-length 79 tests
+    black --exclude .+\.ipynb --check --line-length 79 src/ tests/
     pylint src
     pylint tests
     pytest --cov=src

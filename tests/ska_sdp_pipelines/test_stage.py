@@ -23,9 +23,8 @@ def test_should_create_a_stage_with_configurable_arguments():
     @ConfigurableStage(
         "temp_stage",
         Configuration(
-            a=ConfigParam("number", 10),
-            b=ConfigParam("number", 20)
-        )
+            a=ConfigParam("number", 10), b=ConfigParam("number", 20)
+        ),
     )
     def temp_stage(vis, a=None, b=None):
         return (vis, a, b)
@@ -44,9 +43,8 @@ def test_should_raise_exception_if_vis_is_missing_in_args():
     with pytest.raises(VisibilityMissingException):
 
         @ConfigurableStage(
-            "temp_stage", Configuration(
-                stage_arguments=ConfigParam("number", 0)
-            )
+            "temp_stage",
+            Configuration(stage_arguments=ConfigParam("number", 0)),
         )
         def temp_stage1(stage_arguments):
             pass
@@ -56,9 +54,8 @@ def test_should_raise_exception_if_function_arguments_are_invalide():
     with pytest.raises(ArgumentMismatchException):
 
         @ConfigurableStage(
-            "temp_stage", Configuration(
-                stage_arguments=ConfigParam("number", 0)
-            )
+            "temp_stage",
+            Configuration(stage_arguments=ConfigParam("number", 0)),
         )
         def temp_stage(vis):
             pass

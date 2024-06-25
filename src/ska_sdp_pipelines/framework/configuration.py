@@ -79,7 +79,8 @@ class Configuration:
             **{
                 key: value.default
                 for key, value in self.__config_params.items()
-            }, **kwargs,
+            },
+            **kwargs,
         }
 
 
