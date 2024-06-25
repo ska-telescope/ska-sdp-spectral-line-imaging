@@ -4,12 +4,13 @@ from .configuration import Configuration
 class ConfigurableStage:
     """
     Parameterized ecorator to define a configurable stage
-    
+
     Attributes:
        _name (str): The name of the stage.
        _stage_configuration (Configuration): Configuration parameters for
                                             the stage
     """
+
     def __init__(self, name, configuration=None):
         """
         Initialise the ConfigurableStage class
@@ -18,8 +19,9 @@ class ConfigurableStage:
             configuration (Configuration) : Configuration for the stage
         """
 
-        self._stage_configurations = Configuration() if configuration is None\
-            else configuration
+        self._stage_configurations = (
+            Configuration() if configuration is None else configuration
+        )
         self._name = name
 
     def __call__(self, stage_definition):
@@ -31,9 +33,7 @@ class ConfigurableStage:
             Stage object wrapping the stage_definition
         """
 
-        self._stage_configurations.valididate_arguments_for(
-            stage_definition
-        )
+        self._stage_configurations.valididate_arguments_for(stage_definition)
 
         return _Stage(stage_definition, self._stage_configurations)
 
@@ -46,7 +46,8 @@ class _Stage:
        _stage_configuration (Configuration): Configuration for the stage
 
     """
-    def __init__(self, stage_definition,  configuration=None):
+
+    def __init__(self, stage_definition, configuration=None):
         """
         Initialize the _Stage object
         Parameters:
@@ -56,7 +57,7 @@ class _Stage:
         self._stage_definition = stage_definition
         self._stage_configurations = configuration
 
-    def __call__(self, vis,  **kwargs):
+    def __call__(self, vis, **kwargs):
         """
         Provide callable object for the wrapped function
         Parameters:

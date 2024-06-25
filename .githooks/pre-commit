@@ -11,7 +11,9 @@
 BRANCH=$(git branch --show-current)
 
 if [ "$BRANCH" == "main" ]; then
-    # pylint
+    flake8
+    isort --check-only --profile=black .
+    pylint
     pytest --cov=src
-    # coverage report --fail-under=80
+    coverage report --fail-under=80
 fi

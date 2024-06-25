@@ -9,7 +9,4 @@ class VisibilityMissingException(ArgumentMismatchException):
     pass
 
 
-__all__ = [
-    'ArgumentMismatchException',
-    'VisibilityMissingException'
-]
+__all__ = ["ArgumentMismatchException", "VisibilityMissingException"]

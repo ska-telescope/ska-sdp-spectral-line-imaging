@@ -1,4 +1,4 @@
-from .exceptions import VisibilityMissingException, ArgumentMismatchException
+from .exceptions import ArgumentMismatchException, VisibilityMissingException
 
 
 class ConfigParam:
@@ -10,6 +10,7 @@ class ConfigParam:
        default (_type): The default value for the configurable parameter.
        description (str): Description of the configurable parameter.
     """
+
     def __init__(self, _type, default, description=None):
         """
         Initialise a ConfigParam object
@@ -31,6 +32,7 @@ class Configuration:
         __config_params (dict(str -> ConfigParam)): Configuration parameters
                                                     for the stage
     """
+
     def __init__(self, **kwargs):
         """
         Initialise a Configuration object.
@@ -54,18 +56,16 @@ class Configuration:
                                        in the parameter list of the stage
                                        definition
         """
-        
+
         stage_arguments = set(stage_definition.__code__.co_varnames)
-        mandidatory_arguments = {'vis'}
+        mandidatory_arguments = {"vis"}
         if not mandidatory_arguments.issubset(stage_arguments):
             raise VisibilityMissingException(
                 "Mandatory argument vis missing in argument list"
             )
-        
-        mandidatory_arguments = mandidatory_arguments.union(
-            self.__config_params.keys()
-        )
-        
+
+        mandidatory_arguments = mandidatory_arguments.union(self.__config_params.keys())
+
         if not mandidatory_arguments.issubset(stage_arguments):
             raise ArgumentMismatchException("Invalid argument list")
 
@@ -74,14 +74,9 @@ class Configuration:
         Updates the function parameters with the configuration parameter values
         """
         return {
-            **{
-                key: value.default
-                for key, value in self.__config_params.items()
-            }, **kwargs
+            **{key: value.default for key, value in self.__config_params.items()},
+            **kwargs,
         }
 
 
-__all__ = [
-    'ConfigParam',
-    'Configuration'
-]
+__all__ = ["ConfigParam", "Configuration"]
