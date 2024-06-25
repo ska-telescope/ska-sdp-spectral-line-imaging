@@ -20,6 +20,7 @@ pylint = "^3.2.3"
 numpy = "^1.26.4"
 flake8 = "^7.0.0"
 jsonschema = "^4.22.0"
+typer = "^0.12.3"
 
 [tool.poetry.group.dev.dependencies]
 docutils = "<=0.19"
@@ -49,3 +50,5 @@ sphinx-rtd-theme = "^2.0.0"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+sdp-pipelines = "ska_sdp_pipelines.cli:app"
