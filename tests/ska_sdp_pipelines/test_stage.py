@@ -1,6 +1,9 @@
 import pytest
 
-from ska_sdp_pipelines.framework.configuration import ConfigParam, Configuration
+from ska_sdp_pipelines.framework.configuration import (
+    ConfigParam,
+    Configuration,
+)
 from ska_sdp_pipelines.framework.exceptions import (
     ArgumentMismatchException,
     VisibilityMissingException,

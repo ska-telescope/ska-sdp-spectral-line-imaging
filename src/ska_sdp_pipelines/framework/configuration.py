@@ -64,7 +64,9 @@ class Configuration:
                 "Mandatory argument vis missing in argument list"
             )
 
-        mandidatory_arguments = mandidatory_arguments.union(self.__config_params.keys())
+        mandidatory_arguments = mandidatory_arguments.union(
+            self.__config_params.keys()
+        )
 
         if not mandidatory_arguments.issubset(stage_arguments):
             raise ArgumentMismatchException("Invalid argument list")
@@ -74,8 +76,10 @@ class Configuration:
         Updates the function parameters with the configuration parameter values
         """
         return {
-            **{key: value.default for key, value in self.__config_params.items()},
-            **kwargs,
+            **{
+                key: value.default
+                for key, value in self.__config_params.items()
+            }, **kwargs,
         }
 
 

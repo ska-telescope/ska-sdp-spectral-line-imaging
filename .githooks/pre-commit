@@ -9,11 +9,15 @@
 
 
 BRANCH=$(git branch --show-current)
+set -e
 
 if [ "$BRANCH" == "main" ]; then
-    flake8
-    isort --check-only --profile=black .
-    pylint
+    flake8 src
+    flake8 tests
+    isort --check-only --profile black --line-length 79 src
+    isort --check-only --profile black --line-length 79 tests
+    pylint src
+    pylint tests
     pytest --cov=src
     coverage report --fail-under=80
 fi
