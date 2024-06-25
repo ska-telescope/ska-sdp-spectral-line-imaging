@@ -35,10 +35,10 @@ class ConfigurableStage:
 
         self._stage_configurations.valididate_arguments_for(stage_definition)
 
-        return _Stage(stage_definition, self._stage_configurations)
+        return Stage(stage_definition, self._stage_configurations)
 
 
-class _Stage:
+class Stage:
     """
     Decorator for the stage definition function
     Attributes:
