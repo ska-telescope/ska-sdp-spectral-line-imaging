@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 nbmake = "^1.4.1"
 isort = "^5.6.4"
 black = "^22.3.0"

@@ -1,9 +1,12 @@
 name: spec_line
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - pip=24.0
-  - python=3.10.14
+  - python=3.10
+  - casacore=3.5.0
+  - python-casacore=3.5.2
   - pip:
       - poetry==1.8.3
+      - casadata==2024.5.22
+      - xradio==0.0.28
