@@ -29,6 +29,7 @@ class Pipeline:
         Parameters:
           infile_path (str) : Path to input file
         """
+
         vis = read_dataset(infile_path)
         output = self._stage(vis)
         outfile = create_output_name(infile_path, self.name)

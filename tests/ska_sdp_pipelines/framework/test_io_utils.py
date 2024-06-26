@@ -22,11 +22,13 @@ def test_should_create_output_name(path_mock, datetime_mock, makedirs_mock):
 
 
 @mock.patch(
-    "ska_sdp_pipelines.framework.io_utils.read_processing_set",
+    "ska_sdp_pipelines.framework.io_utils.xr.open_zarr",
     return_value="ProcessingSet",
 )
-def test_should_read_processing_set(read_processing_set_mock):
+def test_should_read_processing_set(open_zarr_mock):
     processing_set = read_dataset("infile_path")
 
-    read_processing_set_mock.assert_called_once_with(ps_store="infile_path")
+    open_zarr_mock.assert_called_once_with(
+        "infile_path/MAIN", consolidated=False
+    )
     assert processing_set == "ProcessingSet"
