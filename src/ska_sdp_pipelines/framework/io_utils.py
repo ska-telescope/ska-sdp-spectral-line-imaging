@@ -2,16 +2,18 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+from xradio.vis.read_processing_set import read_processing_set
+
 
 def read_dataset(infile: str):
-    return [1, 2, 3]
+    return read_processing_set(ps_store=infile)
 
 
 def write_dataset(output, outfile: str):
     pass
 
 
-def create_output_name(src_file, prefix_name):
+def create_output_name(src_file, prefix_name, create=False):
     """
     Creates the output filename and the relative output directory
     Parameters:
@@ -26,6 +28,7 @@ def create_output_name(src_file, prefix_name):
     output_path = f"{parent_path}/output"
     timestampt = datetime.now().strftime("%Y%m%d%H%M%S")
     outfile = f"{output_path}/{prefix_name}_out_{timestampt}"
-    os.makedirs(output_path)
+    if create:
+        os.makedirs(output_path)
 
     return outfile
