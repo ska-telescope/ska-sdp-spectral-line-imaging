@@ -10,6 +10,8 @@ class Pipeline:
       _stage (Stage): Stage to be executed
     """
 
+    __instance = None
+
     def __init__(self, name, stage):
         """
         Initialise the pipeline object
@@ -19,6 +21,7 @@ class Pipeline:
         """
         self.name = name
         self._stage = stage
+        Pipeline.__instance = self
 
     def __call__(self, infile_path):
         """
@@ -30,3 +33,7 @@ class Pipeline:
         output = self._stage(vis)
         outfile = create_output_name(infile_path, self.name)
         write_dataset(output, outfile)
+
+    @classmethod
+    def get_instance(cls):
+        return cls.__instance

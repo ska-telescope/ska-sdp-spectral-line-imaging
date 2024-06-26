@@ -20,3 +20,8 @@ def test_should_run_the_pipeline(write_mock, create_output_mock, read_mock):
     stage.assert_called_once_with("dataset")
     create_output_mock.assert_called_once_with("infile_path", "test_pipeline")
     write_mock.assert_called_once_with("Stage output", "output_name")
+
+
+def test_should_get_instance_of_pipeline():
+    pipeline = Pipeline("test_pipeline", "stage")
+    assert pipeline == pipeline.get_instance()

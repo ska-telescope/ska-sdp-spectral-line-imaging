@@ -26,8 +26,8 @@ def test_should_create_a_stage_with_configurable_arguments():
             a=ConfigParam("number", 10), b=ConfigParam("number", 20)
         ),
     )
-    def temp_stage(vis, a=None, b=None):
-        return (vis, a, b)
+    def temp_stage(input_data, a=None, b=None):
+        return (input_data, a, b)
 
     assert temp_stage("vis") == ("vis", 10, 20)
 

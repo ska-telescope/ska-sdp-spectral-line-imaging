@@ -57,18 +57,19 @@ class Configuration:
                                        definition
         """
 
-        stage_arguments = set(stage_definition.__code__.co_varnames)
-        mandidatory_arguments = {"vis"}
-        if not mandidatory_arguments.issubset(stage_arguments):
+        stage_arguments = stage_definition.__code__.co_varnames
+        configuration_keys = set(self.__config_params.keys())
+
+        if (
+            len(stage_arguments) == 0
+            or stage_arguments[0] in configuration_keys
+        ):
             raise VisibilityMissingException(
                 "Mandatory argument vis missing in argument list"
             )
 
-        mandidatory_arguments = mandidatory_arguments.union(
-            self.__config_params.keys()
-        )
-
-        if not mandidatory_arguments.issubset(stage_arguments):
+        configuration_variables = set(stage_arguments[1:])
+        if configuration_variables != configuration_keys:
             raise ArgumentMismatchException("Invalid argument list")
 
     def extend(self, **kwargs):
