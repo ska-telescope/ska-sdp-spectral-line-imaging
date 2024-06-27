@@ -2,11 +2,12 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import xarray as xr
+from xradio.vis.read_processing_set import read_processing_set
 
 
 def read_dataset(infile: str):
-    return xr.open_zarr(f"{infile}/MAIN", consolidated=False)
+    # Dask related setups.
+    return read_processing_set(ps_store=infile)
 
 
 def write_dataset(output, outfile: str):
