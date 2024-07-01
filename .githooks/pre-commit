@@ -11,11 +11,4 @@
 BRANCH=$(git branch --show-current)
 set -e
 
-if [ "$BRANCH" == "main" ]; then
-    flake8 --show-source --statistics --max-line-length 79  src/ tests/
-    isort --check-only --profile black --line-length 79  src/ tests/
-    black --exclude .+\.ipynb --check --line-length 79 src/ tests/
-    pylint --output-format=parseable,parseable:build/code_analysis.stdout,pylint_junit.JUnitReporter:build/reports/linting-python.xml --max-line-length 79  src/ tests/
-    pytest --cov=src
-    coverage report --fail-under=80
-fi
+make python-lint
