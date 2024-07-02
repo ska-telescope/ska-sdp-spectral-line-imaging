@@ -9,4 +9,12 @@ class VisibilityMissingException(ArgumentMismatchException):
     pass
 
 
-__all__ = ["ArgumentMismatchException", "VisibilityMissingException"]
+class StageNotFoundException(builtins.Exception):
+    pass
+
+
+__all__ = [
+    "ArgumentMismatchException",
+    "VisibilityMissingException",
+    "StageNotFoundException",
+]

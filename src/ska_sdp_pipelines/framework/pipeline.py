@@ -1,5 +1,6 @@
 import dask
 
+from .exceptions import StageNotFoundException
 from .io_utils import create_output_name, read_dataset, write_dataset
 from .pipeline_datastore import PipelineDatastore
 
@@ -37,7 +38,7 @@ class Pipeline:
         pipeline_data["output"] = stage(pipeline_data, *args, **kwargs)
         return pipeline_data
 
-    def __call__(self, infile_path):
+    def __call__(self, infile_path, stages=None):
         """
         Executes the pipeline
         Parameters:
@@ -47,7 +48,26 @@ class Pipeline:
         vis = read_dataset(infile_path)
         pipeline_data = PipelineDatastore(vis)
 
-        for stage in self._stages:
+        selected_satges = self._stages
+        if stages:
+            stage_names = [stage.name for stage in self._stages]
+
+            non_existent_stages = [
+                stage_name
+                for stage_name in stages
+                if stage_name not in stage_names
+            ]
+
+            if non_existent_stages:
+                raise StageNotFoundException(
+                    f"Stages not found: {non_existent_stages}"
+                )
+
+            selected_satges = [
+                stage for stage in self._stages if stage.name in stages
+            ]
+
+        for stage in selected_satges:
             pipeline_data = dask.delayed(self.execute_stage)(
                 stage, pipeline_data
             )

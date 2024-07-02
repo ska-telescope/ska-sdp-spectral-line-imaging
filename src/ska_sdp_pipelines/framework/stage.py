@@ -35,7 +35,7 @@ class ConfigurableStage:
 
         self._stage_configurations.valididate_arguments_for(stage_definition)
 
-        return Stage(stage_definition, self._stage_configurations)
+        return Stage(self._name, stage_definition, self._stage_configurations)
 
 
 class Stage:
@@ -47,13 +47,14 @@ class Stage:
 
     """
 
-    def __init__(self, stage_definition, configuration=None):
+    def __init__(self, name, stage_definition, configuration=None):
         """
         Initialize the _Stage object
         Parameters:
             stage_definition (func): Function to be decorated
             configuration (Configuration): The stage configuration
         """
+        self.name = name
         self._stage_definition = stage_definition
         self._stage_configurations = configuration
 
