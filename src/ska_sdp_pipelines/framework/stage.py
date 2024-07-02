@@ -57,7 +57,7 @@ class Stage:
         self._stage_definition = stage_definition
         self._stage_configurations = configuration
 
-    def __call__(self, vis, **kwargs):
+    def __call__(self, pipeline_data, **kwargs):
         """
         Provide callable object for the wrapped function
         Parameters:
@@ -69,4 +69,4 @@ class Stage:
         updated_kwargs = kwargs
         updated_kwargs = self._stage_configurations.extend(**kwargs)
 
-        return self._stage_definition(vis, **updated_kwargs)
+        return self._stage_definition(pipeline_data, **updated_kwargs)

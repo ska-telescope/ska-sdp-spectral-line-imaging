@@ -1,3 +1,5 @@
+import inspect
+
 from .exceptions import ArgumentMismatchException, VisibilityMissingException
 
 
@@ -57,7 +59,7 @@ class Configuration:
                                        definition
         """
 
-        stage_arguments = stage_definition.__code__.co_varnames
+        stage_arguments = inspect.getargspec(stage_definition).args
         configuration_keys = set(self.__config_params.keys())
 
         if (

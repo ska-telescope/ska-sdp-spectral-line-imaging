@@ -1,4 +1,7 @@
+import dask
+
 from .io_utils import create_output_name, read_dataset, write_dataset
+from .pipeline_datastore import PipelineDatastore
 
 
 class Pipeline:
@@ -12,7 +15,7 @@ class Pipeline:
 
     __instance = None
 
-    def __init__(self, name, stage):
+    def __init__(self, name, stages=None):
         """
         Initialise the pipeline object
         Parameters:
@@ -20,8 +23,19 @@ class Pipeline:
           stage (Stage) : Stage to be executed
         """
         self.name = name
-        self._stage = stage
+        self._stages = [] if stages is None else stages
         Pipeline.__instance = self
+
+    def execute_stage(self, stage, pipeline_data, *args, **kwargs):
+        """
+        Executes individual stages with the pipeline data
+        Parameter:
+            stage(Stage): Pipeline Stage
+            pipeline_data(PipelineDatastore): Rich object wrapping input data
+                and previous stage output
+        """
+        pipeline_data["output"] = stage(pipeline_data, *args, **kwargs)
+        return pipeline_data
 
     def __call__(self, infile_path):
         """
@@ -31,9 +45,16 @@ class Pipeline:
         """
 
         vis = read_dataset(infile_path)
-        output = self._stage(vis)
+        pipeline_data = PipelineDatastore(vis)
+
+        for stage in self._stages:
+            pipeline_data = dask.delayed(self.execute_stage)(
+                stage, pipeline_data
+            )
+
+        output_pipeline_data = pipeline_data.compute()
         outfile = create_output_name(infile_path, self.name)
-        write_dataset(output, outfile)
+        write_dataset(output_pipeline_data, outfile)
 
     @classmethod
     def get_instance(cls):
