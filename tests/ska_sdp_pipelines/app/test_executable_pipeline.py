@@ -58,12 +58,14 @@ def test_should_raise_exception_if_script_doesnot_exists(os_mock):
         executable_pipeline.validate_pipeline()
 
 
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.Path")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.yaml")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.os")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Pipeline")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.sys")
 @mock.patch("builtins.open")
 def test_should_install_executable(
-    open_mock, sys_mock, pipeline_mock, os_mock
+    open_mock, sys_mock, pipeline_mock, os_mock, yaml_mock, path_mock
 ):
     sys_mock.executable = "/path/to/bin/python"
     file_obj = Mock("file_obj")
@@ -71,6 +73,9 @@ def test_should_install_executable(
     enter_mock = MagicMock()
     enter_mock.__enter__.return_value = file_obj
     open_mock.return_value = enter_mock
+
+    path_mock.return_value = path_mock
+    path_mock.parent.absolute.return_value = "/path/to/bin"
 
     pipeline_mock.get_instance.return_value = pipeline_mock
     pipeline_mock.name = "PIPELINE"
@@ -80,9 +85,44 @@ def test_should_install_executable(
 
     executable_pipeline.install()
 
-    open_mock.assert_called_once_with("/path/to/bin/PIPELINE", "w")
+    open_mock.assert_has_calls([mock.call("/path/to/bin/PIPELINE", "w")])
     file_obj.write.assert_called_once_with("script content")
     os_mock.chmod.assert_called_once_with("/path/to/bin/PIPELINE", 0o750)
+
+
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.Path")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.yaml")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.os")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.Pipeline")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.sys")
+@mock.patch("builtins.open")
+def test_should_write_configutartion_during_install(
+    open_mock, sys_mock, pipeline_mock, os_mock, yaml_mock, path_mock
+):
+    sys_mock.executable = "/global/path/to/bin/python"
+    file_obj = Mock("file_obj")
+    file_obj.write = Mock("readlines")
+    enter_mock = MagicMock()
+    enter_mock.__enter__.return_value = file_obj
+    open_mock.return_value = enter_mock
+
+    path_mock.return_value = path_mock
+    path_mock.parent.absolute.return_value = "/path/to/config"
+
+    pipeline_mock.get_instance.return_value = pipeline_mock
+    pipeline_mock.name = "PIPELINE"
+    pipeline_mock.config = "PIPELINE CONFIG"
+
+    executable_pipeline = ExecutablePipeline("/path/to/script")
+    executable_pipeline.executable_content = "script content"
+
+    executable_pipeline.install()
+
+    path_mock.assert_has_calls([mock.call("/path/to/script")])
+    open_mock.assert_has_calls(
+        [mock.call("/path/to/config/PIPELINE.yaml", "w")]
+    )
+    yaml_mock.dump.assert_called_once_with("PIPELINE CONFIG", file_obj)
 
 
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.os")

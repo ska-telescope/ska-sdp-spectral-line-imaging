@@ -3,6 +3,8 @@ import os
 import sys
 from pathlib import Path
 
+import yaml
+
 from ..framework.pipeline import Pipeline
 from .constants import MAIN_ENTRY_POINT, SHEBANG_HEADER
 
@@ -69,6 +71,10 @@ class ExecutablePipeline:
             outfile.write(self.executable_content)
         os.chmod(executable_path, 0o750)
 
+        script_path = Path(self._script_path)
+        script_root = script_path.parent.absolute()
+        self.__write_config(script_root)
+
     def uninstall(self):
         """
         Removes the executable pipeline from the executable path.
@@ -83,3 +89,15 @@ class ExecutablePipeline:
         executable_root = Path(sys.executable).parent.absolute()
         pipeline = Pipeline.get_instance()
         return f"{executable_root}/{pipeline.name}"
+
+    def __write_config(self, config_root):
+        """
+        Writes the yaml configuration to the config_root path.
+        Parameters:
+            config_root (str): Root path for configurations
+        """
+        pipeline = Pipeline.get_instance()
+        config_path = f"{config_root}/{pipeline.name}.yaml"
+
+        with open(config_path, "w") as conf_file:
+            yaml.dump(pipeline.config, conf_file)

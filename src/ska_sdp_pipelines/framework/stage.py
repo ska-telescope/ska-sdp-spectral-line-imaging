@@ -58,6 +58,15 @@ class Stage:
         self._stage_definition = stage_definition
         self._stage_configurations = configuration
 
+    @property
+    def config(self):
+        """
+        Stage configuration dictionary.
+        Returns:
+           A configuration dictionary
+        """
+        return {self.name: self._stage_configurations.items}
+
     def __call__(self, pipeline_data, **kwargs):
         """
         Provide callable object for the wrapped function

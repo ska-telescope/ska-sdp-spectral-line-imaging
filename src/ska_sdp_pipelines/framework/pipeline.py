@@ -1,3 +1,5 @@
+from functools import reduce
+
 import dask
 
 from .exceptions import StageNotFoundException
@@ -37,6 +39,21 @@ class Pipeline:
         """
         pipeline_data["output"] = stage(pipeline_data, *args, **kwargs)
         return pipeline_data
+
+    @property
+    def config(self):
+        """
+        Pipeline configuration dictionary
+        Returns:
+            Dictionary containing the stage states and default parameters
+        """
+        stages_config = reduce(
+            lambda config, stage: {**config, **stage.config}, self._stages, {}
+        )
+
+        stage_states = {stage.name: True for stage in self._stages}
+
+        return {"pipeline": stage_states, "parameters": stages_config}
 
     def __call__(self, infile_path, stages=None):
         """

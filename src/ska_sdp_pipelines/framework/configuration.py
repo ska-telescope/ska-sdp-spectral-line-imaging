@@ -43,6 +43,17 @@ class Configuration:
         """
         self.__config_params = kwargs
 
+    @property
+    def items(self):
+        """
+        Configuration parameters
+        Returns:
+           Dictionary of configuration parameters with default values
+        """
+        return {
+            key: value.default for key, value in self.__config_params.items()
+        }
+
     def valididate_arguments_for(self, stage_definition):
         """
         Validates if the arguments provided for the stage contains all the
@@ -79,10 +90,7 @@ class Configuration:
         Updates the function parameters with the configuration parameter values
         """
         return {
-            **{
-                key: value.default
-                for key, value in self.__config_params.items()
-            },
+            **self.items,
             **kwargs,
         }
 

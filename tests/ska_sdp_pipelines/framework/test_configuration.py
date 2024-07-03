@@ -10,6 +10,15 @@ from ska_sdp_pipelines.framework.exceptions import (
 )
 
 
+def test_should_return_config_dictionary():
+    configurations = Configuration(
+        a=ConfigParam("number", 10), b=ConfigParam("number", 20)
+    )
+
+    default_config = configurations.items
+    assert default_config == {"a": 10, "b": 20}
+
+
 def test_should_extend_configurable_arguments_with_actual_values():
     configurations = Configuration(
         a=ConfigParam("number", 10), b=ConfigParam("number", 20)
