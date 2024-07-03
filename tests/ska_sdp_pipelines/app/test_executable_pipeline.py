@@ -1,3 +1,4 @@
+import pytest
 from mock import MagicMock, Mock, mock
 
 from ska_sdp_pipelines.app.executable_pipeline import (
@@ -25,8 +26,12 @@ def test_should_prepare_executable(open_mock, sys_mock):
     )
 
 
+@mock.patch(
+    "ska_sdp_pipelines.app.executable_pipeline.os.path.exists",
+    return_value=True,
+)
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.importlib.util")
-def test_should_validate_executable(util_mock):
+def test_should_validate_executable(util_mock, exists_mock):
     mock_spec = Mock("SPEC")
     mock_spec.loader = Mock("loader")
     mock_spec.loader.exec_module = Mock("exec_module")
@@ -41,6 +46,16 @@ def test_should_validate_executable(util_mock):
     util_mock.module_from_spec.assert_called_once_with(mock_spec)
     mock_spec.loader.exec_module.assert_called_once_with("SPEC")
     assert executable_pipeline.installable_pipeline == "SPEC"
+
+
+@mock.patch(
+    "ska_sdp_pipelines.app.executable_pipeline.os.path.exists",
+    return_value=False,
+)
+def test_should_raise_exception_if_script_doesnot_exists(os_mock):
+    executable_pipeline = ExecutablePipeline("/path/to/script")
+    with pytest.raises(FileNotFoundError):
+        executable_pipeline.validate_pipeline()
 
 
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.os")

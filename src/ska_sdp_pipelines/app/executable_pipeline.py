@@ -33,6 +33,9 @@ class ExecutablePipeline:
         code.
         Raises: Compilation error based on python interpretor.
         """
+        if not os.path.exists(self._script_path):
+            raise FileNotFoundError(self._script_path)
+
         spec = importlib.util.spec_from_file_location(
             "installable_pipeline", self._script_path
         )
