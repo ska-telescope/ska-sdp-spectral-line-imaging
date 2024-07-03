@@ -11,7 +11,7 @@ It is recommended to use a virtual environment for the developer setup. This doc
 Please make sure to clone the submodules also using
 
 ```bash
-git clone --recurse-submodules ...
+git clone --recurse-submodules url://git-repository
 ```
 
 Also make sure to update submodules at every pull.
