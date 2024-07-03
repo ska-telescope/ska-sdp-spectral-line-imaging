@@ -59,7 +59,7 @@ class ExecutablePipeline:
             + MAIN_ENTRY_POINT
         )
 
-    def install(self):
+    def install(self, config_install_path=None):
         """
         Installs the executable script containing the executable script.
         The path is taken from the executable path obtained from sys.executable
@@ -72,8 +72,12 @@ class ExecutablePipeline:
         os.chmod(executable_path, 0o750)
 
         script_path = Path(self._script_path)
-        script_root = script_path.parent.absolute()
-        self.__write_config(script_root)
+        config_root = (
+            script_path.parent.absolute()
+            if config_install_path is None
+            else config_install_path
+        )
+        self.__write_config(config_root)
 
     def uninstall(self):
         """
@@ -96,6 +100,10 @@ class ExecutablePipeline:
         Parameters:
             config_root (str): Root path for configurations
         """
+
+        if not os.path.exists(config_root):
+            raise FileNotFoundError(f"Directory {config_root} not found")
+
         pipeline = Pipeline.get_instance()
         config_path = f"{config_root}/{pipeline.name}.yaml"
 

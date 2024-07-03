@@ -1,4 +1,4 @@
-from typer import Typer
+from typer import Option, Typer
 
 from .executable_pipeline import ExecutablePipeline
 
@@ -6,17 +6,25 @@ app = Typer()
 
 
 @app.command()
-def install(pipeline_path):
+def install(
+    pipeline_path,
+    config_install_path=Option(
+        default=None,
+        help="""Path to place the defualt config. If not provided,
+        the config will be saved into the pipeline script path""",
+    ),
+):
     """
     Pipeline framework command to install pipelines
     Parameter:
        pipeline_path: Path to the pipeline to be installed
+       config_install_path: Path to place the default config.
     """
 
     executable_pipeline = ExecutablePipeline(pipeline_path)
     executable_pipeline.validate_pipeline()
     executable_pipeline.prepare_executable()
-    executable_pipeline.install()
+    executable_pipeline.install(config_install_path)
 
 
 @app.command()
