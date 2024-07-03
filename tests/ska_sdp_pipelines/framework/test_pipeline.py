@@ -1,5 +1,5 @@
 import pytest
-from mock import Mock, mock
+from mock import MagicMock, Mock, mock
 
 from ska_sdp_pipelines.framework.exceptions import StageNotFoundException
 from ska_sdp_pipelines.framework.pipeline import Pipeline
@@ -24,7 +24,9 @@ def test_should_run_the_pipeline(
     delayed_mock_call_2 = Mock("delay2", return_value=delayed_mock_output)
     delayed_mock.side_effect = [delayed_mock_call_1, delayed_mock_call_2]
     stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
     stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2.name = "stage2"
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2])
 
     pipeline("infile_path", [])
@@ -85,6 +87,177 @@ def test_should_run_the_pipeline_with_selected_stages(
 
     create_output_mock.assert_called_once_with("infile_path", "test_pipeline")
     write_mock.assert_called_once_with("output", "output_name")
+
+
+@mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
+)
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.create_output_name",
+    return_value="output_name",
+)
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("builtins.open")
+def test_should_run_the_pipeline_with_selected_stages_from_config(
+    open_mock,
+    write_mock,
+    create_output_mock,
+    read_mock,
+    delayed_mock,
+    yaml_mock,
+):
+    file_obj = Mock("file_obj")
+    file_obj.write = Mock("readlines")
+    enter_mock = MagicMock()
+    enter_mock.__enter__.return_value = file_obj
+    open_mock.return_value = enter_mock
+
+    yaml_mock.safe_load.return_value = {
+        "pipeline": {"stage1": True, "stage2": False, "stage3": True}
+    }
+
+    delayed_mock_output = Mock("delayed")
+    delayed_mock_output.compute = Mock("compute", return_value="output")
+
+    delayed_mock_call_1 = Mock("delay1", return_value="DELAYED_1")
+    delayed_mock_call_2 = Mock("delay3", return_value=delayed_mock_output)
+    delayed_mock.side_effect = [delayed_mock_call_1, delayed_mock_call_2]
+    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2.name = "stage2"
+    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3.name = "stage3"
+    pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
+
+    pipeline("infile_path", config_path="/path/to/config")
+    open_mock.assert_called_once_with("/path/to/config", "r")
+
+    delayed_mock_call_1.assert_called_once_with(
+        stage1, {"input_data": "dataset"}
+    )
+    delayed_mock_call_2.assert_called_once_with(stage3, "DELAYED_1")
+
+
+@mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
+)
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.create_output_name",
+    return_value="output_name",
+)
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("builtins.open")
+def test_should_run_the_pipeline_with_stages_from_cli_over_config(
+    open_mock,
+    write_mock,
+    create_output_mock,
+    read_mock,
+    delayed_mock,
+    yaml_mock,
+):
+    file_obj = Mock("file_obj")
+    file_obj.write = Mock("readlines")
+    enter_mock = MagicMock()
+    enter_mock.__enter__.return_value = file_obj
+    open_mock.return_value = enter_mock
+
+    yaml_mock.safe_load.return_value = {
+        "pipeline": {"stage1": True, "stage2": True, "stage3": False}
+    }
+
+    delayed_mock_output = Mock("delayed")
+    delayed_mock_output.compute = Mock("compute", return_value="output")
+
+    delayed_mock_call_1 = Mock("delay1", return_value="DELAYED_1")
+    delayed_mock_call_2 = Mock("delay3", return_value=delayed_mock_output)
+    delayed_mock.side_effect = [delayed_mock_call_1, delayed_mock_call_2]
+    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2.name = "stage2"
+    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3.name = "stage3"
+    pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
+
+    pipeline(
+        "infile_path", ["stage1", "stage3"], config_path="/path/to/config"
+    )
+    open_mock.assert_called_once_with("/path/to/config", "r")
+
+    delayed_mock_call_1.assert_called_once_with(
+        stage1, {"input_data": "dataset"}
+    )
+    delayed_mock_call_2.assert_called_once_with(stage3, "DELAYED_1")
+
+
+@mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
+)
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.create_output_name",
+    return_value="output_name",
+)
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("builtins.open")
+def test_should_run_pass_configuration_params_for_stages(
+    open_mock,
+    write_mock,
+    create_output_mock,
+    read_mock,
+    delayed_mock,
+    yaml_mock,
+):
+    file_obj = Mock("file_obj")
+    file_obj.write = Mock("readlines")
+    enter_mock = MagicMock()
+    enter_mock.__enter__.return_value = file_obj
+    open_mock.return_value = enter_mock
+
+    yaml_mock.safe_load.return_value = {
+        "pipeline": {"stage1": True, "stage2": True, "stage3": True},
+        "parameters": {
+            "stage1": {"stage1_parameter_1": 0},
+            "stage2": {"stage2_parameter_1": 0},
+            "stage3": {"stage3_parameter_1": 0},
+        },
+    }
+
+    delayed_mock_call_1 = Mock("delay1", return_value="DELAYED_1")
+    delayed_mock_call_2 = Mock("delay2", return_value="DELAYED_2")
+    delayed_mock_call_3 = Mock("delay3")
+
+    delayed_mock.side_effect = [
+        delayed_mock_call_1,
+        delayed_mock_call_2,
+        delayed_mock_call_3,
+    ]
+    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2.name = "stage2"
+    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3.name = "stage3"
+    pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
+
+    pipeline("infile_path", config_path="/path/to/config")
+    open_mock.assert_called_once_with("/path/to/config", "r")
+
+    delayed_mock_call_1.assert_called_once_with(
+        stage1, {"input_data": "dataset"}, stage1_parameter_1=0
+    )
+    delayed_mock_call_2.assert_called_once_with(
+        stage2, "DELAYED_1", stage2_parameter_1=0
+    )
+    delayed_mock_call_3.assert_called_once_with(
+        stage3, "DELAYED_2", stage3_parameter_1=0
+    )
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
