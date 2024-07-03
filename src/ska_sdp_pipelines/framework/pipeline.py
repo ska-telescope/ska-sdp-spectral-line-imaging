@@ -1,6 +1,7 @@
 from functools import reduce
 
 import dask
+from dask.distributed import Client
 
 from .exceptions import StageNotFoundException
 from .io_utils import create_output_name, read_dataset, write_dataset
@@ -56,7 +57,9 @@ class Pipeline:
 
         return {"pipeline": stage_states, "parameters": stages_config}
 
-    def __call__(self, infile_path, stages=None, config_path=None):
+    def __call__(
+        self, infile_path, stages=None, dask_scheduler=None, config_path=None
+    ):
         """
         Executes the pipeline
         Parameters:
@@ -69,6 +72,9 @@ class Pipeline:
         stage_names = [stage.name for stage in self._stages]
         selected_satges = self._stages
         stages_to_run = None
+
+        if dask_scheduler:
+            Client(dask_scheduler)
 
         if config_path is not None:
             ConfigManager.init(config_path)

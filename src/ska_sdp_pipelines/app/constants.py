@@ -26,12 +26,29 @@ parser.add_argument(
   nargs='*',
   help='Pipleline stages to be executed'
 )
+parser.add_argument(
+  "--dask-scheduler",
+  type=str,
+  default=None,
+  help=(
+    "Optional dask scheduler address to which to submit jobs. "
+    "If specified, any eligible pipeline step will be distributed on "
+    "the associated Dask cluster."
+  ),
+)
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    pipeline = Pipeline.get_instance()
-    stages = [] if args.stages is None else args.stages[0]
-    sys.exit(pipeline(args.input, stages, args.config_path))
+  pipeline = Pipeline.get_instance()
+  stages = [] if args.stages is None else args.stages[0]
+  sys.exit(
+    pipeline(
+      args.input,
+      stages,
+      args.dask_scheduler,
+      args.config_path
+    )
+  )
 """
 
 SHEBANG_HEADER = "#! {executable} \n\n"

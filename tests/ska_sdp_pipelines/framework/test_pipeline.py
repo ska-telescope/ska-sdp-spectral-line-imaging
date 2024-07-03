@@ -89,6 +89,26 @@ def test_should_run_the_pipeline_with_selected_stages(
     write_mock.assert_called_once_with("output", "output_name")
 
 
+@mock.patch("ska_sdp_pipelines.framework.pipeline.Client")
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
+)
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.create_output_name",
+    return_value="output_name",
+)
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+def test_should_instantiate_dask_client(
+    write_mock, create_output_mock, read_mock, client_mock
+):
+    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+    pipeline = Pipeline("test_pipeline", stages=[stage1])
+    dask_scheduler_address = "some_ip"
+    pipeline("infile_path", dask_scheduler=dask_scheduler_address)
+    client_mock.assert_called_once_with(dask_scheduler_address)
+
+
 @mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
 @mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
 @mock.patch(
