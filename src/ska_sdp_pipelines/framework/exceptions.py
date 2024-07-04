@@ -17,9 +17,14 @@ class ConfigNotInitialisedException(builtins.Exception):
     pass
 
 
+class NoStageToExecuteException(builtins.Exception):
+    pass
+
+
 __all__ = [
     "ArgumentMismatchException",
     "VisibilityMissingException",
     "StageNotFoundException",
     "ConfigNotInitialisedException",
+    "NoStageToExecuteException",
 ]

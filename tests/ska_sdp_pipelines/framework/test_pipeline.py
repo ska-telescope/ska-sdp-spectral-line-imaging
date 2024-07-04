@@ -2,7 +2,10 @@ import pytest
 from mock import MagicMock, Mock, mock
 
 from ska_sdp_pipelines.framework.configuration import Configuration
-from ska_sdp_pipelines.framework.exceptions import StageNotFoundException
+from ska_sdp_pipelines.framework.exceptions import (
+    NoStageToExecuteException,
+    StageNotFoundException,
+)
 from ska_sdp_pipelines.framework.pipeline import Pipeline
 
 
@@ -115,7 +118,8 @@ def test_should_not_run_if_no_stages_are_provided(read_mock):
     stage1.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline")
     dask_scheduler_address = "some_ip"
-    pipeline("infile_path", dask_scheduler=dask_scheduler_address)
+    with pytest.raises(NoStageToExecuteException):
+        pipeline("infile_path", dask_scheduler=dask_scheduler_address)
 
 
 @mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")

@@ -3,7 +3,7 @@ from functools import reduce
 import dask
 from dask.distributed import Client
 
-from .exceptions import StageNotFoundException
+from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_name, read_dataset, write_dataset
 from .model.config_manager import ConfigManager
 
@@ -115,14 +115,16 @@ class Pipeline:
             selected_satges = [
                 stage for stage in self._stages if stage.name in stages_to_run
             ]
-        if selected_satges:
-            delayed_output = self.__execute_selected_stages(
-                selected_satges, vis, config, dask_scheduler
-            )
+        if not selected_satges:
+            raise NoStageToExecuteException("Selected stages empty")
 
-            output_pipeline_data = dask.compute(*delayed_output)
-            outfile = create_output_name(infile_path, self.name)
-            write_dataset(output_pipeline_data, outfile)
+        delayed_output = self.__execute_selected_stages(
+            selected_satges, vis, config, dask_scheduler
+        )
+
+        output_pipeline_data = dask.compute(*delayed_output)
+        outfile = create_output_name(infile_path, self.name)
+        write_dataset(output_pipeline_data, outfile)
 
     @classmethod
     def get_instance(cls):
