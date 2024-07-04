@@ -1,5 +1,6 @@
 import pytest
 
+from ska_sdp_pipelines.framework.configurable_stage import ConfigurableStage
 from ska_sdp_pipelines.framework.configuration import (
     ConfigParam,
     Configuration,
@@ -8,7 +9,6 @@ from ska_sdp_pipelines.framework.exceptions import (
     ArgumentMismatchException,
     VisibilityMissingException,
 )
-from ska_sdp_pipelines.framework.stage import ConfigurableStage
 
 
 def test_should_create_a_configurable_stage():
@@ -17,19 +17,6 @@ def test_should_create_a_configurable_stage():
         return vis
 
     assert temp_stage("vis") == "vis"
-
-
-def test_should_create_a_stage_with_configurable_arguments():
-    @ConfigurableStage(
-        "temp_stage",
-        Configuration(
-            a=ConfigParam("number", 10), b=ConfigParam("number", 20)
-        ),
-    )
-    def temp_stage(input_data, a=None, b=None):
-        return (input_data, a, b)
-
-    assert temp_stage("vis") == ("vis", 10, 20)
 
 
 def test_should_return_default_config_dictionary():

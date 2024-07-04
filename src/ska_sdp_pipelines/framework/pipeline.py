@@ -6,7 +6,6 @@ from dask.distributed import Client
 from .exceptions import StageNotFoundException
 from .io_utils import create_output_name, read_dataset, write_dataset
 from .model.config_manager import ConfigManager
-from .pipeline_datastore import PipelineDatastore
 
 
 class Pipeline:
@@ -31,16 +30,35 @@ class Pipeline:
         self._stages = [] if stages is None else stages
         Pipeline.__instance = self
 
-    def execute_stage(self, stage, pipeline_data, *args, **kwargs):
+    def __execute_selected_stages(
+        self, selected_stages, vis, config, dask_scheduler=None
+    ):
         """
         Executes individual stages with the pipeline data
         Parameter:
-            stage(Stage): Pipeline Stage
-            pipeline_data(PipelineDatastore): Rich object wrapping input data
-                and previous stage output
+            selected_stages([functions]): Wrapped stage functions
+            vis(xradio.ps): Input visibilities
+            config(ConfigManager): External provided configuration
+            dask_scheduler(str): Url to the dask scheduler
+        Returns:
+            Dask delayed objects
         """
-        pipeline_data["output"] = stage(pipeline_data, *args, **kwargs)
-        return pipeline_data
+        if dask_scheduler:
+            Client(dask_scheduler)
+        pipeline_data = dict()
+        pipeline_data["input_data"] = vis
+
+        delayed_outputs = []
+        for stage in selected_stages:
+            kwargs = stage.stage_config.extend(
+                **config.stage_config(stage.name)
+            )
+
+            output = dask.delayed(stage)(pipeline_data, **kwargs)
+            pipeline_data["output"] = output
+            delayed_outputs.append(output)
+
+        return delayed_outputs
 
     @property
     def config(self):
@@ -63,18 +81,16 @@ class Pipeline:
         """
         Executes the pipeline
         Parameters:
-          infile_path (str) : Path to input file
+          infile_path (str): Path to input file
+          stages([str]): Names of the stages to be executed
+          dask_scheduler(str): Url of the dask scheduler
         """
 
         vis = read_dataset(infile_path)
-        pipeline_data = PipelineDatastore(vis)
         config = ConfigManager()
         stage_names = [stage.name for stage in self._stages]
         selected_satges = self._stages
         stages_to_run = None
-
-        if dask_scheduler:
-            Client(dask_scheduler)
 
         if config_path is not None:
             ConfigManager.init(config_path)
@@ -99,15 +115,14 @@ class Pipeline:
             selected_satges = [
                 stage for stage in self._stages if stage.name in stages_to_run
             ]
-
-        for stage in selected_satges:
-            pipeline_data = dask.delayed(self.execute_stage)(
-                stage, pipeline_data, **config.stage_config(stage.name)
+        if selected_satges:
+            delayed_output = self.__execute_selected_stages(
+                selected_satges, vis, config, dask_scheduler
             )
 
-        output_pipeline_data = pipeline_data.compute()
-        outfile = create_output_name(infile_path, self.name)
-        write_dataset(output_pipeline_data, outfile)
+            output_pipeline_data = dask.compute(*delayed_output)
+            outfile = create_output_name(infile_path, self.name)
+            write_dataset(output_pipeline_data, outfile)
 
     @classmethod
     def get_instance(cls):
