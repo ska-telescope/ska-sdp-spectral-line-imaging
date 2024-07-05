@@ -42,10 +42,10 @@ def test_should_run_the_pipeline(
     delayed_mock.assert_has_calls([mock.call(stage1), mock.call(stage2)])
 
     delayed_mock_call_1.assert_called_once_with(
-        {"input_data": "dataset", "output": delayed_mock_output}
+        {"input_data": "dataset", "output": None}
     )
     delayed_mock_call_2.assert_called_once_with(
-        {"input_data": "dataset", "output": delayed_mock_output}
+        {"input_data": "dataset", "output": "DELAYED_1"}
     )
 
     compute_mock.assert_called_once_with("DELAYED_1", delayed_mock_output)
@@ -286,15 +286,15 @@ def test_should_run_pass_configuration_params_for_stages(
     open_mock.assert_called_once_with("/path/to/config", "r")
 
     delayed_mock_call_1.assert_called_once_with(
-        {"input_data": "dataset", "output": "delayed_call"},
+        {"input_data": "dataset", "output": None},
         stage1_parameter_1=0,
     )
     delayed_mock_call_2.assert_called_once_with(
-        {"input_data": "dataset", "output": "delayed_call"},
+        {"input_data": "dataset", "output": "DELAYED_1"},
         stage2_parameter_1=0,
     )
     delayed_mock_call_3.assert_called_once_with(
-        {"input_data": "dataset", "output": "delayed_call"},
+        {"input_data": "dataset", "output": "DELAYED_2"},
         stage3_parameter_1=0,
     )
 

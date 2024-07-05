@@ -45,17 +45,19 @@ class Pipeline:
         """
         if dask_scheduler:
             Client(dask_scheduler)
-        pipeline_data = dict()
-        pipeline_data["input_data"] = vis
 
         delayed_outputs = []
+        output = None
         for stage in selected_stages:
             kwargs = stage.stage_config.extend(
                 **config.stage_config(stage.name)
             )
 
-            output = dask.delayed(stage)(pipeline_data, **kwargs)
+            pipeline_data = dict()
+            pipeline_data["input_data"] = vis
             pipeline_data["output"] = output
+
+            output = dask.delayed(stage)(pipeline_data, **kwargs)
             delayed_outputs.append(output)
 
         return delayed_outputs
