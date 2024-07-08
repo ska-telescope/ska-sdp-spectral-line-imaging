@@ -70,7 +70,7 @@ class Configuration:
                                        definition
         """
 
-        stage_arguments = inspect.getargspec(stage_definition).args
+        stage_arguments = inspect.getfullargspec(stage_definition).args
         configuration_keys = set(self.__config_params.keys())
 
         if (

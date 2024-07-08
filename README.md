@@ -16,6 +16,12 @@ git clone --recurse-submodules url://git-repository
 
 Also make sure to update submodules at every pull.
 
+**Updating submodule post clone**
+
+```
+git submodule update --init
+```
+
 **Setup and activate environment**
 
 The `conda` based approach, sets up an environment with `python 3.10`, `pip 24.0` and `poetry 1.8`
@@ -39,6 +45,19 @@ The pre-commit hook is defined for the main branch and is present in the `.githo
 
 ```bash
 git config --local core.hooksPath .githooks/
+```
+
+**Formatting and Linting your code**
+
+```
+make python-format
+make python-lint
+```
+
+**Running the existing tests**
+
+```
+make python-test
 ```
 
 **GPG signing the commits**
