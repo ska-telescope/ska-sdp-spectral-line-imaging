@@ -10,9 +10,9 @@ from ska_sdp_pipelines.framework.io_utils import (
 @mock.patch("ska_sdp_pipelines.framework.io_utils.datetime")
 @mock.patch("ska_sdp_pipelines.framework.io_utils.Path")
 def test_should_create_output_name(path_mock, datetime_mock, makedirs_mock):
-    now_mock = Mock("now")
+    now_mock = Mock(name="now")
     datetime_mock.now.return_value = now_mock
-    now_mock.strftime = Mock("strftime", return_value="timestamp")
+    now_mock.strftime = Mock(name="strftime", return_value="timestamp")
     path_mock.return_value = path_mock
     path_mock.parent.absolute.return_value = "/absolute/path"
     outfile = create_output_name("infile_path", "pipeline_name", create=True)

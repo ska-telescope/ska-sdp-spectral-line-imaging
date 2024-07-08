@@ -24,15 +24,15 @@ from ska_sdp_pipelines.framework.pipeline import Pipeline
 def test_should_run_the_pipeline(
     write_mock, create_output_mock, read_mock, delayed_mock, compute_mock
 ):
-    delayed_mock_output = Mock("delayed")
+    delayed_mock_output = Mock(name="delayed")
 
-    delayed_mock_call_1 = Mock("delay1", return_value="DELAYED_1")
-    delayed_mock_call_2 = Mock("delay2", return_value=delayed_mock_output)
+    delayed_mock_call_1 = Mock(name="delay1", return_value="DELAYED_1")
+    delayed_mock_call_2 = Mock(name="delay2", return_value=delayed_mock_output)
     delayed_mock.side_effect = [delayed_mock_call_1, delayed_mock_call_2]
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
-    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2])
@@ -66,19 +66,19 @@ def test_should_run_the_pipeline(
 def test_should_run_the_pipeline_with_selected_stages(
     write_mock, create_output_mock, read_mock, delayed_mock
 ):
-    delayed_mock_output = Mock("delayed")
-    delayed_mock_output.compute = Mock("compute", return_value="output")
+    delayed_mock_output = Mock(name="delayed")
+    delayed_mock_output.compute = Mock(name="compute", return_value="output")
 
-    delayed_mock_call_1 = Mock("delay1", return_value="DELAYED_1")
-    delayed_mock_call_2 = Mock("delay3", return_value=delayed_mock_output)
+    delayed_mock_call_1 = Mock(name="delay1", return_value="DELAYED_1")
+    delayed_mock_call_2 = Mock(name="delay3", return_value=delayed_mock_output)
     delayed_mock.side_effect = [delayed_mock_call_1, delayed_mock_call_2]
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
-    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
-    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
@@ -100,7 +100,7 @@ def test_should_run_the_pipeline_with_selected_stages(
 def test_should_instantiate_dask_client(
     write_mock, create_output_mock, read_mock, client_mock
 ):
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1])
@@ -113,7 +113,7 @@ def test_should_instantiate_dask_client(
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
 def test_should_not_run_if_no_stages_are_provided(read_mock):
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline")
@@ -141,8 +141,8 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     delayed_mock,
     yaml_mock,
 ):
-    file_obj = Mock("file_obj")
-    file_obj.write = Mock("readlines")
+    file_obj = Mock(name="file_obj")
+    file_obj.write = Mock(name="readlines")
     enter_mock = MagicMock()
     enter_mock.__enter__.return_value = file_obj
     open_mock.return_value = enter_mock
@@ -151,11 +151,11 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
         "pipeline": {"stage1": True, "stage2": False, "stage3": True}
     }
 
-    delayed_mock_output = Mock("delayed")
-    delayed_mock_output.compute = Mock("compute", return_value="output")
+    delayed_mock_output = Mock(name="delayed")
+    delayed_mock_output.compute = Mock(name="compute", return_value="output")
 
-    delayed_mock_call_1 = Mock("delay1", return_value="DELAYED_1")
-    delayed_mock_call_2 = Mock("delay3", return_value=delayed_mock_output)
+    delayed_mock_call_1 = Mock(name="delay1", return_value="DELAYED_1")
+    delayed_mock_call_2 = Mock(name="delay3", return_value=delayed_mock_output)
     delayed_mock.side_effect = [delayed_mock_call_1, delayed_mock_call_2]
     stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
@@ -193,8 +193,8 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     delayed_mock,
     yaml_mock,
 ):
-    file_obj = Mock("file_obj")
-    file_obj.write = Mock("readlines")
+    file_obj = Mock(name="file_obj")
+    file_obj.write = Mock(name="readlines")
     enter_mock = MagicMock()
     enter_mock.__enter__.return_value = file_obj
     open_mock.return_value = enter_mock
@@ -203,19 +203,19 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
         "pipeline": {"stage1": True, "stage2": True, "stage3": False}
     }
 
-    delayed_mock_output = Mock("delayed")
-    delayed_mock_output.compute = Mock("compute", return_value="output")
+    delayed_mock_output = Mock(name="delayed")
+    delayed_mock_output.compute = Mock(name="compute", return_value="output")
 
-    delayed_mock_call_1 = Mock("delay1", return_value="DELAYED_1")
-    delayed_mock_call_2 = Mock("delay3", return_value=delayed_mock_output)
+    delayed_mock_call_1 = Mock(name="delay1", return_value="DELAYED_1")
+    delayed_mock_call_2 = Mock(name="delay3", return_value=delayed_mock_output)
     delayed_mock.side_effect = [delayed_mock_call_1, delayed_mock_call_2]
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
-    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
-    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
@@ -247,8 +247,8 @@ def test_should_run_pass_configuration_params_for_stages(
     delayed_mock,
     yaml_mock,
 ):
-    file_obj = Mock("file_obj")
-    file_obj.write = Mock("readlines")
+    file_obj = Mock(name="file_obj")
+    file_obj.write = Mock(name="readlines")
     enter_mock = MagicMock()
     enter_mock.__enter__.return_value = file_obj
     open_mock.return_value = enter_mock
@@ -262,22 +262,22 @@ def test_should_run_pass_configuration_params_for_stages(
         },
     }
 
-    delayed_mock_call_1 = Mock("delay1", return_value="DELAYED_1")
-    delayed_mock_call_2 = Mock("delay2", return_value="DELAYED_2")
-    delayed_mock_call_3 = Mock("delay3", return_value="delayed_call")
+    delayed_mock_call_1 = Mock(name="delay1", return_value="DELAYED_1")
+    delayed_mock_call_2 = Mock(name="delay2", return_value="DELAYED_2")
+    delayed_mock_call_3 = Mock(name="delay3", return_value="delayed_call")
 
     delayed_mock.side_effect = [
         delayed_mock_call_1,
         delayed_mock_call_2,
         delayed_mock_call_3,
     ]
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
-    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
-    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
@@ -311,13 +311,13 @@ def test_should_run_pass_configuration_params_for_stages(
 def test_should_raise_exception_if_wrong_stage_is_provided(
     write_mock, create_output_mock, read_mock, delayed_mock
 ):
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
-    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
-    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
@@ -327,15 +327,15 @@ def test_should_raise_exception_if_wrong_stage_is_provided(
 
 
 def test_should_return_pipeline_defualt_configuration():
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.config = {"stage1": "stage1_config"}
 
-    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.config = {"stage2": "stage2_config"}
 
-    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.config = {"stage3": "stage3_config"}
 
