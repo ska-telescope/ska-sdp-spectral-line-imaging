@@ -20,11 +20,13 @@ def test_should_be_able_to_distribute_predict(
 
     pipeline_data = {"input_data": ps, "output": model}
 
-    predict_stage(pipeline_data)
+    predict_stage(pipeline_data, epsilon=1e-4, cell_size=10.0)
 
     map_block_mock.assert_called_once_with(
         predict_mock,
         ps,
         template="CHUNKED_DATA",
-        kwargs=dict(model_image=model),
+        kwargs=dict(
+            model_image=model, epsilon=1e-4, cell_size=4.84813681109536e-05
+        ),
     )

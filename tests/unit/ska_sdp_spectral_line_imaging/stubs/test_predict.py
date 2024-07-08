@@ -64,8 +64,9 @@ def test_should_able_to_apply_prediction_on_all_chan(xarray_mock):
     ps.time.size = 10
     ps.baseline_id.size = 10
     model = Mock(name="model")
+    model.values = "MOCK_MODEL_DATA"
 
-    predict(ps, model)
+    predict(ps, model, epsilon=1e-4, cell_size=0.01)
 
     xarray_mock.apply_ufunc.assert_called_once_with(
         predict_ducc,
@@ -82,9 +83,11 @@ def test_should_able_to_apply_prediction_on_all_chan(xarray_mock):
         output_core_dims=[["time", "baseline_id"]],
         vectorize=True,
         kwargs=dict(
-            model_image=model,
+            model_image="MOCK_MODEL_DATA",
             nchan=1,
             ntime=10,
             nbaseline=10,
+            epsilon=1e-4,
+            cell_size=0.01,
         ),
     )

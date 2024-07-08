@@ -36,7 +36,10 @@ def predict_ducc(
     return model
 
 
-def predict(ps, model_image):
+def predict(ps, model_image, **kwargs):
+    cell_size = kwargs["cell_size"]
+    epsilon = kwargs["epsilon"]
+
     model_vec = xr.apply_ufunc(
         predict_ducc,
         ps.WEIGHT,
@@ -52,10 +55,12 @@ def predict(ps, model_image):
         output_core_dims=[["time", "baseline_id"]],
         vectorize=True,
         kwargs=dict(
-            model_image=model_image,
+            model_image=model_image.values,
             nchan=1,
             ntime=ps.time.size,
             nbaseline=ps.baseline_id.size,
+            cell_size=cell_size,
+            epsilon=epsilon,
         ),
     )
 
