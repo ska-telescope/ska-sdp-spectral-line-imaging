@@ -29,7 +29,6 @@ def test_should_extend_configurable_arguments_with_actual_values():
 
 
 def test_should_raise_exception_if_mandatory_first_argument_is_missing():
-
     configuration = Configuration()
     configuration_with_args = Configuration(
         stage_arguments=ConfigParam("number", 0)

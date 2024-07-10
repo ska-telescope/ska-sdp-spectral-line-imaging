@@ -11,11 +11,11 @@ def test_should_run_predict_stage(result_msv4):
         dims=["ra", "dec"],
     )
 
-    pipeline_data = {"input_data": result_msv4, "output": model}
+    pipeline_data = {"output": {"ps": result_msv4, "model_image": model}}
 
-    vis = predict_stage(pipeline_data, epsilon=1e-4, cell_size=15.0)
+    stage_result = predict_stage(pipeline_data, epsilon=1e-4, cell_size=15.0)
 
-    assert vis.shape == (8, 1, 8, 21)
+    assert stage_result["model_vis"].shape == (8, 1, 8, 21)
 
 
 def test_should_run_dask_distributed(result_msv4):
@@ -28,10 +28,12 @@ def test_should_run_dask_distributed(result_msv4):
     )
 
     pipeline_data = {
-        "input_data": result_msv4.chunk(dict(frequency=2)),
-        "output": model,
+        "output": {
+            "ps": result_msv4.chunk(dict(frequency=2)),
+            "model_image": model,
+        }
     }
 
-    vis = predict_stage(pipeline_data, epsilon=1e-4, cell_size=15.0)
+    stage_result = predict_stage(pipeline_data, epsilon=1e-4, cell_size=15.0)
 
-    assert vis.shape == (8, 1, 8, 21)
+    assert stage_result["model_vis"].shape == (8, 1, 8, 21)

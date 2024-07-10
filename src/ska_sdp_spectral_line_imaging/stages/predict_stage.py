@@ -21,8 +21,8 @@ from ..stubs.predict import predict
     ),
 )
 def predict_stage(pipeline_data, epsilon=None, cell_size=None):
-    ps = pipeline_data["input_data"]
-    model_image = pipeline_data["output"]
+    ps = pipeline_data["output"]["ps"]
+    model_image = pipeline_data["output"]["model_image"]
 
     template_core_dims = ["frequency", "polarization", "time", "baseline_id"]
     template_chunk_sizes = {
@@ -42,13 +42,16 @@ def predict_stage(pipeline_data, epsilon=None, cell_size=None):
 
     cell_size_radian = (cell_size * au.arcsecond).to(au.rad).value
 
-    return xr.map_blocks(
-        predict,
-        ps,
-        template=output_xr,
-        kwargs=dict(
-            model_image=model_image,
-            epsilon=epsilon,
-            cell_size=cell_size_radian,
+    return {
+        "ps": ps,
+        "model_vis": xr.map_blocks(
+            predict,
+            ps,
+            template=output_xr,
+            kwargs=dict(
+                model_image=model_image,
+                epsilon=epsilon,
+                cell_size=cell_size_radian,
+            ),
         ),
-    )
+    }

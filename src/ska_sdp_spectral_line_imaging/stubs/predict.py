@@ -29,6 +29,7 @@ def predict_ducc(
         0,
         0,
         epsilon,
+        nthreads=1,
     )
 
     model = model.reshape(ntime, nbaseline)
@@ -46,16 +47,17 @@ def predict(ps, model_image, **kwargs):
         ps.FLAG,
         ps.UVW,
         ps.frequency,
+        model_image,
         input_core_dims=[
             ["time", "baseline_id"],
             ["time", "baseline_id"],
             ["time", "baseline_id", "uvw_label"],
             [],
+            ["ra", "dec"],
         ],
         output_core_dims=[["time", "baseline_id"]],
         vectorize=True,
         kwargs=dict(
-            model_image=model_image.values,
             nchan=1,
             ntime=ps.time.size,
             nbaseline=ps.baseline_id.size,

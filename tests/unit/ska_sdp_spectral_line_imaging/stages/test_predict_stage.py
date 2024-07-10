@@ -9,7 +9,6 @@ from ska_sdp_spectral_line_imaging.stages.predict_stage import predict_stage
 def test_should_be_able_to_distribute_predict(
     map_block_mock, dataarray_mock, predict_mock
 ):
-
     dataarray_mock.return_value = dataarray_mock
     dataarray_mock.chunk.return_value = "CHUNKED_DATA"
     mock_chunks = dict(frequency=32, polarization=1, time=1, baseline_id=1)
@@ -18,7 +17,7 @@ def test_should_be_able_to_distribute_predict(
     ps.sizes = mock_chunks
     model = Mock(name="model")
 
-    pipeline_data = {"input_data": ps, "output": model}
+    pipeline_data = {"output": {"ps": ps, "model_image": model}}
 
     predict_stage(pipeline_data, epsilon=1e-4, cell_size=10.0)
 

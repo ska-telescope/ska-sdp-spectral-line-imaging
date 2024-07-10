@@ -33,7 +33,6 @@ def test_should_return_default_config_dictionary():
 
 
 def test_should_raise_exception_if_vis_is_missing_in_args():
-
     with pytest.raises(VisibilityMissingException):
 
         @ConfigurableStage("temp_stage")

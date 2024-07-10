@@ -51,6 +51,7 @@ def test_should_be_able_to_grid_data(wgridder_mock):
         0,
         0,
         epsilon,
+        nthreads=1,
     )
     ducc_return_mock.reshape.assert_called_once_with(10, 6)
 
@@ -64,7 +65,6 @@ def test_should_able_to_apply_prediction_on_all_chan(xarray_mock):
     ps.time.size = 10
     ps.baseline_id.size = 10
     model = Mock(name="model")
-    model.values = "MOCK_MODEL_DATA"
 
     predict(ps, model, epsilon=1e-4, cell_size=0.01)
 
@@ -74,16 +74,17 @@ def test_should_able_to_apply_prediction_on_all_chan(xarray_mock):
         ps.FLAG,
         ps.UVW,
         ps.frequency,
+        model,
         input_core_dims=[
             ["time", "baseline_id"],
             ["time", "baseline_id"],
             ["time", "baseline_id", "uvw_label"],
             [],
+            ["ra", "dec"],
         ],
         output_core_dims=[["time", "baseline_id"]],
         vectorize=True,
         kwargs=dict(
-            model_image="MOCK_MODEL_DATA",
             nchan=1,
             ntime=10,
             nbaseline=10,
