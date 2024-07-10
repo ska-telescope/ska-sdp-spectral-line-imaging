@@ -15,4 +15,4 @@ These are all the packages, functions and scripts that form part of the project.
    installation
    pipeline_usage
    launching_dask
-   modules
+   ska_sdp_spectral_line_imaging/modules
