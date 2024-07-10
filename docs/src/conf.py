@@ -109,10 +109,14 @@ html_theme = "sphinx_rtd_theme"
 # documentation.
 #
 html_theme_options = {
-    #'logo_only' : False,
-    #'logo_only' : 'ska_logo.jpg',
-    #'logo' : 'ska_logo.jpg',
+    'logo_only' : True,
+    # 'logo_only' : 'ska_logo.jpg',
+    # 'logo' : 'ska_logo.jpg',
 }
+
+html_favicon = "_static/img/favicon.ico"
+html_logo = "_static/img/logo.jpg"
+
 
 html_context = {
     "favicon": "img/favicon.ico",

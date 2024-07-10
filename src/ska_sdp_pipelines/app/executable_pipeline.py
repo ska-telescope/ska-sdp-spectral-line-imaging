@@ -12,18 +12,25 @@ from .constants import MAIN_ENTRY_POINT, SHEBANG_HEADER
 class ExecutablePipeline:
     """
     Creates an executable instance from the pipeline definition
-    Attributes:
-        _script_path(str): Path to the pipeline definition
-        installable_pipeline (module): The pipeline definition
-                                       loaded as a module
-        executable_content (str): The content of the executable file
+
+    Attributes
+    ----------
+        _script_path: str
+            Path to the pipeline definition
+        installable_pipeline: module
+            The pipeline definition loaded as a module
+        executable_content: str
+            The content of the executable file
     """
 
     def __init__(self, script_path):
         """
         Initialise a executable pipeline object
-        Parameter:
-            script_path(str): Path to the pipeline definition
+
+        Parameters
+        ---------
+            script_path: str
+                Path to the pipeline definition
         """
         self._script_path = script_path
         self.installable_pipeline = None
@@ -33,7 +40,10 @@ class ExecutablePipeline:
         """
         Validates if the pipeline definition is syntactically correct python
         code.
-        Raises: Compilation error based on python interpretor.
+
+        Raises
+        ------
+            Compilation error based on python interpretor.
         """
         if not os.path.exists(self._script_path):
             raise FileNotFoundError(self._script_path)
@@ -87,8 +97,10 @@ class ExecutablePipeline:
 
     def __executable_script_path(self):
         """
-        Returns the absolute path of the executable.
-        The path is derived from sys.executable
+        Returns
+        ------
+            the absolute path of the executable.
+            The path is derived from sys.executable
         """
         executable_root = Path(sys.executable).parent.absolute()
         pipeline = Pipeline.get_instance()
@@ -97,8 +109,11 @@ class ExecutablePipeline:
     def __write_config(self, config_root):
         """
         Writes the yaml configuration to the config_root path.
-        Parameters:
-            config_root (str): Root path for configurations
+
+        Parameters
+        ----------
+            config_root: str
+                Root path for configurations
         """
 
         if not os.path.exists(config_root):

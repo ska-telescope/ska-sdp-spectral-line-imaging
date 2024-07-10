@@ -16,9 +16,13 @@ def install(
 ):
     """
     Pipeline framework command to install pipelines
-    Parameter:
-       pipeline_path: Path to the pipeline to be installed
-       config_install_path: Path to place the default config.
+
+    Parameters
+    ----------
+       pipeline_path: str
+           Path to the pipeline to be installed
+       config_install_path: str
+           Path to place the default config.
     """
 
     executable_pipeline = ExecutablePipeline(pipeline_path)
@@ -31,8 +35,13 @@ def install(
 def uninstall(pipeline_path):
     """
     Pipeline framework command to uninstall pipelines
-    Parameter:
-       pipeline_path: Path to the pipeline to be uninstalled
+
+    Parameters
+    ---------
+       pipeline_path: str
+            Path to the pipeline to be uninstalled
+       pipeline_aefeafpath: strAFA
+            Path to the pipeliAFAWSne to be uninstalled
     """
     executable_pipeline = ExecutablePipeline(pipeline_path)
     executable_pipeline.validate_pipeline()

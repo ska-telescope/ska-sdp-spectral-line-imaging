@@ -3,20 +3,26 @@ from .configuration import Configuration
 
 class ConfigurableStage:
     """
-    Parameterized ecorator to define a configurable stage
+    Parameterized decorator to define a configurable stage
 
-    Attributes:
-       _name (str): The name of the stage.
-       _stage_configuration (Configuration): Configuration parameters for
-                                            the stage
+    Attributes
+    ----------
+       _name: str
+            The name of the stage.
+       _stage_configuration: Configuration
+            Configuration parameters for the stage
     """
 
     def __init__(self, name, configuration=None):
         """
         Initialise the ConfigurableStage class
-        Parameters:
-            name (str): Name of the stage
-            configuration (Configuration) : Configuration for the stage
+
+        Parameters
+        ----------
+            name: str
+                Name of the stage
+            configuration: Configuration
+                Configuration for the stage
         """
 
         self._stage_configurations = (
@@ -27,9 +33,14 @@ class ConfigurableStage:
     def __call__(self, stage_definition):
         """
         Provides a callable object for the next level of function wrapping
-        Parameters:
-            stage_definition (function): The function being decorated
-        Returns:
+
+        Parameters
+        ----------
+            stage_definition: function
+                The function being decorated
+
+        Returns
+        -------
             Wrapped stage_definition
         """
 

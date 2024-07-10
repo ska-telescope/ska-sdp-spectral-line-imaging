@@ -3,50 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-
-.. HOME SECTION ==================================================
-
-.. Hidden toctree to manage the sidebar navigation.
-
-.. toctree::
-  :maxdepth: 2
-  :caption: Home
-  :hidden:
-
-
-.. README =============================================================
-
-.. This project most likely has it's own README. We include it here.
+SKA SDP Spectral Line Imaging Pipeline
+========================================
+This repository consists of the spectral line imaging pipeline.
+These are all the packages, functions and scripts that form part of the project.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Readme
+   :caption: Contents
 
-   README.md
-
-.. CHANGELOG =============================================================   
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Releases
-
-   CHANGELOG.rst   
-
-.. COMMUNITY SECTION ==================================================
-
-..
-
-.. toctree::
-  :maxdepth: 2
-  :caption: ska_sdp_spectral_line_imaging
-  :hidden:
-
-  ska_sdp_spectral_line_imaging/guide
-
-
-SKA SDP Spectral Line Imaging Pipeline
-======================================
-
-These are all the packages, functions and scripts that form part of the project.
-
-- :doc:`ska_sdp_spectral_line_imaging/guide`
+   installation
+   pipeline_usage
+   launching_dask
+   modules

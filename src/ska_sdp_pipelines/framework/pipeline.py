@@ -12,9 +12,13 @@ class Pipeline:
     """
     Pipeline class allows for defining a pipeline as an ordered list of
     stages, and takes care of executing those stages.
-    Attributes:
-      name (str): Name of the pipeline
-      _stage (Stage): Stage to be executed
+
+    Attributes
+    ----------
+      name: str
+          Name of the pipeline
+      _stage: Stage
+          Stage to be executed
     """
 
     __instance = None
@@ -22,9 +26,13 @@ class Pipeline:
     def __init__(self, name, stages=None):
         """
         Initialise the pipeline object
-        Parameters:
-          name (str) : Name of the pipeline
-          stage (Stage) : Stage to be executed
+
+        Parameters
+        ----------
+          name: str
+              Name of the pipeline
+          stage: Stage
+              Stage to be executed
         """
         self.name = name
         self._stages = [] if stages is None else stages
@@ -35,12 +43,20 @@ class Pipeline:
     ):
         """
         Executes individual stages with the pipeline data
-        Parameter:
-            selected_stages([functions]): Wrapped stage functions
-            vis(xradio.ps): Input visibilities
-            config(ConfigManager): External provided configuration
-            dask_scheduler(str): Url to the dask scheduler
-        Returns:
+
+        Parameters
+        ---------
+            selected_stages: [functions]
+                Wrapped stage functions
+            vis: xradio.ps
+                Input visibilities
+            config: ConfigManager
+                External provided configuration
+            dask_scheduler: str
+                Url to the dask scheduler
+
+        Returns
+        -------
             Dask delayed objects
         """
         if dask_scheduler:
@@ -66,7 +82,9 @@ class Pipeline:
     def config(self):
         """
         Pipeline configuration dictionary
-        Returns:
+
+        Returns
+        -------
             Dictionary containing the stage states and default parameters
         """
         stages_config = reduce(
@@ -82,10 +100,15 @@ class Pipeline:
     ):
         """
         Executes the pipeline
-        Parameters:
-          infile_path (str): Path to input file
-          stages([str]): Names of the stages to be executed
-          dask_scheduler(str): Url of the dask scheduler
+
+        Parameters
+        ----------
+          infile_path : str
+             Path to input file
+          stages: str
+             Names of the stages to be executed
+          dask_scheduler: str
+             Url of the dask scheduler
         """
 
         vis = read_dataset(infile_path)
