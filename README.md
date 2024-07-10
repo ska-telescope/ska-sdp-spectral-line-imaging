@@ -59,6 +59,11 @@ make python-lint
 ```
 make python-test
 ```
+**Updating Readthedocs**
+
+```
+make -C docs/ create-docs
+```
 
 **GPG signing the commits**
 

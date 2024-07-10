@@ -25,6 +25,5 @@ create-doc:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 
 %: Makefile
-	sphinx-apidoc -o "$(SPHINXSRC)" "$(DOCSOURCE)" -H Modules
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
