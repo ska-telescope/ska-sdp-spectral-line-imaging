@@ -1,5 +1,4 @@
-SKA SDP Spectral Line Imaging change-log
---
+# CHANGELOG
 
 ## v0.0.1
 
