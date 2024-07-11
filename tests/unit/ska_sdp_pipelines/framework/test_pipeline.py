@@ -17,8 +17,8 @@ from ska_sdp_pipelines.framework.pipeline import Pipeline
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
 @mock.patch(
-    "ska_sdp_pipelines.framework.pipeline.create_output_name",
-    return_value="output_name",
+    "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+    return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
 def test_should_run_the_pipeline(
@@ -42,16 +42,24 @@ def test_should_run_the_pipeline(
     delayed_mock.assert_has_calls([mock.call(stage1), mock.call(stage2)])
 
     delayed_mock_call_1.assert_called_once_with(
-        {"input_data": "dataset", "output": None}
+        {
+            "input_data": "dataset",
+            "output": None,
+            "output_dir": "./output/timestamp",
+        }
     )
     delayed_mock_call_2.assert_called_once_with(
-        {"input_data": "dataset", "output": "DELAYED_1"}
+        {
+            "input_data": "dataset",
+            "output": "DELAYED_1",
+            "output_dir": "./output/timestamp",
+        }
     )
 
     compute_mock.assert_called_once_with("DELAYED_1", delayed_mock_output)
 
-    create_output_mock.assert_called_once_with("infile_path", "test_pipeline")
-    write_mock.assert_called_once_with("output", "output_name")
+    create_output_mock.assert_called_once_with("./output", "test_pipeline")
+    write_mock.assert_called_once_with("output", "./output/timestamp")
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
@@ -59,8 +67,8 @@ def test_should_run_the_pipeline(
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
 @mock.patch(
-    "ska_sdp_pipelines.framework.pipeline.create_output_name",
-    return_value="output_name",
+    "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+    return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
 def test_should_run_the_pipeline_with_selected_stages(
@@ -93,8 +101,8 @@ def test_should_run_the_pipeline_with_selected_stages(
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
 @mock.patch(
-    "ska_sdp_pipelines.framework.pipeline.create_output_name",
-    return_value="output_name",
+    "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+    return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
 def test_should_instantiate_dask_client(
@@ -112,7 +120,13 @@ def test_should_instantiate_dask_client(
 @mock.patch(
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
-def test_should_not_run_if_no_stages_are_provided(read_mock):
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+    return_value="./output/timestamp",
+)
+def test_should_not_run_if_no_stages_are_provided(
+    create_output_mock, read_mock
+):
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
@@ -128,8 +142,8 @@ def test_should_not_run_if_no_stages_are_provided(read_mock):
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
 @mock.patch(
-    "ska_sdp_pipelines.framework.pipeline.create_output_name",
-    return_value="output_name",
+    "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+    return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
 @mock.patch("builtins.open")
@@ -180,8 +194,8 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
 @mock.patch(
-    "ska_sdp_pipelines.framework.pipeline.create_output_name",
-    return_value="output_name",
+    "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+    return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
 @mock.patch("builtins.open")
@@ -234,8 +248,8 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
 @mock.patch(
-    "ska_sdp_pipelines.framework.pipeline.create_output_name",
-    return_value="output_name",
+    "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+    return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
 @mock.patch("builtins.open")
@@ -286,15 +300,27 @@ def test_should_run_pass_configuration_params_for_stages(
     open_mock.assert_called_once_with("/path/to/config", "r")
 
     delayed_mock_call_1.assert_called_once_with(
-        {"input_data": "dataset", "output": None},
+        {
+            "input_data": "dataset",
+            "output": None,
+            "output_dir": "./output/timestamp",
+        },
         stage1_parameter_1=0,
     )
     delayed_mock_call_2.assert_called_once_with(
-        {"input_data": "dataset", "output": "DELAYED_1"},
+        {
+            "input_data": "dataset",
+            "output": "DELAYED_1",
+            "output_dir": "./output/timestamp",
+        },
         stage2_parameter_1=0,
     )
     delayed_mock_call_3.assert_called_once_with(
-        {"input_data": "dataset", "output": "DELAYED_2"},
+        {
+            "input_data": "dataset",
+            "output": "DELAYED_2",
+            "output_dir": "./output/timestamp",
+        },
         stage3_parameter_1=0,
     )
 
@@ -304,8 +330,8 @@ def test_should_run_pass_configuration_params_for_stages(
     "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
 )
 @mock.patch(
-    "ska_sdp_pipelines.framework.pipeline.create_output_name",
-    return_value="output_name",
+    "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+    return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
 def test_should_raise_exception_if_wrong_stage_is_provided(

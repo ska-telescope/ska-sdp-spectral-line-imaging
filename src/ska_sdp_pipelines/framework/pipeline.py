@@ -4,7 +4,7 @@ import dask
 from dask.distributed import Client
 
 from .exceptions import NoStageToExecuteException, StageNotFoundException
-from .io_utils import create_output_name, read_dataset, write_dataset
+from .io_utils import create_output_dir, read_dataset, write_dataset
 from .model.config_manager import ConfigManager
 
 
@@ -39,7 +39,7 @@ class Pipeline:
         Pipeline.__instance = self
 
     def __execute_selected_stages(
-        self, selected_stages, vis, config, dask_scheduler=None
+        self, selected_stages, vis, config, output_dir, dask_scheduler=None
     ):
         """
         Executes individual stages with the pipeline data
@@ -52,6 +52,8 @@ class Pipeline:
                 Input visibilities
             config: ConfigManager
                 External provided configuration
+            output_dir: str
+                Path to output directory
             dask_scheduler: str
                 Url to the dask scheduler
 
@@ -70,6 +72,7 @@ class Pipeline:
             )
 
             pipeline_data = dict()
+            pipeline_data["output_dir"] = output_dir
             pipeline_data["input_data"] = vis
             pipeline_data["output"] = output
 
@@ -96,7 +99,12 @@ class Pipeline:
         return {"pipeline": stage_states, "parameters": stages_config}
 
     def __call__(
-        self, infile_path, stages=None, dask_scheduler=None, config_path=None
+        self,
+        infile_path,
+        stages=None,
+        dask_scheduler=None,
+        config_path=None,
+        output_path=None,
     ):
         """
         Executes the pipeline
@@ -109,6 +117,8 @@ class Pipeline:
              Names of the stages to be executed
           dask_scheduler: str
              Url of the dask scheduler
+          output_path: str
+             Path to root output directory
         """
 
         vis = read_dataset(infile_path)
@@ -116,6 +126,10 @@ class Pipeline:
         stage_names = [stage.name for stage in self._stages]
         selected_satges = self._stages
         stages_to_run = None
+
+        if output_path is None:
+            output_path = "./output"
+        output_dir = create_output_dir(output_path, self.name)
 
         if config_path is not None:
             ConfigManager.init(config_path)
@@ -144,12 +158,15 @@ class Pipeline:
             raise NoStageToExecuteException("Selected stages empty")
 
         delayed_output = self.__execute_selected_stages(
-            selected_satges, vis, config, dask_scheduler
+            selected_satges,
+            vis,
+            config,
+            output_dir,
+            dask_scheduler,
         )
 
         output_pipeline_data = dask.compute(*delayed_output)
-        outfile = create_output_name(infile_path, self.name)
-        write_dataset(output_pipeline_data, outfile)
+        write_dataset(output_pipeline_data, output_dir)
 
     @classmethod
     def get_instance(cls):

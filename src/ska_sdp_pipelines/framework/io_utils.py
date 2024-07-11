@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from pathlib import Path
 
 from xradio.vis.read_processing_set import read_processing_set
 
@@ -14,28 +13,27 @@ def write_dataset(output, outfile: str):
     pass
 
 
-def create_output_name(src_file, prefix_name, create=False):
+def create_output_dir(output_path, prefix_name):
     """
-    Creates the output filename and the relative output directory
+    Creates the root output directory if it doesn't exist already and a
+    timestamped folder inside it to store input config and output generated.
 
     Parameters
     ----------
-        src_file: str
-            Creates output filename relative to "src_file"
+        output_path: str
+            The root output folder where the timestamped folders are created
         prefix_name: str
             Common prefix to be added to output filename
 
     Returns
     -------
         (str):
-            Output filename
+            Timestamped folder path
     """
-    src_file_path = Path(src_file)
-    parent_path = src_file_path.parent.absolute()
-    output_path = f"{parent_path}/output"
-    timestampt = datetime.now().strftime("%Y%m%d%H%M%S")
-    outfile = f"{output_path}/{prefix_name}_out_{timestampt}"
-    if create:
+    if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    return outfile
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    timestamped_folder = f"{output_path}/{prefix_name}_out_{timestamp}"
+    os.makedirs(timestamped_folder)
+    return timestamped_folder

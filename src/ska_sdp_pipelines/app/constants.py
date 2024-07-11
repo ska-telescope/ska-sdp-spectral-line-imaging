@@ -20,6 +20,13 @@ parser.add_argument(
   help='Path to the pipeline configuration yaml file'
 )
 parser.add_argument(
+  '--output',
+  dest='output_path',
+  type=str,
+  nargs='?',
+  help='Path to store pipeline outputs'
+)
+parser.add_argument(
   '--stages',
   dest='stages',
   action='append',
@@ -46,7 +53,8 @@ if __name__ == "__main__":
       args.input,
       stages,
       args.dask_scheduler,
-      args.config_path
+      args.config_path,
+      args.output_path
     )
   )
 """
