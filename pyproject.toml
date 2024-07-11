@@ -8,15 +8,6 @@ packages = [
     { include = "ska_sdp_spectral_line_imaging", from = "src" }
 ]
 
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "skao"
-url = "https://artefact.skao.int/repository/pypi-internal/simple"
-priority = "primary"
-
 [tool.poetry.dependencies]
 python = "^3.10"
 nbmake = "^1.4.1"
@@ -56,6 +47,11 @@ mock = "^5.1.0"
 [tool.poetry.group.docs.dependencies]
 recommonmark = "^0.7.1"
 sphinx-rtd-theme = "^2.0.0"
+
+[[tool.poetry.source]]
+name = "skao"
+url = "https://artefact.skao.int/repository/pypi-internal/simple"
+priority = "supplemental"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
