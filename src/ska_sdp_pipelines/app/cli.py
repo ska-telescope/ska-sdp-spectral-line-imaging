@@ -40,8 +40,6 @@ def uninstall(pipeline_path):
     ---------
        pipeline_path: str
             Path to the pipeline to be uninstalled
-       pipeline_aefeafpath: strAFA
-            Path to the pipeliAFAWSne to be uninstalled
     """
     executable_pipeline = ExecutablePipeline(pipeline_path)
     executable_pipeline.validate_pipeline()
