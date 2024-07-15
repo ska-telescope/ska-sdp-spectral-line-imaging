@@ -4358,6 +4358,22 @@ url = "https://artefact.skao.int/repository/pypi-internal/simple"
 reference = "skao"
 
 [[package]]
+name = "ska-ser-logging"
+version = "0.4.3"
+description = "Square Kilometre Array logging configuration library"
+optional = false
+python-versions = ">=3.10,<4.0"
+files = [
+    {file = "ska_ser_logging-0.4.3-py3-none-any.whl", hash = "sha256:06a337e4e726f36d24b86087ec106fbb9e65be4566fe328eb56f56f2310322f8"},
+    {file = "ska_ser_logging-0.4.3.tar.gz", hash = "sha256:a94aa51db54ad2a88af4c320c850c766c1733d9f8534381dd67f993e8e4f5d11"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://artefact.skao.int/repository/pypi-internal/simple"
+reference = "skao"
+
+[[package]]
 name = "ska-telmodel"
 version = "1.18.1"
 description = "SKA telescope model library"
@@ -5243,4 +5259,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ee4893d81a8eff12c1bd865ea1b909aeaa691301a89306db8a922f3fc3b608db"
+content-hash = "1c58b52d4abe6081e8611cc2e95640abc38155896b84cfd00fbc4ee440ad51e1"

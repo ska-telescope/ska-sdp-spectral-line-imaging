@@ -35,6 +35,7 @@ xarray = "^2024.6.0"
 ducc0 = "^0.34.0"
 
 ska-sdp-datamodels = "^0.3.0"
+ska-ser-logging = "^0.4.3"
 [tool.poetry.group.dev.dependencies]
 docutils = "<=0.19"
 markupsafe = "^2.1.3"

@@ -39,13 +39,18 @@ def test_should_run_the_pipeline(
 
     pipeline("infile_path", [])
     read_mock.assert_called_once_with("infile_path")
-    delayed_mock.assert_has_calls([mock.call(stage1), mock.call(stage2)])
+    delayed_mock.assert_has_calls(
+        [
+            mock.call(pipeline._Pipeline__with_log),
+            mock.call(pipeline._Pipeline__with_log),
+        ]
+    )
 
     delayed_mock_call_1.assert_called_once_with(
-        {"input_data": "dataset", "output": None}
+        stage1, {"input_data": "dataset", "output": None}
     )
     delayed_mock_call_2.assert_called_once_with(
-        {"input_data": "dataset", "output": "DELAYED_1"}
+        stage2, {"input_data": "dataset", "output": "DELAYED_1"}
     )
 
     compute_mock.assert_called_once_with("DELAYED_1", delayed_mock_output)
@@ -85,7 +90,13 @@ def test_should_run_the_pipeline_with_selected_stages(
 
     pipeline("infile_path", ["stage1", "stage3"])
     read_mock.assert_called_once_with("infile_path")
-    delayed_mock.assert_has_calls([mock.call(stage1), mock.call(stage3)])
+
+    delayed_mock_call_1.assert_called_once_with(
+        stage1, {"input_data": "dataset", "output": None}
+    )
+    delayed_mock_call_2.assert_called_once_with(
+        stage3, {"input_data": "dataset", "output": "DELAYED_1"}
+    )
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.Client")
@@ -171,7 +182,12 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     pipeline("infile_path", config_path="/path/to/config")
     open_mock.assert_called_once_with("/path/to/config", "r")
 
-    delayed_mock.assert_has_calls([mock.call(stage1), mock.call(stage3)])
+    delayed_mock_call_1.assert_called_once_with(
+        stage1, {"input_data": "dataset", "output": None}
+    )
+    delayed_mock_call_2.assert_called_once_with(
+        stage3, {"input_data": "dataset", "output": "DELAYED_1"}
+    )
 
 
 @mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
@@ -225,7 +241,12 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     )
     open_mock.assert_called_once_with("/path/to/config", "r")
 
-    delayed_mock.assert_has_calls([mock.call(stage1), mock.call(stage3)])
+    delayed_mock_call_1.assert_called_once_with(
+        stage1, {"input_data": "dataset", "output": None}
+    )
+    delayed_mock_call_2.assert_called_once_with(
+        stage3, {"input_data": "dataset", "output": "DELAYED_1"}
+    )
 
 
 @mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
@@ -286,14 +307,17 @@ def test_should_run_pass_configuration_params_for_stages(
     open_mock.assert_called_once_with("/path/to/config", "r")
 
     delayed_mock_call_1.assert_called_once_with(
+        stage1,
         {"input_data": "dataset", "output": None},
         stage1_parameter_1=0,
     )
     delayed_mock_call_2.assert_called_once_with(
+        stage2,
         {"input_data": "dataset", "output": "DELAYED_1"},
         stage2_parameter_1=0,
     )
     delayed_mock_call_3.assert_called_once_with(
+        stage3,
         {"input_data": "dataset", "output": "DELAYED_2"},
         stage3_parameter_1=0,
     )
