@@ -21,8 +21,14 @@ from ska_sdp_pipelines.framework.pipeline import Pipeline
     return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml")
 def test_should_run_the_pipeline(
-    write_mock, create_output_mock, read_mock, delayed_mock, compute_mock
+    write_yml_mock,
+    write_mock,
+    create_output_mock,
+    read_mock,
+    delayed_mock,
+    compute_mock,
 ):
     delayed_mock_output = Mock(name="delayed")
 
@@ -32,14 +38,24 @@ def test_should_run_the_pipeline(
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+    stage1.config = {"stage1": "stage1_config"}
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
+    stage2.config = {"stage2": "stage2_config"}
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2])
 
     pipeline("infile_path", [])
     read_mock.assert_called_once_with("infile_path")
     delayed_mock.assert_has_calls([mock.call(stage1), mock.call(stage2)])
+
+    expected_config = {
+        "pipeline": {"stage1": True, "stage2": True},
+        "parameters": {
+            "stage1": "stage1_config",
+            "stage2": "stage2_config",
+        },
+    }
 
     delayed_mock_call_1.assert_called_once_with(
         {
@@ -60,6 +76,9 @@ def test_should_run_the_pipeline(
 
     create_output_mock.assert_called_once_with("./output", "test_pipeline")
     write_mock.assert_called_once_with("output", "./output/timestamp")
+    write_yml_mock.assert_called_once_with(
+        "./output/timestamp/config.yml", expected_config
+    )
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
@@ -71,8 +90,9 @@ def test_should_run_the_pipeline(
     return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml")
 def test_should_run_the_pipeline_with_selected_stages(
-    write_mock, create_output_mock, read_mock, delayed_mock
+    write_yml_mock, write_mock, create_output_mock, read_mock, delayed_mock
 ):
     delayed_mock_output = Mock(name="delayed")
     delayed_mock_output.compute = Mock(name="compute", return_value="output")
@@ -83,11 +103,14 @@ def test_should_run_the_pipeline_with_selected_stages(
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+    stage1.config = {"stage1": "stage1_config"}
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
+    stage2.config = {"stage2": "stage2_config"}
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
+    stage3.config = {"stage3": "stage3_config"}
     stage3.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
@@ -105,12 +128,14 @@ def test_should_run_the_pipeline_with_selected_stages(
     return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml")
 def test_should_instantiate_dask_client(
-    write_mock, create_output_mock, read_mock, client_mock
+    write_yml_mock, write_mock, create_output_mock, read_mock, client_mock
 ):
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+    stage1.config = {"stage1": "stage1_config"}
     pipeline = Pipeline("test_pipeline", stages=[stage1])
     dask_scheduler_address = "some_ip"
     pipeline("infile_path", dask_scheduler=dask_scheduler_address)
@@ -124,12 +149,14 @@ def test_should_instantiate_dask_client(
     "ska_sdp_pipelines.framework.pipeline.create_output_dir",
     return_value="./output/timestamp",
 )
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml")
 def test_should_not_run_if_no_stages_are_provided(
-    create_output_mock, read_mock
+    write_yml_mock, create_output_mock, read_mock
 ):
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+
     pipeline = Pipeline("test_pipeline")
     dask_scheduler_address = "some_ip"
     with pytest.raises(NoStageToExecuteException):
@@ -146,21 +173,19 @@ def test_should_not_run_if_no_stages_are_provided(
     return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.shutil")
 @mock.patch("builtins.open")
 def test_should_run_the_pipeline_with_selected_stages_from_config(
     open_mock,
+    shutil_mock,
+    write_yml_mock,
     write_mock,
     create_output_mock,
     read_mock,
     delayed_mock,
     yaml_mock,
 ):
-    file_obj = Mock(name="file_obj")
-    file_obj.write = Mock(name="readlines")
-    enter_mock = MagicMock()
-    enter_mock.__enter__.return_value = file_obj
-    open_mock.return_value = enter_mock
-
     yaml_mock.safe_load.return_value = {
         "pipeline": {"stage1": True, "stage2": False, "stage3": True}
     }
@@ -174,16 +199,21 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+    stage1.config = {"stage1": "stage1_config"}
     stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
+    stage2.config = {"stage2": "stage2_config"}
     stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
+    stage3.config = {"stage3": "stage3_config"}
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
     pipeline("infile_path", config_path="/path/to/config")
-    open_mock.assert_called_once_with("/path/to/config", "r")
+    shutil_mock.copy.assert_called_once_with(
+        "/path/to/config", "./output/timestamp/config.yml"
+    )
 
     delayed_mock.assert_has_calls([mock.call(stage1), mock.call(stage3)])
 
@@ -199,7 +229,11 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
 @mock.patch("builtins.open")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.shutil")
 def test_should_run_the_pipeline_with_stages_from_cli_over_config(
+    shutil_mock,
+    write_yml_mock,
     open_mock,
     write_mock,
     create_output_mock,
@@ -226,12 +260,15 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+    stage1.config = {"stage1": "stage1_config"}
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
+    stage2.config = {"stage2": "stage2_config"}
     stage2.stage_config = Configuration()
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
+    stage3.config = {"stage3": "stage3_config"}
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
     pipeline(
@@ -252,9 +289,13 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.shutil")
 @mock.patch("builtins.open")
 def test_should_run_pass_configuration_params_for_stages(
     open_mock,
+    shutil_mock,
+    write_yml_mock,
     write_mock,
     create_output_mock,
     read_mock,
@@ -288,12 +329,15 @@ def test_should_run_pass_configuration_params_for_stages(
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+    stage1.config = {"stage1": "stage1_config"}
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
+    stage2.config = {"stage2": "stage2_config"}
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
+    stage3.config = {"stage3": "stage3_config"}
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
     pipeline("infile_path", config_path="/path/to/config")
@@ -334,18 +378,22 @@ def test_should_run_pass_configuration_params_for_stages(
     return_value="./output/timestamp",
 )
 @mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml")
 def test_should_raise_exception_if_wrong_stage_is_provided(
-    write_mock, create_output_mock, read_mock, delayed_mock
+    write_yml_mock, write_mock, create_output_mock, read_mock, delayed_mock
 ):
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+    stage1.config = {"stage1": "stage1_config"}
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
+    stage2.config = {"stage2": "stage2_config"}
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
+    stage3.config = {"stage3": "stage3_config"}
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
     with pytest.raises(StageNotFoundException):

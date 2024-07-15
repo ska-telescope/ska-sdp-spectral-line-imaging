@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import yaml
 from xradio.vis.read_processing_set import read_processing_set
 
 
@@ -37,3 +38,8 @@ def create_output_dir(output_path, prefix_name):
     timestamped_folder = f"{output_path}/{prefix_name}_out_{timestamp}"
     os.makedirs(timestamped_folder)
     return timestamped_folder
+
+
+def write_yml(output_path, config):
+    with open(output_path, "w") as conf_file:
+        yaml.dump(config, conf_file)

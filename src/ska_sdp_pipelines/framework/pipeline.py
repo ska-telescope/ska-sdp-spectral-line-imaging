@@ -1,10 +1,11 @@
+import shutil
 from functools import reduce
 
 import dask
 from dask.distributed import Client
 
 from .exceptions import NoStageToExecuteException, StageNotFoundException
-from .io_utils import create_output_dir, read_dataset, write_dataset
+from .io_utils import create_output_dir, read_dataset, write_dataset, write_yml
 from .model.config_manager import ConfigManager
 
 
@@ -135,6 +136,9 @@ class Pipeline:
             ConfigManager.init(config_path)
             config = ConfigManager.get_config()
             stages_to_run = config.stages_to_run
+            shutil.copy(config_path, f"{output_dir}/config.yml")
+        else:
+            write_yml(f"{output_dir}/config.yml", self.config)
 
         if stages:
             non_existent_stages = [

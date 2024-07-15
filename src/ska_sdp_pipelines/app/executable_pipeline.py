@@ -3,8 +3,7 @@ import os
 import sys
 from pathlib import Path
 
-import yaml
-
+from ..framework.io_utils import write_yml
 from ..framework.pipeline import Pipeline
 from .constants import MAIN_ENTRY_POINT, SHEBANG_HEADER
 
@@ -122,5 +121,4 @@ class ExecutablePipeline:
         pipeline = Pipeline.get_instance()
         config_path = f"{config_root}/{pipeline.name}.yaml"
 
-        with open(config_path, "w") as conf_file:
-            yaml.dump(pipeline.config, conf_file)
+        write_yml(config_path, pipeline.config)

@@ -1,8 +1,9 @@
-from mock import Mock, mock
+from mock import MagicMock, Mock, mock
 
 from ska_sdp_pipelines.framework.io_utils import (
     create_output_dir,
     read_dataset,
+    write_yml,
 )
 
 
@@ -59,3 +60,18 @@ def test_should_read_given_dataset(read_processing_set_mock):
     read_processing_set_mock.assert_called_once_with(ps_store=infile)
 
     assert ps == "PROCESSING_SET"
+
+
+@mock.patch("ska_sdp_pipelines.framework.io_utils.yaml")
+@mock.patch("builtins.open")
+def test_should_write_yaml_to_the_given_path(open_mock, yaml_mock):
+    output_path = "./output.yml"
+    config = {"key": "value"}
+    enter_mock = MagicMock()
+    enter_mock.__enter__.return_value = "opened_obj"
+    open_mock.return_value = enter_mock
+
+    write_yml(output_path, config)
+
+    open_mock.assert_called_once_with(output_path, "w")
+    yaml_mock.dump.assert_called_once_with(config, "opened_obj")
