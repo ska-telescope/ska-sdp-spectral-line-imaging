@@ -7,6 +7,7 @@ from ska_ser_logging import configure_logging
 
 from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_name, read_dataset, write_dataset
+from .log_util import additional_log_config
 from .model.config_manager import ConfigManager
 
 
@@ -19,7 +20,7 @@ class Pipeline:
     ----------
       name: str
           Name of the pipeline
-      _stage: Stage
+      _stages: list[ConfigurableStage]
           Stage to be executed
     """
 
@@ -33,10 +34,10 @@ class Pipeline:
         ----------
           name: str
               Name of the pipeline
-          stage: Stage
-              Stage to be executed
+          stages: list[ConfigurableStage]
+              Stages to be executed
         """
-        configure_logging()
+        configure_logging(overrides=additional_log_config(name))
         self.name = name
         self._stages = [] if stages is None else stages
         Pipeline.__instance = self

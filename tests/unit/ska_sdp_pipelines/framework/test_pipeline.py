@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from mock import MagicMock, Mock, mock
 
@@ -7,6 +9,14 @@ from ska_sdp_pipelines.framework.exceptions import (
     StageNotFoundException,
 )
 from ska_sdp_pipelines.framework.pipeline import Pipeline
+
+
+@pytest.fixture(scope="module", autouse=True)
+def configure_log():
+    with mock.patch(
+        "ska_sdp_pipelines.framework.pipeline.configure_logging"
+    ) as configure_log_mock:
+        yield configure_log_mock
 
 
 @mock.patch(
@@ -57,6 +67,44 @@ def test_should_run_the_pipeline(
 
     create_output_mock.assert_called_once_with("infile_path", "test_pipeline")
     write_mock.assert_called_once_with("output", "output_name")
+
+
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.additional_log_config",
+    return_value="ADDITIONAL_LOG",
+)
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.dask.compute", return_value="output"
+)
+@mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.read_dataset", return_value="dataset"
+)
+@mock.patch(
+    "ska_sdp_pipelines.framework.pipeline.create_output_name",
+    return_value="output_name",
+)
+@mock.patch("ska_sdp_pipelines.framework.pipeline.write_dataset")
+def test_should_run_the_pipeline_with_verbose(
+    write_mock,
+    create_output_mock,
+    read_mock,
+    delayed_mock,
+    compute_mock,
+    additional_log_config_mock,
+    configure_log,
+):
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+    stage1.stage_config = Configuration()
+
+    pipeline = Pipeline("test_pipeline", stages=[stage1])
+
+    pipeline("infile_path", [], verbose=True)
+    configure_log.assert_has_calls(
+        [mock.call(overrides="ADDITIONAL_LOG"), mock.call(logging.DEBUG)]
+    )
+    additional_log_config_mock.assert_called_once_with("test_pipeline")
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.dask.delayed")
