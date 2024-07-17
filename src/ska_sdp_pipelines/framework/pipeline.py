@@ -1,14 +1,11 @@
 import logging
 from functools import reduce
 
-import dask
-from dask.distributed import Client
-from ska_ser_logging import configure_logging
-
 from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_name, read_dataset, write_dataset
-from .log_util import additional_log_config
+from .log_util import LogUtil
 from .model.config_manager import ConfigManager
+from .scheduler import SchedulerFactory
 
 
 class Pipeline:
@@ -37,75 +34,13 @@ class Pipeline:
           stages: list[ConfigurableStage]
               Stages to be executed
         """
-        configure_logging(overrides=additional_log_config(name))
+
         self.name = name
         self._stages = [] if stages is None else stages
         Pipeline.__instance = self
+
+        LogUtil.configure(name)
         self.logger = logging.getLogger(self.name)
-
-    def __with_log(self, stage, pipeline_data, **kwargs):
-        """
-        Execute stage with entry and exit log
-
-        Parameters
-        ---------
-            stage: functions
-                Stage function
-            pipeline_data: dict
-                Pipeline data for the stage
-            kwargs: dict
-                Additional arguments
-
-        Returns
-        -------
-            Stage output
-        """
-        self.logger.info(f"=============== START {stage.name} ============= ")
-        output = stage(pipeline_data, **kwargs)
-        self.logger.info(f"=============== FINISH {stage.name} ============ ")
-        return output
-
-    def __execute_selected_stages(
-        self, selected_stages, vis, config, dask_scheduler=None
-    ):
-        """
-        Executes individual stages with the pipeline data
-
-        Parameters
-        ---------
-            selected_stages: [functions]
-                Wrapped stage functions
-            vis: xradio.ps
-                Input visibilities
-            config: ConfigManager
-                External provided configuration
-            dask_scheduler: str
-                Url to the dask scheduler
-
-        Returns
-        -------
-            Dask delayed objects
-        """
-        if dask_scheduler:
-            Client(dask_scheduler)
-
-        delayed_outputs = []
-        output = None
-        for stage in selected_stages:
-            kwargs = stage.stage_config.extend(
-                **config.stage_config(stage.name)
-            )
-
-            pipeline_data = dict()
-            pipeline_data["input_data"] = vis
-            pipeline_data["output"] = output
-
-            output = dask.delayed(self.__with_log)(
-                stage, pipeline_data, **kwargs
-            )
-            delayed_outputs.append(output)
-
-        return delayed_outputs
 
     @property
     def config(self):
@@ -148,8 +83,7 @@ class Pipeline:
           verbose: bool
              Toggle DEBUG log level
         """
-        if verbose:
-            configure_logging(logging.DEBUG)
+        LogUtil.configure(self.name, verbose)
 
         self.logger.info("=============== START =====================")
         self.logger.info(f"Executing {self.name} pipeline with metadata:")
@@ -163,6 +97,7 @@ class Pipeline:
         stage_names = [stage.name for stage in self._stages]
         selected_stages = self._stages
         stages_to_run = None
+        scheduler = SchedulerFactory.get_scheduler(dask_scheduler)
 
         if config_path is not None:
             ConfigManager.init(config_path)
@@ -196,11 +131,9 @@ class Pipeline:
             )}"""
         )
 
-        delayed_output = self.__execute_selected_stages(
-            selected_stages, vis, config, dask_scheduler
-        )
+        scheduler.schedule(selected_stages, vis, config, verbose)
 
-        output_pipeline_data = dask.compute(*delayed_output)
+        output_pipeline_data = scheduler.execute()
         outfile = create_output_name(infile_path, self.name)
         write_dataset(output_pipeline_data, outfile)
 
