@@ -4,6 +4,16 @@
 
 This repository consists of the spectral line imaging pipeline.
 
+## Pipeline Installation
+
+To install the spectral line imaging pipeline, run
+
+```bash
+poetry install
+
+sdp-pipelines install src/ska_sdp_spectral_line_imaging/pipeline.py
+```
+
 ## Developer Setup
 
 It is recommended to use a virtual environment for the developer setup. This document explains the developer setup using `conda`.
