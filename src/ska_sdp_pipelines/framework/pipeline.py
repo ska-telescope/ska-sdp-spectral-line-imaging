@@ -1,12 +1,12 @@
+import logging
 import shutil
 from functools import reduce
 
-import dask
-from dask.distributed import Client
-
 from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_dir, read_dataset, write_dataset, write_yml
+from .log_util import LogUtil
 from .model.config_manager import ConfigManager
+from .scheduler import SchedulerFactory
 
 
 class Pipeline:
@@ -18,7 +18,7 @@ class Pipeline:
     ----------
       name: str
           Name of the pipeline
-      _stage: Stage
+      _stages: list[ConfigurableStage]
           Stage to be executed
     """
 
@@ -32,55 +32,16 @@ class Pipeline:
         ----------
           name: str
               Name of the pipeline
-          stage: Stage
-              Stage to be executed
+          stages: list[ConfigurableStage]
+              Stages to be executed
         """
+
         self.name = name
         self._stages = [] if stages is None else stages
         Pipeline.__instance = self
 
-    def __execute_selected_stages(
-        self, selected_stages, vis, config, output_dir, dask_scheduler=None
-    ):
-        """
-        Executes individual stages with the pipeline data
-
-        Parameters
-        ---------
-            selected_stages: [functions]
-                Wrapped stage functions
-            vis: xradio.ps
-                Input visibilities
-            config: ConfigManager
-                External provided configuration
-            output_dir: str
-                Path to output directory
-            dask_scheduler: str
-                Url to the dask scheduler
-
-        Returns
-        -------
-            Dask delayed objects
-        """
-        if dask_scheduler:
-            Client(dask_scheduler)
-
-        delayed_outputs = []
-        output = None
-        for stage in selected_stages:
-            kwargs = stage.stage_config.extend(
-                **config.stage_config(stage.name)
-            )
-
-            pipeline_data = dict()
-            pipeline_data["output_dir"] = output_dir
-            pipeline_data["input_data"] = vis
-            pipeline_data["output"] = output
-
-            output = dask.delayed(stage)(pipeline_data, **kwargs)
-            delayed_outputs.append(output)
-
-        return delayed_outputs
+        LogUtil.configure(name)
+        self.logger = logging.getLogger(self.name)
 
     @property
     def config(self):
@@ -105,6 +66,7 @@ class Pipeline:
         stages=None,
         dask_scheduler=None,
         config_path=None,
+        verbose=False,
         output_path=None,
     ):
         """
@@ -114,23 +76,37 @@ class Pipeline:
         ----------
           infile_path : str
              Path to input file
-          stages: str
+          stages: list[str]
              Names of the stages to be executed
           dask_scheduler: str
              Url of the dask scheduler
+          config_path: str
+             Configuration yaml file path
+          verbose: bool
+             Toggle DEBUG log level
           output_path: str
              Path to root output directory
         """
+        if output_path is None:
+            output_path = "./output"
+        output_dir = create_output_dir(output_path, self.name)
+
+        LogUtil.configure(self.name, output_dir=output_dir, verbose=verbose)
+
+        self.logger.info("=============== START =====================")
+        self.logger.info(f"Executing {self.name} pipeline with metadata:")
+        self.logger.info(f"Infile Path: {infile_path}")
+        self.logger.info(f"Stages: {stages}")
+        self.logger.info(f"Dask scheduler: {dask_scheduler}")
+        self.logger.info(f"Configuration Path: {config_path}")
+        self.logger.info(f"Current run output path : {output_dir}")
 
         vis = read_dataset(infile_path)
         config = ConfigManager()
         stage_names = [stage.name for stage in self._stages]
-        selected_satges = self._stages
+        selected_stages = self._stages
         stages_to_run = None
-
-        if output_path is None:
-            output_path = "./output"
-        output_dir = create_output_dir(output_path, self.name)
+        scheduler = SchedulerFactory.get_scheduler(dask_scheduler)
 
         if config_path is not None:
             ConfigManager.init(config_path)
@@ -155,22 +131,24 @@ class Pipeline:
             stages_to_run = stages
 
         if stages_to_run is not None:
-            selected_satges = [
+            selected_stages = [
                 stage for stage in self._stages if stage.name in stages_to_run
             ]
-        if not selected_satges:
+        if not selected_stages:
             raise NoStageToExecuteException("Selected stages empty")
 
-        delayed_output = self.__execute_selected_stages(
-            selected_satges,
-            vis,
-            config,
-            output_dir,
-            dask_scheduler,
+        self.logger.info(
+            f"""Selected stages to run: {', '.join(
+                stage.name for stage in selected_stages
+            )}"""
         )
 
-        output_pipeline_data = dask.compute(*delayed_output)
+        scheduler.schedule(selected_stages, vis, config, output_dir, verbose)
+
+        output_pipeline_data = scheduler.execute()
         write_dataset(output_pipeline_data, output_dir)
+
+        self.logger.info("=============== FINISH =====================")
 
     @classmethod
     def get_instance(cls):

@@ -43,6 +43,17 @@ parser.add_argument(
     "the associated Dask cluster."
   ),
 )
+parser.add_argument(
+  "--verbose",
+  "-v",
+  dest='verbose',
+  action='count',
+  default=0,
+  help=(
+    "Increase pipeline verbosity to debug level."
+  ),
+)
+
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -51,10 +62,11 @@ if __name__ == "__main__":
   sys.exit(
     pipeline(
       args.input,
-      stages,
-      args.dask_scheduler,
-      args.config_path,
-      args.output_path
+      stages=stages,
+      dask_scheduler=args.dask_scheduler,
+      config_path=args.config_path,
+      verbose=(args.verbose != 0),
+      output_path=args.output_path
     )
   )
 """
