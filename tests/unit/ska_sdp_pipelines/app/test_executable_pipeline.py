@@ -59,13 +59,13 @@ def test_should_raise_exception_if_script_doesnot_exists(os_mock):
 
 
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Path")
-@mock.patch("ska_sdp_pipelines.app.executable_pipeline.yaml")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.os")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Pipeline")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.sys")
 @mock.patch("builtins.open")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.write_yml")
 def test_should_install_executable(
-    open_mock, sys_mock, pipeline_mock, os_mock, yaml_mock, path_mock
+    write_yml_mock, open_mock, sys_mock, pipeline_mock, os_mock, path_mock
 ):
     sys_mock.executable = "/path/to/bin/python"
     file_obj = Mock("file_obj")
@@ -92,13 +92,13 @@ def test_should_install_executable(
 
 
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Path")
-@mock.patch("ska_sdp_pipelines.app.executable_pipeline.yaml")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.write_yml")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.os")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Pipeline")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.sys")
 @mock.patch("builtins.open")
 def test_should_write_configutartion_during_install(
-    open_mock, sys_mock, pipeline_mock, os_mock, yaml_mock, path_mock
+    open_mock, sys_mock, pipeline_mock, os_mock, write_yml_mock, path_mock
 ):
     sys_mock.executable = "/global/path/to/bin/python"
     file_obj = Mock("file_obj")
@@ -121,20 +121,19 @@ def test_should_write_configutartion_during_install(
     executable_pipeline.install()
 
     path_mock.assert_has_calls([mock.call("/path/to/script")])
-    open_mock.assert_has_calls(
-        [mock.call("/path/to/config/PIPELINE.yaml", "w")]
+    write_yml_mock.assert_called_once_with(
+        "/path/to/config/PIPELINE.yaml", "PIPELINE CONFIG"
     )
-    yaml_mock.dump.assert_called_once_with("PIPELINE CONFIG", file_obj)
 
 
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Path")
-@mock.patch("ska_sdp_pipelines.app.executable_pipeline.yaml")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.write_yml")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.os")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Pipeline")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.sys")
 @mock.patch("builtins.open")
 def test_should_write_configutartion_during_install_to_provided_path(
-    open_mock, sys_mock, pipeline_mock, os_mock, yaml_mock, path_mock
+    open_mock, sys_mock, pipeline_mock, os_mock, write_yml_mock, path_mock
 ):
     sys_mock.executable = "/global/path/to/bin/python"
     file_obj = Mock("file_obj")
@@ -156,19 +155,19 @@ def test_should_write_configutartion_during_install_to_provided_path(
 
     executable_pipeline.install("/new/path/to/config")
 
-    open_mock.assert_has_calls(
-        [mock.call("/new/path/to/config/PIPELINE.yaml", "w")]
+    write_yml_mock.assert_called_once_with(
+        "/new/path/to/config/PIPELINE.yaml", "PIPELINE CONFIG"
     )
 
 
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Path")
-@mock.patch("ska_sdp_pipelines.app.executable_pipeline.yaml")
+@mock.patch("ska_sdp_pipelines.app.executable_pipeline.write_yml")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.os")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.Pipeline")
 @mock.patch("ska_sdp_pipelines.app.executable_pipeline.sys")
 @mock.patch("builtins.open")
 def test_should_raise_exception_during_install_if_config_path_does_not_exist(
-    open_mock, sys_mock, pipeline_mock, os_mock, yaml_mock, path_mock
+    open_mock, sys_mock, pipeline_mock, os_mock, write_yml_mock, path_mock
 ):
     sys_mock.executable = "/global/path/to/bin/python"
     file_obj = Mock("file_obj")
