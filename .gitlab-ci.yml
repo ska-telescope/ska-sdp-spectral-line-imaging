@@ -1,5 +1,6 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  CI_POETRY_VERSION: 1.8.3
 
 stages:
   - lint
