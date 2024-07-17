@@ -91,7 +91,7 @@ class Pipeline:
             output_path = "./output"
         output_dir = create_output_dir(output_path, self.name)
 
-        LogUtil.configure(self.name, verbose)
+        LogUtil.configure(self.name, output_dir=output_dir, verbose=verbose)
 
         self.logger.info("=============== START =====================")
         self.logger.info(f"Executing {self.name} pipeline with metadata:")
@@ -99,6 +99,7 @@ class Pipeline:
         self.logger.info(f"Stages: {stages}")
         self.logger.info(f"Dask scheduler: {dask_scheduler}")
         self.logger.info(f"Configuration Path: {config_path}")
+        self.logger.info(f"Current run output path : {output_dir}")
 
         vis = read_dataset(infile_path)
         config = ConfigManager()

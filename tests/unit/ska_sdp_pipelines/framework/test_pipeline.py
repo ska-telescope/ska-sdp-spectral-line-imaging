@@ -117,7 +117,12 @@ def test_should_run_the_pipeline_with_verbose(log_util):
     pipeline("infile_path", [], verbose=True)
 
     log_util.configure.assert_has_calls(
-        [mock.call("test_pipeline"), mock.call("test_pipeline", True)]
+        [
+            mock.call("test_pipeline"),
+            mock.call(
+                "test_pipeline", output_dir="./output/timestamp", verbose=True
+            ),
+        ]
     )
 
 

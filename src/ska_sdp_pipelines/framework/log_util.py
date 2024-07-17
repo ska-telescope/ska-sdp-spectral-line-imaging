@@ -6,7 +6,7 @@ from ska_ser_logging import configure_logging
 
 class LogUtil:
     @classmethod
-    def configure(cls, name, verbose=False):
+    def configure(cls, name, output_dir=None, verbose=False):
         """
         Configure the log using standardised config
          Parameters
@@ -22,25 +22,34 @@ class LogUtil:
             level = logging.DEBUG
 
         configure_logging(
-            level=level, overrides=cls.__additional_log_config(name)
+            level=level,
+            overrides=cls.__additional_log_config(name, output_dir),
         )
 
     @classmethod
-    def __additional_log_config(cls, base_name):
+    def __additional_log_config(cls, pipeline_name, output_dir=None):
         """
         Get updated log configuration
 
         Parameters
         ----------
-            base_name: str
+            pipeline_name: str
                 Log file name
+            output_dir: str
+                Output directory
 
         Returns
         -------
             dictionary config
         """
+        if output_dir is None:
+            return
+
         timestamp = datetime.now()
-        log_file = f"{base_name}_{timestamp.strftime('%Y-%m-%dT%H:%M:%S')}.log"
+        log_file = (
+            f"{output_dir}/{pipeline_name}_"
+            f"{timestamp.strftime('%Y-%m-%dT%H:%M:%S')}.log"
+        )
         return {
             "handlers": {
                 "file": {

@@ -21,7 +21,7 @@ def test_should_configure_with_additional_log_config(
             "file": {
                 "()": logging.FileHandler,
                 "formatter": "default",
-                "filename": "name_FORMATTED_TIME.log",
+                "filename": "/path/to/output/name_FORMATTED_TIME.log",
             }
         },
         "root": {
@@ -29,10 +29,25 @@ def test_should_configure_with_additional_log_config(
         },
     }
 
-    LogUtil.configure(pipeline_name)
+    LogUtil.configure(pipeline_name, output_dir="/path/to/output")
     configure_mock.assert_called_once_with(
         level=logging.INFO, overrides=expected
     )
+
+
+@mock.patch("ska_sdp_pipelines.framework.log_util.configure_logging")
+@mock.patch("ska_sdp_pipelines.framework.log_util.datetime")
+def test_should_configure_without_additional_log_config_if_no_output(
+    datetime_mock, configure_mock
+):
+    now_mock_object = Mock(name="now")
+    now_mock_object.strftime.return_value = "FORMATTED_TIME"
+    datetime_mock.now.return_value = now_mock_object
+
+    pipeline_name = "name"
+
+    LogUtil.configure(pipeline_name)
+    configure_mock.assert_called_once_with(level=logging.INFO, overrides=None)
 
 
 @mock.patch("ska_sdp_pipelines.framework.log_util.configure_logging")
@@ -44,23 +59,8 @@ def test_should_configure_verbose(datetime_mock, configure_mock):
 
     pipeline_name = "name"
 
-    expected = {
-        "handlers": {
-            "file": {
-                "()": logging.FileHandler,
-                "formatter": "default",
-                "filename": "name_FORMATTED_TIME.log",
-            }
-        },
-        "root": {
-            "handlers": ["console", "file"],
-        },
-    }
-
     LogUtil.configure(pipeline_name, verbose=True)
-    configure_mock.assert_called_once_with(
-        level=logging.DEBUG, overrides=expected
-    )
+    configure_mock.assert_called_once_with(level=logging.DEBUG, overrides=None)
 
 
 def test_should_execute_stage_with_logs():
