@@ -1,8 +1,9 @@
 import logging
+import shutil
 from functools import reduce
 
 from .exceptions import NoStageToExecuteException, StageNotFoundException
-from .io_utils import create_output_name, read_dataset, write_dataset
+from .io_utils import create_output_dir, read_dataset, write_dataset, write_yml
 from .log_util import LogUtil
 from .model.config_manager import ConfigManager
 from .scheduler import SchedulerFactory
@@ -66,6 +67,7 @@ class Pipeline:
         dask_scheduler=None,
         config_path=None,
         verbose=False,
+        output_path=None,
     ):
         """
         Executes the pipeline
@@ -82,7 +84,13 @@ class Pipeline:
              Configuration yaml file path
           verbose: bool
              Toggle DEBUG log level
+          output_path: str
+             Path to root output directory
         """
+        if output_path is None:
+            output_path = "./output"
+        output_dir = create_output_dir(output_path, self.name)
+
         LogUtil.configure(self.name, verbose)
 
         self.logger.info("=============== START =====================")
@@ -103,6 +111,9 @@ class Pipeline:
             ConfigManager.init(config_path)
             config = ConfigManager.get_config()
             stages_to_run = config.stages_to_run
+            shutil.copy(config_path, f"{output_dir}/config.yml")
+        else:
+            write_yml(f"{output_dir}/config.yml", self.config)
 
         if stages:
             non_existent_stages = [
@@ -131,11 +142,10 @@ class Pipeline:
             )}"""
         )
 
-        scheduler.schedule(selected_stages, vis, config, verbose)
+        scheduler.schedule(selected_stages, vis, config, output_dir, verbose)
 
         output_pipeline_data = scheduler.execute()
-        outfile = create_output_name(infile_path, self.name)
-        write_dataset(output_pipeline_data, outfile)
+        write_dataset(output_pipeline_data, output_dir)
 
         self.logger.info("=============== FINISH =====================")
 

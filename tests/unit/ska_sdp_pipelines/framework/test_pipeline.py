@@ -55,10 +55,16 @@ def write_mock():
 
 
 @pytest.fixture(scope="function", autouse=True)
+def write_yml_mock():
+    with mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml") as write:
+        yield write
+
+
+@pytest.fixture(scope="function", autouse=True)
 def create_output_mock():
     with mock.patch(
-        "ska_sdp_pipelines.framework.pipeline.create_output_name",
-        return_value="output_name",
+        "ska_sdp_pipelines.framework.pipeline.create_output_dir",
+        return_value="./output/timestamp",
     ) as create_output:
         yield create_output
 
@@ -77,8 +83,10 @@ def test_should_run_the_pipeline(
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
+    stage1.config = {}
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
+    stage2.config = {}
     stage2.stage_config = Configuration()
 
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2])
@@ -88,16 +96,21 @@ def test_should_run_the_pipeline(
     read_mock.assert_called_once_with("infile_path")
     scheduler_factory.get_scheduler.assert_called_once_with(None)
     default_scheduler.schedule.assert_called_once_with(
-        [stage1, stage2], "dataset", config_manager_mock, False
+        [stage1, stage2],
+        "dataset",
+        config_manager_mock,
+        "./output/timestamp",
+        False,
     )
 
-    create_output_mock.assert_called_once_with("infile_path", "test_pipeline")
-    write_mock.assert_called_once_with("output", "output_name")
+    create_output_mock.assert_called_once_with("./output", "test_pipeline")
+    write_mock.assert_called_once_with("output", "./output/timestamp")
 
 
 def test_should_run_the_pipeline_with_verbose(log_util):
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
+    stage1.config = {}
     stage1.stage_config = Configuration()
 
     pipeline = Pipeline("test_pipeline", stages=[stage1])
@@ -115,12 +128,15 @@ def test_should_run_the_pipeline_with_selected_stages(
     config_manager_mock.return_value = config_manager_mock
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
+    stage1.config = {}
     stage1.stage_config = Configuration()
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
+    stage2.config = {}
     stage2.stage_config = Configuration()
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
+    stage3.config = {}
     stage3.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
@@ -128,13 +144,18 @@ def test_should_run_the_pipeline_with_selected_stages(
     read_mock.assert_called_once_with("infile_path")
 
     default_scheduler.schedule.assert_called_once_with(
-        [stage1, stage3], "dataset", config_manager_mock, False
+        [stage1, stage3],
+        "dataset",
+        config_manager_mock,
+        "./output/timestamp",
+        False,
     )
 
 
 def test_should_instantiate_dask_client(scheduler_factory):
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
+    stage1.config = {}
     stage1.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline", stages=[stage1])
     dask_scheduler_address = "some_ip"
@@ -147,6 +168,7 @@ def test_should_instantiate_dask_client(scheduler_factory):
 def test_should_not_run_if_no_stages_are_provided():
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
+    stage1.config = {}
     stage1.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline")
     dask_scheduler_address = "some_ip"
@@ -154,12 +176,14 @@ def test_should_not_run_if_no_stages_are_provided():
         pipeline("infile_path", dask_scheduler=dask_scheduler_address)
 
 
+@mock.patch("ska_sdp_pipelines.framework.pipeline.shutil")
 @mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
 def test_should_run_the_pipeline_with_selected_stages_from_config(
-    config_manager_mock, default_scheduler
+    config_manager_mock, shutil_mock, default_scheduler, create_output_mock
 ):
     config_manager_mock.get_config.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage3"]
+    create_output_mock.return_value = "/path/to/output/timestamp"
 
     stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
@@ -170,18 +194,38 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
+
+    stage1.config = {}
+    stage2.config = {}
+    stage3.config = {}
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
-    pipeline("infile_path", config_path="/path/to/config")
+    pipeline(
+        "infile_path",
+        config_path="/path/to/config",
+        output_path="/path/to/output",
+    )
+
+    create_output_mock.assert_called_once_with(
+        "/path/to/output", "test_pipeline"
+    )
+    shutil_mock.copy.assert_called_once_with(
+        "/path/to/config", "/path/to/output/timestamp/config.yml"
+    )
 
     default_scheduler.schedule.assert_called_once_with(
-        [stage1, stage3], "dataset", config_manager_mock, False
+        [stage1, stage3],
+        "dataset",
+        config_manager_mock,
+        "/path/to/output/timestamp",
+        False,
     )
 
 
+@mock.patch("ska_sdp_pipelines.framework.pipeline.shutil")
 @mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
 def test_should_run_the_pipeline_with_stages_from_cli_over_config(
-    config_manager_mock, default_scheduler
+    config_manager_mock, shutil_mock, default_scheduler
 ):
     config_manager_mock.get_config.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage2"]
@@ -195,6 +239,11 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
+
+    stage1.config = {}
+    stage2.config = {}
+    stage3.config = {}
+
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
     pipeline(
@@ -202,7 +251,11 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     )
 
     default_scheduler.schedule.assert_called_once_with(
-        [stage1, stage3], "dataset", config_manager_mock, False
+        [stage1, stage3],
+        "dataset",
+        config_manager_mock,
+        "./output/timestamp",
+        False,
     )
 
 
@@ -216,6 +269,11 @@ def test_should_raise_exception_if_wrong_stage_is_provided():
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
+
+    stage1.config = {}
+    stage2.config = {}
+    stage3.config = {}
+
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
     with pytest.raises(StageNotFoundException):

@@ -1,20 +1,22 @@
 Launching a Dask Cluster
 =========================
 
-The pipeline can leverage a dask cluster with multiple nodes to distribute the spectral line imaging stage. In order to use that feature, you most likely will have to spin up said dask cluster before starting the pipeline.
+The pipeline can leverage a dask cluster with multiple workers to run operations in distributed manner. For this, you need an active dask cluster before starting the pipeline.
 
-Testing on a local machine
------------------------------
+Local machine
+-------------
 
-You may want to do some development or testing work on your own desktop computer, in which case launching a dask cluster manually is the straightforward method.
+You can run dask locally on your machine, in which case the dask scheduler will distribute the operations across multiple processes.
 
-In one terminal window, activate the same ``conda`` environment as the pipeline. Then launch:
+In one terminal window, activate the same ``conda`` environment as the pipeline. Then run:
 
 .. code-block:: bash
 
     dask scheduler
 
-This starts the dask scheduler on ``port 8786``. Now onto launching the workers. In another terminal window, activate the same python environment as the pipeline. Then launch:
+This starts the dask scheduler on (default) ``port 8786``. 
+
+In another terminal window, activate the same python environment as the pipeline. Then run:
 
 .. code-block:: bash
 

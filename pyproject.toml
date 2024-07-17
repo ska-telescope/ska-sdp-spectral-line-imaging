@@ -55,7 +55,7 @@ pytest-mock = "^3.14.0"
 mock = "^5.1.0"
 
 [tool.poetry.group.docs.dependencies]
-recommonmark = "^0.7.1"
+myst-parser = "^3.0.1"
 sphinx-rtd-theme = "^2.0.0"
 
 [build-system]

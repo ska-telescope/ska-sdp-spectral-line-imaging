@@ -17,7 +17,9 @@ class DefaultScheduler:
     def __init__(self):
         self.delayed_outputs = []
 
-    def schedule(self, selected_stages, vis, config, verbose=False):
+    def schedule(
+        self, selected_stages, vis, config, output_dir, verbose=False
+    ):
         output = None
         for stage in selected_stages:
             kwargs = stage.stage_config.extend(
@@ -26,6 +28,7 @@ class DefaultScheduler:
 
             pipeline_data = dict()
             pipeline_data["input_data"] = vis
+            pipeline_data["output_dir"] = output_dir
             pipeline_data["output"] = output
 
             output = dask.delayed(LogUtil.with_log)(

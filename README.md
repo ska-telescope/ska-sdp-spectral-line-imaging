@@ -1,16 +1,8 @@
-SKA SDP Spectral Line Imaging
---
+# SKA SDP Spectral Line Imaging
 
 ## Description
+
 This repository consists of the spectral line imaging pipeline.
-
-## Pipeline Installation
-
-```
-poetry install
-
-sdp-pipelines install src/ska_sdp_spectral_line_imaging/pipeline.py
-```
 
 ## Developer Setup
 
@@ -67,10 +59,11 @@ make python-lint
 ```
 make python-test
 ```
-**Updating Readthedocs**
+
+**Updating documentation of API**
 
 ```
-make -C docs/ create-docs
+make -C docs/ create-doc
 ```
 
 **GPG signing the commits**
@@ -81,21 +74,21 @@ Enable GPG signing for commits by setting the `commit.gpgsign` config variable t
 git config commit.gpgsign true
 ```
 
-To use the ssh-key to sign the commits set `gpg.format` to ssh, and update `user.signingkey` to the path of the ssh public key 
+To use the ssh-key to sign the commits set `gpg.format` to ssh, and update `user.signingkey` to the path of the ssh public key.
 
 ```bash
 git config gpg.format ssh
 git config user.signingkey ~/.ssh/id_rsa.pub
 ```
 
+The current pre-commit hook runs the following
 
-The current pre-commit hook runs the following 
 1. Tests on `src` folder
 2. `pylint` set to fail on warnings. **[To be enabled once code is added]**
 3. Coverage test to not fall below 80%  **[To be enabled once code is added]**
 
 ## To Be updated
 
- - Installation 
- - Usage 
- - Support 
+- Installation
+- Usage
+- Support
