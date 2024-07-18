@@ -57,7 +57,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 if __name__ == "__main__":
-  pipeline = Pipeline.get_instance()
+  pipeline = Pipeline('{pipeline_name}', existing_instance=True)
   stages = [] if args.stages is None else args.stages[0]
   sys.exit(
     pipeline(

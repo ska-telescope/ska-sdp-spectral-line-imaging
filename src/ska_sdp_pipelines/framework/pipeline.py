@@ -6,10 +6,11 @@ from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_dir, read_dataset, write_dataset, write_yml
 from .log_util import LogUtil
 from .model.config_manager import ConfigManager
+from .model.named_instance import NamedInstance
 from .scheduler import SchedulerFactory
 
 
-class Pipeline:
+class Pipeline(metaclass=NamedInstance):
     """
     Pipeline class allows for defining a pipeline as an ordered list of
     stages, and takes care of executing those stages.
@@ -22,9 +23,7 @@ class Pipeline:
           Stage to be executed
     """
 
-    __instance = None
-
-    def __init__(self, name, stages=None):
+    def __init__(self, name, stages=None, existing_instance=False):
         """
         Initialise the pipeline object
 
@@ -34,11 +33,12 @@ class Pipeline:
               Name of the pipeline
           stages: list[ConfigurableStage]
               Stages to be executed
+          existing_instance: bool
+              If true, return an existing instance with name
         """
 
         self.name = name
         self._stages = [] if stages is None else stages
-        Pipeline.__instance = self
 
         LogUtil.configure(name)
         self.logger = logging.getLogger(self.name)
@@ -149,7 +149,3 @@ class Pipeline:
         write_dataset(output_pipeline_data, output_dir)
 
         self.logger.info("=============== FINISH =====================")
-
-    @classmethod
-    def get_instance(cls):
-        return cls.__instance
