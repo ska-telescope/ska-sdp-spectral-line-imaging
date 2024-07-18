@@ -7,7 +7,7 @@ from ska_sdp_pipelines.framework.configuration import (
 )
 from ska_sdp_pipelines.framework.exceptions import (
     ArgumentMismatchException,
-    VisibilityMissingException,
+    PipelineMetadataMissingException,
 )
 
 
@@ -33,13 +33,13 @@ def test_should_return_default_config_dictionary():
 
 
 def test_should_raise_exception_if_vis_is_missing_in_args():
-    with pytest.raises(VisibilityMissingException):
+    with pytest.raises(PipelineMetadataMissingException):
 
         @ConfigurableStage("temp_stage")
         def temp_stage():
             pass
 
-    with pytest.raises(VisibilityMissingException):
+    with pytest.raises(PipelineMetadataMissingException):
 
         @ConfigurableStage(
             "temp_stage",

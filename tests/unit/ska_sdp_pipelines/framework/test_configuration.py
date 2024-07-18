@@ -6,7 +6,7 @@ from ska_sdp_pipelines.framework.configuration import (
 )
 from ska_sdp_pipelines.framework.exceptions import (
     ArgumentMismatchException,
-    VisibilityMissingException,
+    PipelineMetadataMissingException,
 )
 
 
@@ -40,10 +40,10 @@ def test_should_raise_exception_if_mandatory_first_argument_is_missing():
     def temp_stage1(stage_arguments):
         pass
 
-    with pytest.raises(VisibilityMissingException):
+    with pytest.raises(PipelineMetadataMissingException):
         configuration.valididate_arguments_for(temp_stage)
 
-    with pytest.raises(VisibilityMissingException):
+    with pytest.raises(PipelineMetadataMissingException):
         configuration_with_args.valididate_arguments_for(temp_stage1)
 
 
