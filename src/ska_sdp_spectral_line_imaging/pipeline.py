@@ -17,6 +17,8 @@
 # --config spectral_line_imaging_prototype.yaml
 #
 # pylint: disable=no-member,import-error
+import os
+
 import astropy.io.fits as fits
 import astropy.units as au
 import ducc0.wgridder as wgridder
@@ -70,7 +72,7 @@ def read_model(pipeline_data, image_name, pols):
     images = []
 
     for pol in pols:
-        with fits.open(f"{image_name}-{pol}-image.fits") as f:
+        with fits.open(os.path.abspath(f"{image_name}-{pol}-image.fits")) as f:
             images.append(f[0].data.squeeze())
 
     image_stack = xr.DataArray(
@@ -234,7 +236,10 @@ def vis_stokes_conversion(pipeline_data):
 )
 def export_image(pipeline_data, image_name):
     cubes = pipeline_data["output"]["cubes"]
-    cubes.to_zarr(store=image_name)
+    output_path = os.path.abspath(
+        os.path.join(pipeline_data["output_dir"], image_name)
+    )
+    cubes.to_zarr(store=output_path)
 
 
 pipeline_1 = Pipeline(
