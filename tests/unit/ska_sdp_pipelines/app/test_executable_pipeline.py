@@ -54,7 +54,7 @@ def test_should_validate_executable(util_mock, exists_mock, pipeline_mock):
     util_mock.module_from_spec.assert_called_once_with(mock_spec)
     mock_spec.loader.exec_module.assert_called_once_with("SPEC")
     pipeline_mock.assert_called_once_with(
-        "pipeline_name", existing_instance=True
+        "pipeline_name", _existing_instance_=True
     )
     assert executable_pipeline.installable_pipeline == "SPEC"
 
@@ -125,8 +125,8 @@ def test_should_install_executable(
 
     pipeline_mock.assert_has_calls(
         [
-            mock.call("PIPELINE", existing_instance=True),
-            mock.call("PIPELINE", existing_instance=True),
+            mock.call("PIPELINE", _existing_instance_=True),
+            mock.call("PIPELINE", _existing_instance_=True),
         ]
     )
 
@@ -165,8 +165,8 @@ def test_should_write_configutartion_during_install(
     executable_pipeline.install()
     pipeline_mock.assert_has_calls(
         [
-            mock.call("PIPELINE", existing_instance=True),
-            mock.call("PIPELINE", existing_instance=True),
+            mock.call("PIPELINE", _existing_instance_=True),
+            mock.call("PIPELINE", _existing_instance_=True),
         ]
     )
 
@@ -207,8 +207,8 @@ def test_should_write_configutartion_during_install_to_provided_path(
 
     pipeline_mock.assert_has_calls(
         [
-            mock.call("PIPELINE", existing_instance=True),
-            mock.call("PIPELINE", existing_instance=True),
+            mock.call("PIPELINE", _existing_instance_=True),
+            mock.call("PIPELINE", _existing_instance_=True),
         ]
     )
     write_yml_mock.assert_called_once_with(
@@ -253,5 +253,5 @@ def test_should_uninstall_executable(sys_mock, pipeline_mock, os_mock):
 
     executable_pipeline.uninstall()
 
-    pipeline_mock.assert_called_once_with("PIPELINE", existing_instance=True)
+    pipeline_mock.assert_called_once_with("PIPELINE", _existing_instance_=True)
     os_mock.remove.assert_called_once_with("/path/to/bin/PIPELINE")

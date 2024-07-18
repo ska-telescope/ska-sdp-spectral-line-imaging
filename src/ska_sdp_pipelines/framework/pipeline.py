@@ -23,7 +23,7 @@ class Pipeline(metaclass=NamedInstance):
           Stage to be executed
     """
 
-    def __init__(self, name, stages=None, existing_instance=False):
+    def __init__(self, name, stages=None, _existing_instance_=False):
         """
         Initialise the pipeline object
 
@@ -33,7 +33,7 @@ class Pipeline(metaclass=NamedInstance):
               Name of the pipeline
           stages: list[ConfigurableStage]
               Stages to be executed
-          existing_instance: bool
+          _existing_instance_: bool
               If true, return an existing instance with name
         """
 

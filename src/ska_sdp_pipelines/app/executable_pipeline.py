@@ -58,7 +58,9 @@ class ExecutablePipeline:
         sys.modules["installable_pipeline"] = self.installable_pipeline
         spec.loader.exec_module(self.installable_pipeline)
 
-        valid_pipeline = Pipeline(self._pipeline_name, existing_instance=True)
+        valid_pipeline = Pipeline(
+            self._pipeline_name, _existing_instance_=True
+        )
 
         if valid_pipeline is None:
             raise PipelineNotFoundException(
@@ -114,7 +116,7 @@ class ExecutablePipeline:
             The path is derived from sys.executable
         """
         executable_root = Path(sys.executable).parent.absolute()
-        pipeline = Pipeline(self._pipeline_name, existing_instance=True)
+        pipeline = Pipeline(self._pipeline_name, _existing_instance_=True)
         return f"{executable_root}/{pipeline.name}"
 
     def __write_config(self, config_root):
@@ -130,7 +132,7 @@ class ExecutablePipeline:
         if not os.path.exists(config_root):
             raise FileNotFoundError(f"Directory {config_root} not found")
 
-        pipeline = Pipeline(self._pipeline_name, existing_instance=True)
+        pipeline = Pipeline(self._pipeline_name, _existing_instance_=True)
         config_path = f"{config_root}/{pipeline.name}.yaml"
 
         write_yml(config_path, pipeline.config)
