@@ -44,10 +44,26 @@ ska\_sdp\_pipelines.framework.io\_utils module
    :undoc-members:
    :show-inheritance:
 
+ska\_sdp\_pipelines.framework.log\_util module
+----------------------------------------------
+
+.. automodule:: ska_sdp_pipelines.framework.log_util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 ska\_sdp\_pipelines.framework.pipeline module
 ---------------------------------------------
 
 .. automodule:: ska_sdp_pipelines.framework.pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ska\_sdp\_pipelines.framework.scheduler module
+----------------------------------------------
+
+.. automodule:: ska_sdp_pipelines.framework.scheduler
    :members:
    :undoc-members:
    :show-inheritance:
