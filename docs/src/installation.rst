@@ -43,8 +43,21 @@ This command install spectral line pipeline and generates default config YAML fi
 
 .. code-block:: bash
 
-    sdp-pipeline install path/to/pipeline-definition
-        [--config-install-path]=/path/to/install/location
+    sdp-pipeline install src/ska_sdp_spectral_line_imaging/pipeline.py
+        [--config-install-path]=/path/to/dir
+
+
+Run the pipeline
+----------------
+
+.. code-block:: bash
+
+    spectral_line_imaging_pipeline --input /path/to/processing_set \
+        --config /path/to/config \
+        --output /path/to/output 
+        --dask-scheduler /url/of/the/dask/scheduler
+
+Run `spectral_line_imaging_pipeline --help` for more information.
 
 ==============
 Dev Setup
