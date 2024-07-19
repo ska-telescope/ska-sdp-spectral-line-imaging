@@ -72,7 +72,7 @@ def read_model(pipeline_data, image_name, pols):
     images = []
 
     for pol in pols:
-        with fits.open(os.path.abspath(f"{image_name}-{pol}-image.fits")) as f:
+        with fits.open(f"{image_name}-{pol}-image.fits") as f:
             images.append(f[0].data.squeeze())
 
     image_stack = xr.DataArray(
@@ -236,9 +236,8 @@ def vis_stokes_conversion(pipeline_data):
 )
 def export_image(pipeline_data, image_name):
     cubes = pipeline_data["output"]["cubes"]
-    output_path = os.path.abspath(
-        os.path.join(pipeline_data["output_dir"], image_name)
-    )
+    output_path = os.path.join(pipeline_data["output_dir"], image_name)
+
     cubes.to_zarr(store=output_path)
 
 
