@@ -1,15 +1,19 @@
 import os
+import sys
+from importlib.resources import files
 from subprocess import check_call
 
 import pytest
 
+import tests.integration.ska_sdp_spectral_line_imaging.resources as resources
 from ska_sdp_spectral_line_imaging.pipeline import (
     spectral_line_imaging_pipeline,
 )
 
+sys.path.append(".")
+
 MSIN = "tMS.ps"
-SOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
-RESOURCEDIR = f"{SOURCE_DIR}/../../../resources"
+RESOURCEDIR = files(resources)
 
 
 def untar(source):
