@@ -1,0 +1,24 @@
+parameters:
+  export_zarr:
+    image_name: test_cube.zarr
+  imaging:
+    cell_size: 60.0
+    nx: 16
+    ny: 16
+  predict_stage:
+    cell_size: 60.0
+  read_model:
+    image_name: tMS
+  select_vis:
+    ddi: 0
+    field_id: 0
+    intent: null
+pipeline:
+  continuum_subtraction: true
+  export_residual: true
+  export_zarr: true
+  imaging: true
+  predict_stage: true
+  read_model: true
+  select_vis: true
+  vis_stokes_conversion: true
