@@ -207,7 +207,7 @@ def imaging_stage(pipeline_data, epsilon, cell_size, nx, ny):
         ),
     )
 
-    return {"cubes": image_cube}
+    return {"ps": ps, "cubes": image_cube}
 
 
 @ConfigurableStage("vis_stokes_conversion")
@@ -229,6 +229,21 @@ def vis_stokes_conversion(pipeline_data):
 
 
 @ConfigurableStage(
+    "export_residual",
+    Configuration(
+        psout_name=ConfigParam(str, "residual.zarr"),
+    ),
+)
+def export_residual(pipeline_data, psout_name):
+    ps = pipeline_data["output"]["ps"]
+    output_path = os.path.abspath(
+        os.path.join(pipeline_data["output_dir"], psout_name)
+    )
+    ps.VISIBILITY.to_zarr(store=output_path)
+    return pipeline_data["output"]
+
+
+@ConfigurableStage(
     "export_zarr",
     Configuration(
         image_name=ConfigParam(str, "output_image.zarr"),
@@ -239,6 +254,7 @@ def export_image(pipeline_data, image_name):
     output_path = os.path.join(pipeline_data["output_dir"], image_name)
 
     cubes.to_zarr(store=output_path)
+    return pipeline_data["output"]
 
 
 pipeline_1 = Pipeline(
@@ -250,6 +266,7 @@ pipeline_1 = Pipeline(
         predict_stage,
         cont_sub,
         imaging_stage,
+        export_residual,
         export_image,
     ],
 )
