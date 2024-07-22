@@ -7,7 +7,7 @@ These are all the packages, functions and scripts that form part of the project.
    :maxdepth: 2
    :caption: Contents
 
-   installation
+   INSTALLATION
    pipeline_framework
    launching_dask
    ska_sdp_spectral_line_imaging/modules
