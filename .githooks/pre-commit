@@ -12,3 +12,5 @@ BRANCH=$(git branch --show-current)
 set -e
 
 make python-lint
+
+make python-test

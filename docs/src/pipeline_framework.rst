@@ -47,13 +47,11 @@ The four classes required to define a complete pipeline are
 Examples
 ********
 
-==============================
-Continuum subtraction Pipeline
-==============================
+===========================
+Process Visibility Pipeline
+===========================
 
-This is an example pipeline to demonstarate how to define a continuum
-subtraction pipeline with some default configuration. The pipeline consists of
-three stages
+This is an example to demonstarate how to define a pipeline which performs some operations on visibility data present in a processing set. The pipeline consists of three stages
 
 - :py:func:`select_field`: Select the appropriate field from the processing set
 - :py:func:`process_vis`: Multiplies visibility with a multiplier
@@ -220,7 +218,7 @@ with the help of the :command:`sdp-pipelines` command.
   /path/to/process_vis_pipeline.py \
   --config-install-path=/path/to/save/default/config
 
-If the `\--config-install-path` is not provided, the default config will be
+If the ``--config-install-path`` is not provided, the default config will be
 generated at the location of the pipeline definition file.
 
 ---------------------------
@@ -296,7 +294,7 @@ Toggeling pipeline stages
 The stages defined above can be toggled off during the pipeline execution by
 one two following approaches.
 
-1. Using the `\--stages` option
+1. Using the ``--stages`` option
     Pass only the names of the stages (space seperated) which need to be executed.
 2. Using the pipeline section in config
     Toggle the stages which need not be run to false.

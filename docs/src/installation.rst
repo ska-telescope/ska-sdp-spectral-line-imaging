@@ -1,45 +1,31 @@
-***************
+************
 Installation
-***************
+************
 
-===============
-Pipeline Setup
-===============
-It is recommended to use a virtual environment for the developer setup. This document explains the developer setup using ``conda``.
+========================
+Pipeline Setup (non-dev)
+========================
 
-Please make sure to clone the submodules also using
-
-.. code-block:: bash
-
-    git clone --recurse-submodules url://git-repository
-
-Also make sure to update submodules at every pull.
-
-Setup and activate environment
------------------------------------
-
-The `conda` based approach, sets up an environment with ``python 3.10``, ``pip 24.0`` and ``poetry 1.8``
+Currently, only way to install the pipeline is using poetry. First, clone the repo using this command.
 
 .. code-block:: bash
 
-    conda env create -f environment.yml
+    git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-spectral-line-imaging.git
 
-    conda activate spec_line
-
-Install dependencies
+Install the framework
 ----------------------
 
-`poetry` is used for dependency management.
+`poetry` is used for dependency management and installation.
 
 .. code-block:: bash
 
-    poetry install
+    poetry install --only main
 
 
 Install spectral line pipeline
 -------------------------------
 
-This command install spectral line pipeline and generates default config YAML file.
+This command installs spectral line pipeline and generates default config YAML file.
 
 .. code-block:: bash
 
@@ -57,20 +43,62 @@ Run the pipeline
         --output /path/to/output 
         --dask-scheduler /url/of/the/dask/scheduler
 
-Run `spectral_line_imaging_pipeline --help` for more information.
+Run ``spectral_line_imaging_pipeline --help`` for more information.
 
-==============
+=========
 Dev Setup
-==============
+=========
+
+Cloning the repository
+----------------------
+
+Please make sure to clone the submodules also using
+
+.. code-block:: bash
+
+    git clone --recurse-submodules https://gitlab.com/ska-telescope/sdp/ska-sdp-spectral-line-imaging.git
+
+Also make sure to update submodules at every pull.
+
+**Updating submodule post clone**
+
+.. code-block:: bash
+
+    git submodule update --init
+
+
+Setting up conda and installing pipeline
+----------------------------------------
+
+It is recommended to use a virtual environment for the developer setup. This document explains the developer setup using ``conda``.
+
+The ``conda`` based approach, sets up an environment with packages defined in ``environment.yaml``. This makes sure that the python and poetry versions used with this repo does not conflict with any previous poetry installed on your machine.
+
+You can run the scripts present in ``/scripts`` directory to create a conda environment and install the pipeline with its dependencies.
+
+.. code-block:: bash
+
+    ./scripts/recreate-conda-env.sh
+
+    conda activate spec_line
+
+    scripts/install-pipeline.sh
+
 
 Git hooks
 -----------
 
-The pre-commit hook is defined for the main branch and is present in the ``.githooks`` folder. To enable ``git-hooks`` for the current repository please link the ``.githooks`` folder to the ``core.hooksPath`` variable of the ``git`` configuration
+To enable ``git-hooks`` for the current repository please link the ``.githooks`` folder to the ``core.hooksPath`` variable of the ``git`` configuration
 
 .. code-block:: bash
 
     git config --local core.hooksPath .githooks/
+
+The pre-commit hook is defined for the main branch and is present in the ``.githooks`` folder.
+The current pre-commit hook runs the following
+
+1. Tests on ``src`` folder
+2. ``pylint`` set to fail on warnings.
 
 GPG signing the commits
 --------------------------
@@ -88,9 +116,3 @@ To use the ssh-key to sign the commits set ``gpg.format`` to ssh, and update ``u
     git config gpg.format ssh
 
     git config user.signingkey ~/.ssh/id_rsa.pub
-
-The current pre-commit hook runs the following 
-
-1. Tests on ``src`` folder
-2. ``pylint`` set to fail on warnings. **[To be enabled once code is added]**
-3. Coverage test to not fall below 80%  **[To be enabled once code is added]**
