@@ -1,57 +1,49 @@
 import os
-import sys
-from importlib.resources import files
-from subprocess import check_call
+import shutil
+import tarfile
 
 import pytest
 
-import tests.integration.ska_sdp_spectral_line_imaging.resources as resources
 from ska_sdp_spectral_line_imaging.pipeline import (
     spectral_line_imaging_pipeline,
 )
 
-sys.path.append(".")
-
-MSIN = "tMS.ps"
-RESOURCEDIR = files(resources)
+MSIN = "./tMS.ps"
+RESOURCE_DIR = f"{os.path.dirname(os.path.realpath(__file__))}/resources"
 
 
-def untar(source):
-    if not os.path.isfile(source):
-        raise IOError(
-            f"Not able to find {source} containing test input files."
-        )
-    check_call(["tar", "xf", source])
+def untar(source, dest):
+    tar = tarfile.open(source)
+    tar.extractall(path=dest)
+    tar.close()
 
 
 @pytest.fixture()
-def run_in_tmp_path(tmp_path):
+def prepare_test_data(tmp_path):
     """
     Creates a temporary directory, runs the test in it, and removes the
     directory.
     """
     # 'tmp_path' is a base fixture from Pytest that already
     # does everything else, including cleaning up.
+
+    untar(f"{RESOURCE_DIR}/tMS.ps.tgz", tmp_path)
+    for stoke in "IQUV":
+        shutil.copy(f"{RESOURCE_DIR}/tMS-{stoke}-image.fits", tmp_path)
+    shutil.copy(f"{RESOURCE_DIR}/config.yaml", tmp_path)
     os.chdir(tmp_path)
 
-
-@pytest.fixture(autouse=True)
-def source_env(run_in_tmp_path):
-    untar(f"{RESOURCEDIR}/{MSIN}.tgz")
+    yield tmp_path
 
 
-def test_pipeline():
+def test_pipeline(prepare_test_data):
     """
     Given a MSv4 and a model image the pipepile should output a stokes cube
     """
-    os.system(f"cp {RESOURCEDIR}/tMS-I-image.fits .")
-    os.system(f"cp {RESOURCEDIR}/tMS-Q-image.fits .")
-    os.system(f"cp {RESOURCEDIR}/tMS-U-image.fits .")
-    os.system(f"cp {RESOURCEDIR}/tMS-V-image.fits .")
 
     spectral_line_imaging_pipeline(
-        f"{RESOURCEDIR}/{MSIN}",
-        config_path=f"{RESOURCEDIR}/config.yaml",
+        MSIN,
+        config_path="./config.yaml",
     )
 
     output_path = os.listdir("./output")
