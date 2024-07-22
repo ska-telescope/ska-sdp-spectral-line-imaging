@@ -16,13 +16,23 @@ The poetry is used for dependency management and installation. Following command
 poetry install --only main
 ```
 
+### Installing a  pipeline
+
+Following command installs a pipeline and generates default
+config YAML file.
+
+```bash
+    sdp-pipeline install pipeline_name path/to/pipeline-definition
+        [--config-install-path]=/path/to/install/location
+```
+
 ### Install spectral line pipeline
 
 Following command installs spectral line pipeline and generates default
 config YAML file.
 
 ```bash
-sdp-pipeline install src/ska_sdp_spectral_line_imaging/pipeline.py
+sdp-pipeline install spectral_line_imaging_pipeline src/ska_sdp_spectral_line_imaging/pipeline.py
     [--config-install-path]=/path/to/dir
 ```
 
