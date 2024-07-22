@@ -2,10 +2,12 @@ import pytest
 from mock import Mock, mock
 
 from ska_sdp_pipelines.framework.configuration import Configuration
+from ska_sdp_pipelines.framework.constants import MANDATORY_CLI_ARGS
 from ska_sdp_pipelines.framework.exceptions import (
     NoStageToExecuteException,
     StageNotFoundException,
 )
+from ska_sdp_pipelines.framework.model.cli_arguments import CLIArgument
 from ska_sdp_pipelines.framework.pipeline import Pipeline
 
 
@@ -15,6 +17,14 @@ def log_util():
         "ska_sdp_pipelines.framework.pipeline.LogUtil"
     ) as log_util_mock:
         yield log_util_mock
+
+
+@pytest.fixture(scope="function", autouse=True)
+def cli_arguments():
+    with mock.patch(
+        "ska_sdp_pipelines.framework.pipeline.CLIArguments"
+    ) as cli_arguments_mock:
+        yield cli_arguments_mock
 
 
 @pytest.fixture(scope="function")
@@ -69,6 +79,70 @@ def create_output_mock():
         yield create_output
 
 
+def test_should_initialise_the_pipeline_with_default_cli_args(cli_arguments):
+    Pipeline("test_pipeline")
+    cli_arguments.assert_called_once_with(MANDATORY_CLI_ARGS)
+
+
+def test_should_initialise_the_pipeline_with_additional_cli_args(
+    cli_arguments,
+):
+    cli_args = [CLIArgument("additional_arg1"), CLIArgument("additional_arg2")]
+    Pipeline("test_pipeline", cli_args=cli_args)
+    cli_arguments.assert_called_once_with(MANDATORY_CLI_ARGS + cli_args)
+
+
+@mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
+def test_should_run_the_pipeline_as_cli_command(
+    config_manager_mock,
+    read_mock,
+    write_mock,
+    create_output_mock,
+    scheduler_factory,
+    default_scheduler,
+    cli_arguments,
+):
+    config_manager_mock.return_value = config_manager_mock
+    cli_arguments.return_value = cli_arguments
+    cli_arguments.get_cli_args.return_value = {"input": "infile_path"}
+    args = Mock(name="CLI_args")
+    args.input = "infile_path"
+    args.dask_scheduler = None
+    args.config_path = None
+    args.verbose = False
+    args.output_path = None
+    args.stages = None
+
+    cli_arguments.parse_args.return_value = args
+
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+    stage1.stage_config = Configuration()
+    stage1.config = {}
+    stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
+    stage2.name = "stage2"
+    stage2.config = {}
+    stage2.stage_config = Configuration()
+
+    pipeline = Pipeline("test_pipeline", stages=[stage1, stage2])
+
+    pipeline.run()
+
+    read_mock.assert_called_once_with("infile_path")
+    scheduler_factory.get_scheduler.assert_called_once_with(None)
+    default_scheduler.schedule.assert_called_once_with(
+        [stage1, stage2],
+        "dataset",
+        config_manager_mock,
+        "./output/timestamp",
+        False,
+        cli_args={"input": "infile_path"},
+    )
+
+    create_output_mock.assert_called_once_with("./output", "test_pipeline")
+    write_mock.assert_called_once_with("output", "./output/timestamp")
+
+
 @mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
 def test_should_run_the_pipeline(
     config_manager_mock,
@@ -101,6 +175,7 @@ def test_should_run_the_pipeline(
         config_manager_mock,
         "./output/timestamp",
         False,
+        cli_args=None,
     )
 
     create_output_mock.assert_called_once_with("./output", "test_pipeline")
@@ -154,6 +229,7 @@ def test_should_run_the_pipeline_with_selected_stages(
         config_manager_mock,
         "./output/timestamp",
         False,
+        cli_args=None,
     )
 
 
@@ -224,6 +300,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
         config_manager_mock,
         "/path/to/output/timestamp",
         False,
+        cli_args=None,
     )
 
 
@@ -261,6 +338,7 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
         config_manager_mock,
         "./output/timestamp",
         False,
+        cli_args=None,
     )
 
 

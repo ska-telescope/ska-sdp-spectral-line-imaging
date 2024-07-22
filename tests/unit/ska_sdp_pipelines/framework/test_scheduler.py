@@ -57,7 +57,12 @@ def test_should_schedule_stages_with_configuration_params(
 
     default_scheduler = DefaultScheduler()
     default_scheduler.schedule(
-        [stage1, stage2, stage3], "dataset", config, "output_dir"
+        [stage1, stage2, stage3],
+        "dataset",
+        config,
+        "output_dir",
+        arg1="arg1",
+        arg2="arg2",
     )
 
     delayed_mock.assert_has_calls(
@@ -71,7 +76,12 @@ def test_should_schedule_stages_with_configuration_params(
     delayed_mock_call_1.assert_called_once_with(
         False,
         stage1,
-        {"input_data": "dataset", "output": None, "output_dir": "output_dir"},
+        {
+            "input_data": "dataset",
+            "output": None,
+            "output_dir": "output_dir",
+            "additional_arguments": {"arg1": "arg1", "arg2": "arg2"},
+        },
         stage1_parameter_1=0,
     )
     delayed_mock_call_2.assert_called_once_with(
@@ -81,6 +91,7 @@ def test_should_schedule_stages_with_configuration_params(
             "input_data": "dataset",
             "output": "DELAYED_1",
             "output_dir": "output_dir",
+            "additional_arguments": {"arg1": "arg1", "arg2": "arg2"},
         },
         stage2_parameter_1=0,
     )
@@ -91,6 +102,7 @@ def test_should_schedule_stages_with_configuration_params(
             "input_data": "dataset",
             "output": "DELAYED_2",
             "output_dir": "output_dir",
+            "additional_arguments": {"arg1": "arg1", "arg2": "arg2"},
         },
         stage3_parameter_1=0,
     )

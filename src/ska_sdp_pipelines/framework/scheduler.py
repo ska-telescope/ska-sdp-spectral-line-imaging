@@ -40,7 +40,9 @@ class DefaultScheduler:
     def __init__(self):
         self.delayed_outputs = []
 
-    def schedule(self, stages, vis, config, output_dir, verbose=False):
+    def schedule(
+        self, stages, vis, config, output_dir, verbose=False, **kwargs
+    ):
         """
         Schedules the stages as dask delayed objects
         Parameters
@@ -55,10 +57,12 @@ class DefaultScheduler:
             Output directory to store generated products
           verbose: bool
             Log debug statements
+          **kwargs:
+            Additional Key value args
         """
         output = None
         for stage in stages:
-            kwargs = stage.stage_config.extend(
+            stage_kwargs = stage.stage_config.extend(
                 **config.stage_config(stage.name)
             )
 
@@ -66,9 +70,10 @@ class DefaultScheduler:
             pipeline_data["input_data"] = vis
             pipeline_data["output_dir"] = output_dir
             pipeline_data["output"] = output
+            pipeline_data["additional_arguments"] = kwargs
 
             output = dask.delayed(LogUtil.with_log)(
-                verbose, stage, pipeline_data, **kwargs
+                verbose, stage, pipeline_data, **stage_kwargs
             )
             self.delayed_outputs.append(output)
 

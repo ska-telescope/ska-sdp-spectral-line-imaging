@@ -2,9 +2,11 @@ import logging
 import shutil
 from functools import reduce
 
+from .constants import MANDATORY_CLI_ARGS
 from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_dir, read_dataset, write_dataset, write_yml
 from .log_util import LogUtil
+from .model.cli_arguments import CLIArguments
 from .model.config_manager import ConfigManager
 from .model.named_instance import NamedInstance
 from .scheduler import SchedulerFactory
@@ -23,7 +25,9 @@ class Pipeline(metaclass=NamedInstance):
           Stage to be executed
     """
 
-    def __init__(self, name, stages=None, _existing_instance_=False):
+    def __init__(
+        self, name, stages=None, global_config=None, cli_args=None, **kwargs
+    ):
         """
         Initialise the pipeline object
 
@@ -33,12 +37,20 @@ class Pipeline(metaclass=NamedInstance):
               Name of the pipeline
           stages: list[ConfigurableStage]
               Stages to be executed
-          _existing_instance_: bool
-              If true, return an existing instance with name
+          global_config: Configuration
+              Pipeline level configurations
+          cli_args: list[CLIArgument]
+              Runtime arguments for the pipeline
+          **kwargs:
+              Additional kwargs
         """
 
         self.name = name
         self._stages = [] if stages is None else stages
+        self._global_config = global_config
+        self._cli_args = CLIArguments(
+            MANDATORY_CLI_ARGS + ([] if cli_args is None else cli_args)
+        )
 
         LogUtil.configure(name)
         self.logger = logging.getLogger(self.name)
@@ -60,6 +72,24 @@ class Pipeline(metaclass=NamedInstance):
 
         return {"pipeline": stage_states, "parameters": stages_config}
 
+    def run(self):
+        """
+        Run the pipeline as a CLI command
+        """
+        cli_args = self._cli_args.parse_args()
+
+        stages = [] if cli_args.stages is None else cli_args.stages[0]
+
+        self(
+            cli_args.input,
+            stages=stages,
+            dask_scheduler=cli_args.dask_scheduler,
+            config_path=cli_args.config_path,
+            verbose=(cli_args.verbose != 0),
+            output_path=cli_args.output_path,
+            cli_args=self._cli_args.get_cli_args(),
+        )
+
     def __call__(
         self,
         infile_path,
@@ -68,6 +98,7 @@ class Pipeline(metaclass=NamedInstance):
         config_path=None,
         verbose=False,
         output_path=None,
+        cli_args=None,
     ):
         """
         Executes the pipeline
@@ -86,7 +117,10 @@ class Pipeline(metaclass=NamedInstance):
              Toggle DEBUG log level
           output_path: str
              Path to root output directory
+          cli_args: Optional[argparse.Namespace]
+             CLI arguments
         """
+
         if output_path is None:
             output_path = "./output"
         output_dir = create_output_dir(output_path, self.name)
@@ -143,7 +177,14 @@ class Pipeline(metaclass=NamedInstance):
             )}"""
         )
 
-        scheduler.schedule(selected_stages, vis, config, output_dir, verbose)
+        scheduler.schedule(
+            selected_stages,
+            vis,
+            config,
+            output_dir,
+            verbose,
+            cli_args=cli_args,
+        )
 
         output_pipeline_data = scheduler.execute()
         write_dataset(output_pipeline_data, output_dir)
