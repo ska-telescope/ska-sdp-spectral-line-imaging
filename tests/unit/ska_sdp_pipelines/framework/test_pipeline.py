@@ -314,4 +314,4 @@ def test_should_return_pipeline_defualt_configuration():
 
 def test_should_get_instance_of_pipeline():
     pipeline = Pipeline("test_pipeline", ["stage"])
-    assert pipeline == pipeline.get_instance()
+    assert pipeline == Pipeline("test_pipeline", _existing_instance_=True)

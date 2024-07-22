@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 
+from ..framework.exceptions import PipelineNotFoundException
 from ..framework.io_utils import write_yml
 from ..framework.pipeline import Pipeline
 from .constants import MAIN_ENTRY_POINT, SHEBANG_HEADER
@@ -22,7 +23,7 @@ class ExecutablePipeline:
             The content of the executable file
     """
 
-    def __init__(self, script_path):
+    def __init__(self, pipeline_name, script_path):
         """
         Initialise a executable pipeline object
 
@@ -32,6 +33,7 @@ class ExecutablePipeline:
                 Path to the pipeline definition
         """
         self._script_path = script_path
+        self._pipeline_name = pipeline_name
         self.installable_pipeline = None
         self.executable_content = None
 
@@ -43,6 +45,8 @@ class ExecutablePipeline:
         Raises
         ------
             Compilation error based on python interpretor.
+            PipelineNotFoundException if the provided pipeline name
+                doesn't exist
         """
         if not os.path.exists(self._script_path):
             raise FileNotFoundError(self._script_path)
@@ -53,6 +57,16 @@ class ExecutablePipeline:
         self.installable_pipeline = importlib.util.module_from_spec(spec)
         sys.modules["installable_pipeline"] = self.installable_pipeline
         spec.loader.exec_module(self.installable_pipeline)
+
+        valid_pipeline = Pipeline(
+            self._pipeline_name, _existing_instance_=True
+        )
+
+        if valid_pipeline is None:
+            raise PipelineNotFoundException(
+                f"Pipeline {self._pipeline_name} not"
+                f" found in {self._script_path}"
+            )
 
     def prepare_executable(self):
         """
@@ -65,7 +79,7 @@ class ExecutablePipeline:
         self.executable_content = (
             SHEBANG_HEADER.format(executable=sys.executable)
             + "".join(file_content)
-            + MAIN_ENTRY_POINT
+            + MAIN_ENTRY_POINT.format(pipeline_name=self._pipeline_name)
         )
 
     def install(self, config_install_path=None):
@@ -102,7 +116,7 @@ class ExecutablePipeline:
             The path is derived from sys.executable
         """
         executable_root = Path(sys.executable).parent.absolute()
-        pipeline = Pipeline.get_instance()
+        pipeline = Pipeline(self._pipeline_name, _existing_instance_=True)
         return f"{executable_root}/{pipeline.name}"
 
     def __write_config(self, config_root):
@@ -118,7 +132,7 @@ class ExecutablePipeline:
         if not os.path.exists(config_root):
             raise FileNotFoundError(f"Directory {config_root} not found")
 
-        pipeline = Pipeline.get_instance()
+        pipeline = Pipeline(self._pipeline_name, _existing_instance_=True)
         config_path = f"{config_root}/{pipeline.name}.yaml"
 
         write_yml(config_path, pipeline.config)

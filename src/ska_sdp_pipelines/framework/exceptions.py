@@ -45,10 +45,15 @@ class NoStageToExecuteException(builtins.Exception):
     pass
 
 
+class PipelineNotFoundException(builtins.Exception):
+    pass
+
+
 __all__ = [
     "ArgumentMismatchException",
     "PipelineMetadataMissingException",
     "StageNotFoundException",
     "ConfigNotInitialisedException",
     "NoStageToExecuteException",
+    "PipelineNotFoundException",
 ]

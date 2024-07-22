@@ -7,11 +7,12 @@ app = Typer()
 
 @app.command()
 def install(
+    pipeline_name,
     pipeline_path,
     config_install_path=Option(
         default=None,
         help="""Path to place the defualt config. If not provided,
-        the config will be saved into the pipeline script path""",
+            the config will be saved into the pipeline script path""",
     ),
 ):
     """
@@ -25,14 +26,14 @@ def install(
            Path to place the default config.
     """
 
-    executable_pipeline = ExecutablePipeline(pipeline_path)
+    executable_pipeline = ExecutablePipeline(pipeline_name, pipeline_path)
     executable_pipeline.validate_pipeline()
     executable_pipeline.prepare_executable()
     executable_pipeline.install(config_install_path)
 
 
 @app.command()
-def uninstall(pipeline_path):
+def uninstall(pipeline_name, pipeline_path):
     """
     Pipeline framework command to uninstall pipelines
 
@@ -41,7 +42,7 @@ def uninstall(pipeline_path):
        pipeline_path: str
             Path to the pipeline to be uninstalled
     """
-    executable_pipeline = ExecutablePipeline(pipeline_path)
+    executable_pipeline = ExecutablePipeline(pipeline_name, pipeline_path)
     executable_pipeline.validate_pipeline()
     executable_pipeline.prepare_executable()
     executable_pipeline.uninstall()
