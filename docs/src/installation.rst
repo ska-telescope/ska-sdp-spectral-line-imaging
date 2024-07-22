@@ -97,9 +97,10 @@ To enable ``git-hooks`` for the current repository please link the ``.githooks``
 The pre-commit hook is defined for the main branch and is present in the ``.githooks`` folder.
 The current pre-commit hook runs the following
 
-1. Tests on ``src`` folder
-2. ``pylint`` set to fail on warnings.
-3. Coverage test to not fall below 80%.
+#. ``pylint`` set to fail on warnings.
+#. Tests on ``src`` folder, with coverage not to fall below 80%.
+#. Build documentation
+#. Help prepare commit message as per agreed format
 
 GPG signing the commits
 --------------------------
