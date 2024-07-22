@@ -257,7 +257,7 @@ def export_image(pipeline_data, image_name):
     return pipeline_data["output"]
 
 
-pipeline_1 = Pipeline(
+spectral_line_imaging_pipeline = Pipeline(
     "spectral_line_imaging_pipeline",
     stages=[
         select_field,
