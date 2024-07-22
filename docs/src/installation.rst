@@ -99,6 +99,7 @@ The current pre-commit hook runs the following
 
 1. Tests on ``src`` folder
 2. ``pylint`` set to fail on warnings.
+3. Coverage test to not fall below 80%.
 
 GPG signing the commits
 --------------------------
