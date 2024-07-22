@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+set -e
+
+exec < /dev/tty
+
+# Function to prompt the user with a message
+ask_input() {
+    local prompt="$1"
+    local var_name="$2"
+    read -rp "$prompt: " $var_name
+}
+
+# Function to prompt the user with a yes/no question
+ask_yes_no() {
+    local prompt="$1"
+    local response
+    while true; do
+        read -rp "$prompt [y/n]: " response
+        case "$response" in
+            [Yy]*) return 0 ;;
+            [Nn]*) return 1 ;;
+            *) echo "Please answer yes or no." ;;
+        esac
+    done
+}
+
+# Only run for commit message templates (not for merges, etc.)
+if [[ "$2" != "" && "$2" != "template" ]]; then
+    exit 0
+fi
+
+# Get commit message file path
+COMMIT_MSG_FILE="$1"
+
+echo -e "\n\e[34m\
+================================\n\
+    Generating commit message   \n\
+================================\e[0m\n";
+
+# Ask for JIRA ticket, title, and description
+ask_input "Enter JIRA ticket" jira_ticket
+ask_input "Enter title of the commit" commit_title
+
+# Generate the commit message
+echo "$jira_ticket: $commit_title" > "$COMMIT_MSG_FILE"
+
+echo "" >> "$COMMIT_MSG_FILE"
+echo "# Keep at least one blank line between title, body and co-author tag" >> "$COMMIT_MSG_FILE"
+echo "# By default, consecutive empty lines will be removed by git" >> "$COMMIT_MSG_FILE"
+echo "" >> "$COMMIT_MSG_FILE"
+echo "" >> "$COMMIT_MSG_FILE"
+
+# Ask if the user wants to add a co-author
+if ask_yes_no "Add a co-author template?"; then
+    echo "" >> "$COMMIT_MSG_FILE"
+    echo "# Example: Rob Bob <rob.bob@gmail.com>" >> "$COMMIT_MSG_FILE"
+    echo "Co-authored-by: name <email>" >> "$COMMIT_MSG_FILE"
+    echo "" >> "$COMMIT_MSG_FILE"
+fi
+
+exec <&-
+
+echo $'\n\n'
+
+exit 0

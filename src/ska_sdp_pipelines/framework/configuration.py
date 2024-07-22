@@ -1,6 +1,9 @@
 import inspect
 
-from .exceptions import ArgumentMismatchException, VisibilityMissingException
+from .exceptions import (
+    ArgumentMismatchException,
+    PipelineMetadataMissingException,
+)
 
 
 class ConfigParam:
@@ -81,7 +84,7 @@ class Configuration:
 
         Raises
         ------
-            VisibilityMissingException:
+            PipelineMetadataMissingException:
                 If mandatory argument 'vis' is missing
                 in the parameter list of the stage definition
             ArgumentMismatchException:
@@ -96,8 +99,8 @@ class Configuration:
             len(stage_arguments) == 0
             or stage_arguments[0] in configuration_keys
         ):
-            raise VisibilityMissingException(
-                "Mandatory argument vis missing in argument list"
+            raise PipelineMetadataMissingException(
+                "Mandatory first argument pipeline metadata missing"
             )
 
         configuration_variables = set(stage_arguments[1:])
