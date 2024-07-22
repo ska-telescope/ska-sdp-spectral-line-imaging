@@ -1,14 +1,64 @@
-#!/bin/sh
-#
-# An example hook script to verify what is about to be committed.
-# Called by "git commit" with no arguments.  The hook should
-# exit with non-zero status after issuing an appropriate message if
-# it wants to stop the commit.
-#
-# To enable this hook, rename this file to "pre-commit".
+#!/usr/bin/env bash
 
-
-BRANCH=$(git branch --show-current)
 set -e
 
-make python-lint
+exec < /dev/tty
+
+# Get staged files into an array
+readarray -t STAGED_FILES <<< "$(git diff --cached --name-only)"
+
+# List of files to track
+FILES=("pyproject.toml" "environment.yml")
+
+# Check if any of the specified files are staged for commit
+CHECK_FOR_FILE_CHANGE=0
+for file in "${FILES[@]}"; do
+    if [[ " ${STAGED_FILES[*]} " == *"$file"* ]]; then
+        CHECK_FOR_FILE_CHANGE=1
+        break
+    fi
+done
+
+if [[ $CHECK_FOR_FILE_CHANGE -eq 1 ]] ; then
+    echo -e "\n\e[31mChanges detected in $file\e[0m".
+    echo
+    read -rp 'Have you updated your local conda environment? [y/n] ' response
+    case "$response" in
+        [Yy]*) ;;
+        [Nn]*) echo -e "\nPlease run the \e[32mscripts/recreate-conda-env.sh\e[0m to update conda environment, then install the pipeline\n" ; exit 1;;
+        *) echo -e "\nPlease answer \e[31myes or no\e[0m. Exiting.\n"; exit 1 ;;
+    esac
+fi
+
+# Check if API documentation is generated
+echo
+read -rp 'Have you generated the API documentation using create-doc? [y/n] ' response
+case "$response" in
+    [Yy]*) ;;
+    [Nn]*) echo -e "\nPlease run \e[32mmake -C docs/ create-doc\e[0m to generate readthedocs documentation from API docstrings.\n\e[31mBe sure to review the changes\e[0m after creating documentation.\n" ; exit 1;;
+    *) echo -e "\nPlease answer \e[31myes or no\e[0m. Exiting.\n"; exit 1 ;;
+esac
+
+exec <&-
+
+# Running format, lints, test
+echo -e "\n\e[34m\
+======================================\n\
+    Running python lint and tests   \n\
+======================================\e[0m\n";
+
+make python-lint;
+make python-test;
+
+# Checking if docs can be built
+echo -e "\n\e[34m\
+==========================================\n\
+    Building readthedocs documentation   \n\
+==========================================\e[0m\n";
+
+make docs-build html;
+
+# A sleep to check for any reports
+echo "Exiting pre-commit";
+
+exit 0

@@ -1,4 +1,4 @@
-# This prototype additionally depends on ska_sdp_datamodels
+# This pipeline additionally depends on ska_sdp_datamodels
 # and ska_sdp_func_python
 #
 # Image the line free channels for the continuum model
@@ -10,11 +10,11 @@
 #
 # Running the pipline
 #
-# spectral_line_imaging_prototype --input <input.ms>
+# spectral_line_imaging_pipeline --input <input.ms>
 #
 # With config overridden
-# spectral_line_imaging_prototype --input <input.ms> \
-# --config spectral_line_imaging_prototype.yaml
+# spectral_line_imaging_pipeline --input <input.ms> \
+# --config spectral_line_imaging_pipeline.yaml
 #
 # pylint: disable=no-member,import-error
 import os

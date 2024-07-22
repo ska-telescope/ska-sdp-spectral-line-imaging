@@ -6,19 +6,11 @@ This repository consists of the spectral line imaging pipeline.
 
 ## Pipeline Installation
 
-To install the spectral line imaging pipeline, run
-
-```bash
-poetry install
-
-sdp-pipelines install src/ska_sdp_spectral_line_imaging/pipeline.py
-```
+Please visit [docs](https://developer.skao.int/projects/ska-sdp-spectral-line-imaging/en/latest/installation.html) for instructions on how to setup, install and run the spectral line imaging pipeline.
 
 ## Developer Setup
 
-It is recommended to use a virtual environment for the developer setup. This document explains the developer setup using `conda`.
-
-Please make sure to clone the submodules also using
+Please make sure to clone the submodules using
 
 ```bash
 git clone --recurse-submodules url://git-repository
@@ -32,21 +24,20 @@ Also make sure to update submodules at every pull.
 git submodule update --init
 ```
 
-**Setup and activate environment**
+**Setting up conda and installing pipeline**
 
-The `conda` based approach, sets up an environment with `python 3.10`, `pip 24.0` and `poetry 1.8`
+It is recommended to use a virtual environment for the developer setup. This document explains the developer setup using `conda`.
+
+The `conda` based approach, sets up an environment with packages defined in ``environment.yaml``. This approach makes sure that the poetry and python versions used with this repo do not conflict with any previously installed versions on your machine.
+
+You can run the scripts present in ``/scripts`` directory to create a conda environment and install pipeline.
 
 ```bash
-conda env create -f environment.yml
+./scripts/recreate-conda-env.sh
+
 conda activate spec_line
-```
 
-**Install dependencies**
-
-`poetry` is used for dependency management.
-
-```bash
-poetry install
+scripts/install-pipeline.sh
 ```
 
 **Formatting and Linting your code**
@@ -67,6 +58,23 @@ make python-test
 ```
 make -C docs/ create-doc
 ```
+
+**Git hooks**
+
+To enable `git-hooks` for the current repository, please link the `.githooks` folder to the `core.hooksPath` variable of the `git` configuration.
+
+```bash
+git config --local core.hooksPath .githooks/
+```
+
+The pre-commit hook is defined for the main branch and is present in the `.githooks` folder.
+The current pre-commit hook runs the following
+
+1. `pylint` set to fail on warnings.
+1. Tests on `src` folder
+    1. Coverage not to fall below 80%.
+1. Build documentation
+1. Help prepare commit message as per agreed format
 
 **GPG signing the commits**
 
@@ -106,24 +114,3 @@ To use gpg keys to sign the commits
 git config gpg.format openpgp
 git config user.signingkey <GPG KEY>
 ```
-
-**Git hooks**
-
-To enable `git-hooks` for the current repository please link the `.githooks` folder to the `core.hooksPath` variable of the `git` configuration
-
-```bash
-git config --local core.hooksPath .githooks/
-```
-
-The pre-commit hook is defined for the main branch and is present in the `.githooks` folder.
-The current pre-commit hook runs the following
-
-1. Tests on `src` folder
-2. `pylint` set to fail on warnings. **[To be enabled once code is added]**
-3. Coverage test to not fall below 80%  **[To be enabled once code is added]**
-
-## To be updated
-
-- Installation
-- Usage
-- Support
