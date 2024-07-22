@@ -43,7 +43,7 @@ This command install spectral line pipeline and generates default config YAML fi
 
 .. code-block:: bash
 
-    sdp-pipeline install path/to/pipeline-definition
+    sdp-pipeline install pipeline_name path/to/pipeline-definition
         [--config-install-path]=/path/to/install/location
 
 ==============

@@ -11,7 +11,7 @@ To install the spectral line imaging pipeline, run
 ```bash
 poetry install
 
-sdp-pipelines install src/ska_sdp_spectral_line_imaging/pipeline.py
+sdp-pipelines install spectral_line_imaging_prototype src/ska_sdp_spectral_line_imaging/pipeline.py
 ```
 
 ## Developer Setup
