@@ -213,9 +213,18 @@ class Pipeline(metaclass=NamedInstance):
         if not active_stages:
             raise NoStageToExecuteException("Selected stages empty")
 
-        executable_stages = [
-            stage for stage in self._stages if stage.name in active_stages
-        ]
+        executable_stages = []
+        for stage in self._stages:
+            if stage.name in active_stages:
+                stage.update_pipeline_parameters(
+                    self.config_manager.stage_config(stage.name),
+                    input_data=vis,
+                    output_dir=output_dir,
+                    cli_args=cli_args,
+                    global_config=self._global_config,
+                )
+
+                executable_stages.append(stage)
 
         self.logger.info(
             f"""Selected stages to run: {', '.join(
@@ -223,14 +232,7 @@ class Pipeline(metaclass=NamedInstance):
             )}"""
         )
 
-        scheduler.schedule(
-            executable_stages,
-            vis,
-            self.config_manager,
-            output_dir,
-            verbose,
-            cli_args=cli_args,
-        )
+        scheduler.schedule(executable_stages, verbose)
 
         output_pipeline_data = scheduler.execute()
         write_dataset(output_pipeline_data, output_dir)

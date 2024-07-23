@@ -20,9 +20,9 @@ from ..stubs.predict import predict
         ),
     ),
 )
-def predict_stage(pipeline_data, epsilon=None, cell_size=None):
-    ps = pipeline_data["output"]["ps"]
-    model_image = pipeline_data["output"]["model_image"]
+def predict_stage(upstream_output, epsilon=None, cell_size=None):
+    ps = upstream_output["ps"]
+    model_image = upstream_output["model_image"]
 
     template_core_dims = ["frequency", "polarization", "time", "baseline_id"]
     template_chunk_sizes = {

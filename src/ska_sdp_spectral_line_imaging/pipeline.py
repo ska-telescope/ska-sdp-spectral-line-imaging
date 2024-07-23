@@ -48,8 +48,8 @@ from ska_sdp_spectral_line_imaging.stages.predict_stage import predict_stage
         ddi=ConfigParam(int, 0),
     ),
 )
-def select_field(pipeline_data, intent, field_id, ddi):
-    ps = pipeline_data["input_data"]
+def select_field(upstream_output, intent, field_id, ddi, input_data):
+    ps = input_data
     # TODO: This is a hack to get the psname
     psname = list(ps.keys())[0].split(".ps")[0]
 
@@ -67,8 +67,8 @@ def select_field(pipeline_data, intent, field_id, ddi):
         pols=ConfigParam(list, ["I", "Q", "U", "V"]),
     ),
 )
-def read_model(pipeline_data, image_name, pols):
-    ps = pipeline_data["output"]["ps"]
+def read_model(upstream_output, image_name, pols):
+    ps = upstream_output["ps"]
     images = []
 
     for pol in pols:
@@ -83,9 +83,9 @@ def read_model(pipeline_data, image_name, pols):
 
 
 @ConfigurableStage("continuum_subtraction")
-def cont_sub(pipeline_data):
-    ps = pipeline_data["output"]["ps"]
-    model = pipeline_data["output"]["model_vis"]
+def cont_sub(upstream_output):
+    ps = upstream_output["ps"]
+    model = upstream_output["model_vis"]
 
     return {"ps": ps.assign({"VISIBILITY": ps.VISIBILITY - model})}
 
@@ -174,8 +174,8 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
         ny=ConfigParam(int, 256, description="Image size y"),
     ),
 )
-def imaging_stage(pipeline_data, epsilon, cell_size, nx, ny):
-    ps = pipeline_data["output"]["ps"]
+def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
+    ps = upstream_output["ps"]
 
     template_core_dims = ["frequency", "polarization", "ra", "dec"]
     template_chunk_sizes = {
@@ -211,8 +211,8 @@ def imaging_stage(pipeline_data, epsilon, cell_size, nx, ny):
 
 
 @ConfigurableStage("vis_stokes_conversion")
-def vis_stokes_conversion(pipeline_data):
-    ps = pipeline_data["output"]["ps"]
+def vis_stokes_conversion(upstream_output):
+    ps = upstream_output["ps"]
 
     converted_vis = xr.apply_ufunc(
         convert_pol_frame,
@@ -234,13 +234,11 @@ def vis_stokes_conversion(pipeline_data):
         psout_name=ConfigParam(str, "residual.zarr"),
     ),
 )
-def export_residual(pipeline_data, psout_name):
-    ps = pipeline_data["output"]["ps"]
-    output_path = os.path.abspath(
-        os.path.join(pipeline_data["output_dir"], psout_name)
-    )
+def export_residual(upstream_output, psout_name, output_dir):
+    ps = upstream_output["ps"]
+    output_path = os.path.abspath(os.path.join(output_dir, psout_name))
     ps.VISIBILITY.to_zarr(store=output_path)
-    return pipeline_data["output"]
+    return upstream_output
 
 
 @ConfigurableStage(
@@ -249,12 +247,12 @@ def export_residual(pipeline_data, psout_name):
         image_name=ConfigParam(str, "output_image.zarr"),
     ),
 )
-def export_image(pipeline_data, image_name):
-    cubes = pipeline_data["output"]["cubes"]
-    output_path = os.path.join(pipeline_data["output_dir"], image_name)
+def export_image(upstream_output, image_name, output_dir):
+    cubes = upstream_output["cubes"]
+    output_path = os.path.join(output_dir, image_name)
 
     cubes.to_zarr(store=output_path)
-    return pipeline_data["output"]
+    return upstream_output
 
 
 spectral_line_imaging_pipeline = Pipeline(

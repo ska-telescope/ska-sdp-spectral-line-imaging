@@ -106,6 +106,10 @@ def test_should_run_the_pipeline_as_cli_command(
 ):
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage2"]
+    config_manager_mock.stage_config.side_effect = [
+        "stage_config1",
+        "stage_config2",
+    ]
     cli_arguments.return_value = cli_arguments
     cli_arguments.get_cli_args.return_value = {"input": "infile_path"}
     args = Mock(name="CLI_args")
@@ -135,15 +139,27 @@ def test_should_run_the_pipeline_as_cli_command(
     scheduler_factory.get_scheduler.assert_called_once_with(None)
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage2],
-        "dataset",
-        config_manager_mock,
-        "./output/timestamp",
         False,
-        cli_args={"input": "infile_path"},
     )
 
     create_output_mock.assert_called_once_with("./output", "test_pipeline")
     write_mock.assert_called_once_with("output", "./output/timestamp")
+
+    stage1.update_pipeline_parameters.assert_called_once_with(
+        "stage_config1",
+        input_data="dataset",
+        output_dir="./output/timestamp",
+        cli_args={"input": "infile_path"},
+        global_config=None,
+    )
+
+    stage2.update_pipeline_parameters.assert_called_once_with(
+        "stage_config2",
+        input_data="dataset",
+        output_dir="./output/timestamp",
+        cli_args={"input": "infile_path"},
+        global_config=None,
+    )
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
@@ -157,6 +173,10 @@ def test_should_run_the_pipeline(
 ):
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage2"]
+    config_manager_mock.stage_config.side_effect = [
+        "stage_config1",
+        "stage_config2",
+    ]
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
@@ -174,15 +194,27 @@ def test_should_run_the_pipeline(
     scheduler_factory.get_scheduler.assert_called_once_with(None)
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage2],
-        "dataset",
-        config_manager_mock,
-        "./output/timestamp",
         False,
-        cli_args=None,
     )
 
     create_output_mock.assert_called_once_with("./output", "test_pipeline")
     write_mock.assert_called_once_with("output", "./output/timestamp")
+
+    stage1.update_pipeline_parameters.assert_called_once_with(
+        "stage_config1",
+        input_data="dataset",
+        output_dir="./output/timestamp",
+        cli_args=None,
+        global_config=None,
+    )
+
+    stage2.update_pipeline_parameters.assert_called_once_with(
+        "stage_config2",
+        input_data="dataset",
+        output_dir="./output/timestamp",
+        cli_args=None,
+        global_config=None,
+    )
 
 
 def test_should_run_the_pipeline_with_verbose(log_util):
@@ -237,11 +269,7 @@ def test_should_run_the_pipeline_with_selected_stages(
 
     default_scheduler.schedule.assert_called_once_with(
         [stage1],
-        "dataset",
-        config_manager_mock,
-        "./output/timestamp",
         False,
-        cli_args=None,
     )
 
 
@@ -277,13 +305,13 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     config_manager_mock.stages_to_run = ["stage1", "stage3"]
     create_output_mock.return_value = "/path/to/output/timestamp"
 
-    stage1 = Mock("mock_stage_1", return_value="Stage_1 output")
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
-    stage2 = Mock("mock_stage_2", return_value="Stage_2 output")
+    stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.stage_config = Configuration()
-    stage3 = Mock("mock_stage_3", return_value="Stage_3 output")
+    stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.stage_config = Configuration()
 
@@ -308,11 +336,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
 
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage3],
-        "dataset",
-        config_manager_mock,
-        "/path/to/output/timestamp",
         False,
-        cli_args=None,
     )
 
 
@@ -350,11 +374,7 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
 
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage2],
-        "dataset",
-        config_manager_mock,
-        "./output/timestamp",
         False,
-        cli_args=None,
     )
 
 

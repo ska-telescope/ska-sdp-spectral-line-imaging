@@ -1,8 +1,6 @@
 from mock import Mock, mock
 
-from ska_sdp_pipelines.framework.configuration import Configuration
 from ska_sdp_pipelines.framework.log_util import LogUtil
-from ska_sdp_pipelines.framework.model.config_manager import ConfigManager
 from ska_sdp_pipelines.framework.scheduler import (
     DaskScheduler,
     DefaultScheduler,
@@ -25,15 +23,6 @@ def test_should_get_dask_scheduler(client_mock):
 def test_should_schedule_stages_with_configuration_params(
     delayed_mock,
 ):
-    config = ConfigManager(
-        {"stage1": True, "stage2": True, "stage3": True},
-        {
-            "stage1": {"stage1_parameter_1": 0},
-            "stage2": {"stage2_parameter_1": 0},
-            "stage3": {"stage3_parameter_1": 0},
-        },
-    )
-
     delayed_mock_call_1 = Mock(name="delay1", return_value="DELAYED_1")
     delayed_mock_call_2 = Mock(name="delay2", return_value="DELAYED_2")
     delayed_mock_call_3 = Mock(name="delay3", return_value="DELAYED_3")
@@ -44,24 +33,17 @@ def test_should_schedule_stages_with_configuration_params(
         delayed_mock_call_3,
     ]
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
-    stage1.name = "stage1"
-    stage1.stage_config = Configuration()
+    stage1.stage_definition = "stage1_definition"
+    stage1.get_stage_arguments.return_value = {"arg1": 1}
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
-    stage2.name = "stage2"
-    stage2.stage_config = Configuration()
+    stage2.stage_definition = "stage2_definition"
+    stage2.get_stage_arguments.return_value = {"arg2": 2}
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
-    stage3.name = "stage3"
-    stage3.stage_config = Configuration()
+    stage3.stage_definition = "stage3_definition"
+    stage3.get_stage_arguments.return_value = {"arg3": 3}
 
     default_scheduler = DefaultScheduler()
-    default_scheduler.schedule(
-        [stage1, stage2, stage3],
-        "dataset",
-        config,
-        "output_dir",
-        arg1="arg1",
-        arg2="arg2",
-    )
+    default_scheduler.schedule([stage1, stage2, stage3])
 
     delayed_mock.assert_has_calls(
         [
@@ -73,36 +55,18 @@ def test_should_schedule_stages_with_configuration_params(
 
     delayed_mock_call_1.assert_called_once_with(
         False,
-        stage1,
-        {
-            "input_data": "dataset",
-            "output": None,
-            "output_dir": "output_dir",
-            "additional_arguments": {"arg1": "arg1", "arg2": "arg2"},
-        },
-        stage1_parameter_1=0,
+        "stage1_definition",
+        None,
+        arg1=1,
     )
     delayed_mock_call_2.assert_called_once_with(
-        False,
-        stage2,
-        {
-            "input_data": "dataset",
-            "output": "DELAYED_1",
-            "output_dir": "output_dir",
-            "additional_arguments": {"arg1": "arg1", "arg2": "arg2"},
-        },
-        stage2_parameter_1=0,
+        False, "stage2_definition", "DELAYED_1", arg2=2
     )
     delayed_mock_call_3.assert_called_once_with(
         False,
-        stage3,
-        {
-            "input_data": "dataset",
-            "output": "DELAYED_2",
-            "output_dir": "output_dir",
-            "additional_arguments": {"arg1": "arg1", "arg2": "arg2"},
-        },
-        stage3_parameter_1=0,
+        "stage3_definition",
+        "DELAYED_2",
+        arg3=3,
     )
 
     assert default_scheduler.delayed_outputs == [

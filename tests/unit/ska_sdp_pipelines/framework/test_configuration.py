@@ -1,4 +1,5 @@
 import pytest
+from mock import Mock
 
 from ska_sdp_pipelines.framework.configuration import (
     ConfigParam,
@@ -34,11 +35,11 @@ def test_should_raise_exception_if_mandatory_first_argument_is_missing():
         stage_arguments=ConfigParam("number", 0)
     )
 
-    def temp_stage():
-        pass
+    temp_stage = Mock(name="temp_stage")
+    temp_stage.params = []
 
-    def temp_stage1(stage_arguments):
-        pass
+    temp_stage1 = Mock(name="temp_stage1")
+    temp_stage1.params = ["stage_arguments"]
 
     with pytest.raises(PipelineMetadataMissingException):
         configuration.valididate_arguments_for(temp_stage)
@@ -50,8 +51,8 @@ def test_should_raise_exception_if_mandatory_first_argument_is_missing():
 def test_should_raise_exception_if_function_arguments_are_invalide():
     config = Configuration(stage_arguments=ConfigParam("number", 0))
 
-    def temp_stage(vis):
-        pass
+    temp_stage = Mock(name="temp_stage")
+    temp_stage.params = ["vis"]
 
     with pytest.raises(ArgumentMismatchException):
         config.valididate_arguments_for(temp_stage)

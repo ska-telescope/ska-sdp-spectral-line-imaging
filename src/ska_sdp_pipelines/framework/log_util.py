@@ -64,7 +64,7 @@ class LogUtil:
         }
 
     @classmethod
-    def with_log(cls, verbose, stage, pipeline_data, **kwargs):
+    def with_log(cls, verbose, stage, *args, **kwargs):
         """
         Execute stage with entry and exit log
 
@@ -89,6 +89,6 @@ class LogUtil:
         if verbose:
             logger.setLevel(logging.DEBUG)
         logger.info(f"=============== START {stage.name} ============= ")
-        output = stage(pipeline_data, **kwargs)
+        output = stage(*args, **kwargs)
         logger.info(f"=============== FINISH {stage.name} ============ ")
         return output

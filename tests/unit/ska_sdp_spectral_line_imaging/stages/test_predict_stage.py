@@ -17,9 +17,9 @@ def test_should_be_able_to_distribute_predict(
     ps.sizes = mock_chunks
     model = Mock(name="model")
 
-    pipeline_data = {"output": {"ps": ps, "model_image": model}}
-
-    predict_stage(pipeline_data, epsilon=1e-4, cell_size=10.0)
+    predict_stage.stage_definition(
+        {"ps": ps, "model_image": model}, epsilon=1e-4, cell_size=10.0
+    )
 
     map_block_mock.assert_called_once_with(
         predict_mock,

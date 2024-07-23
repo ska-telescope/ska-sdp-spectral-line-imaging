@@ -1,5 +1,3 @@
-import inspect
-
 from .exceptions import (
     ArgumentMismatchException,
     PipelineMetadataMissingException,
@@ -72,7 +70,7 @@ class Configuration:
             key: value.default for key, value in self.__config_params.items()
         }
 
-    def valididate_arguments_for(self, stage_definition):
+    def valididate_arguments_for(self, stage):
         """
         Validates if the arguments provided for the stage contains all the
         mandatory and configurable parameters
@@ -92,7 +90,7 @@ class Configuration:
                 in the parameter list of the stage definition
         """
 
-        stage_arguments = inspect.getfullargspec(stage_definition).args
+        stage_arguments = stage.params
         configuration_keys = set(self.__config_params.keys())
 
         if (
@@ -103,8 +101,8 @@ class Configuration:
                 "Mandatory first argument pipeline metadata missing"
             )
 
-        configuration_variables = set(stage_arguments[1:])
-        if configuration_variables != configuration_keys:
+        configuration_variables = set(stage_arguments)
+        if not configuration_variables.issuperset(configuration_keys):
             raise ArgumentMismatchException("Invalid argument list")
 
     def extend(self, **kwargs):
