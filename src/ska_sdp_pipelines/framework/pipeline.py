@@ -1,6 +1,5 @@
+import functools
 import logging
-import shutil
-from functools import reduce
 
 from .constants import MANDATORY_CLI_ARGS
 from .exceptions import NoStageToExecuteException, StageNotFoundException
@@ -55,22 +54,86 @@ class Pipeline(metaclass=NamedInstance):
         LogUtil.configure(name)
         self.logger = logging.getLogger(self.name)
 
-    @property
-    def config(self):
+        self.config_manager = ConfigManager(
+            pipeline=self._pipeline_config(), parameters=self._parameter()
+        )
+
+    def __validate_stages(self, stages):
         """
-        Pipeline configuration dictionary
+        Validates the stages name with the pipeline definition stages.
+
+        Parameters
+        ----------
+        stages: [str]
+            Stages names
+
+        Raises
+        ------
+        StageNotFoundException
+            If any non-existing stage found.
+        """
+        stages_names = [stage.name for stage in self._stages]
+
+        non_existing_stages = [
+            stage for stage in stages if stage not in stages_names
+        ]
+        if non_existing_stages:
+            raise StageNotFoundException(
+                f"Stages not found: {non_existing_stages}"
+            )
+
+    def _pipeline_config(self, selected_stages=None):
+        """
+        Returns the pipeline config as a dictionary of enabled/disabled stages.
+
+        Parameters
+        ----------
+        selected_stages: [str]
+            Enabled stages.
 
         Returns
         -------
-            Dictionary containing the stage states and default parameters
+        dict
+            Dictionary of selected stages
         """
-        stages_config = reduce(
+        if selected_stages is not None:
+            if len(selected_stages):
+                return {
+                    stage.name: stage.name in selected_stages
+                    for stage in self._stages
+                }
+            else:
+                return None
+
+        return {stage.name: True for stage in self._stages}
+
+    def _parameter(self):
+        """
+        Returns pipeline stages config parameters dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary of stage parameters
+        """
+
+        return functools.reduce(
             lambda config, stage: {**config, **stage.config}, self._stages, {}
         )
 
-        stage_states = {stage.name: True for stage in self._stages}
+    @property
+    def config(self):
+        """
+        Get all the configuration
 
-        return {"pipeline": stage_states, "parameters": stages_config}
+        Returns
+        -------
+        dict
+            Pipeline configuration with top level keys
+                - `parameters`
+                - `pipelines`
+        """
+        return self.config_manager.config
 
     def run(self):
         """
@@ -120,7 +183,7 @@ class Pipeline(metaclass=NamedInstance):
           cli_args: Optional[argparse.Namespace]
              CLI arguments
         """
-
+        stages = [] if stages is None else stages
         if output_path is None:
             output_path = "./output"
         output_dir = create_output_dir(output_path, self.name)
@@ -136,51 +199,34 @@ class Pipeline(metaclass=NamedInstance):
         self.logger.info(f"Current run output path : {output_dir}")
 
         vis = read_dataset(infile_path)
-        config = ConfigManager()
-        stage_names = [stage.name for stage in self._stages]
-        selected_stages = self._stages
-        stages_to_run = None
+
         scheduler = SchedulerFactory.get_scheduler(dask_scheduler)
+        self.config_manager.update_config(
+            config_path=config_path,
+            pipeline=self._pipeline_config(selected_stages=stages),
+        )
 
-        if config_path is not None:
-            ConfigManager.init(config_path)
-            config = ConfigManager.get_config()
-            stages_to_run = config.stages_to_run
-            shutil.copy(config_path, f"{output_dir}/config.yml")
-        else:
-            write_yml(f"{output_dir}/config.yml", self.config)
+        self.__validate_stages(stages)
 
-        if stages:
-            non_existent_stages = [
-                stage_name
-                for stage_name in stages
-                if stage_name not in stage_names
-            ]
+        active_stages = self.config_manager.stages_to_run
 
-            if non_existent_stages:
-                raise StageNotFoundException(
-                    f"Stages not found: {non_existent_stages}"
-                )
-
-            stages_to_run = stages
-
-        if stages_to_run is not None:
-            selected_stages = [
-                stage for stage in self._stages if stage.name in stages_to_run
-            ]
-        if not selected_stages:
+        if not active_stages:
             raise NoStageToExecuteException("Selected stages empty")
+
+        executable_stages = [
+            stage for stage in self._stages if stage.name in active_stages
+        ]
 
         self.logger.info(
             f"""Selected stages to run: {', '.join(
-                stage.name for stage in selected_stages
+                stage.name for stage in executable_stages
             )}"""
         )
 
         scheduler.schedule(
-            selected_stages,
+            executable_stages,
             vis,
-            config,
+            self.config_manager,
             output_dir,
             verbose,
             cli_args=cli_args,
@@ -188,5 +234,6 @@ class Pipeline(metaclass=NamedInstance):
 
         output_pipeline_data = scheduler.execute()
         write_dataset(output_pipeline_data, output_dir)
+        write_yml(f"{output_dir}/config.yml", self.config_manager.config)
 
         self.logger.info("=============== FINISH =====================")

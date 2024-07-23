@@ -26,14 +26,12 @@ def test_should_schedule_stages_with_configuration_params(
     delayed_mock,
 ):
     config = ConfigManager(
+        {"stage1": True, "stage2": True, "stage3": True},
         {
-            "pipeline": {"stage1": True, "stage2": True, "stage3": True},
-            "parameters": {
-                "stage1": {"stage1_parameter_1": 0},
-                "stage2": {"stage2_parameter_1": 0},
-                "stage3": {"stage3_parameter_1": 0},
-            },
-        }
+            "stage1": {"stage1_parameter_1": 0},
+            "stage2": {"stage2_parameter_1": 0},
+            "stage3": {"stage3_parameter_1": 0},
+        },
     )
 
     delayed_mock_call_1 = Mock(name="delay1", return_value="DELAYED_1")

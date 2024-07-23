@@ -62,10 +62,6 @@ class DefaultScheduler:
         """
         output = None
         for stage in stages:
-            stage_kwargs = stage.stage_config.extend(
-                **config.stage_config(stage.name)
-            )
-
             pipeline_data = dict()
             pipeline_data["input_data"] = vis
             pipeline_data["output_dir"] = output_dir
@@ -73,7 +69,10 @@ class DefaultScheduler:
             pipeline_data["additional_arguments"] = kwargs
 
             output = dask.delayed(LogUtil.with_log)(
-                verbose, stage, pipeline_data, **stage_kwargs
+                verbose,
+                stage,
+                pipeline_data,
+                **config.stage_config(stage.name)
             )
             self.delayed_outputs.append(output)
 
