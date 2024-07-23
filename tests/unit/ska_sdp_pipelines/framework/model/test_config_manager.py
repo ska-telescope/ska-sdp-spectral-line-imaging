@@ -6,7 +6,6 @@ from ska_sdp_pipelines.framework.model.config_manager import ConfigManager
 
 @pytest.fixture(autouse=True)
 def setup():
-    ConfigManager._instance = None
     pipeline = {"stage1": True, "stage2": False, "stage3": True}
     parameters = {
         "stage1": {"stage1_parameter_1": 0},
@@ -118,3 +117,22 @@ def test_should_return_stages_config(setup):
     expected_stage_config = {"stage2_parameter_1": 0}
 
     assert expected_stage_config == config_manager.stage_config("stage2")
+
+
+@mock.patch("ska_sdp_pipelines.framework.model.config_manager.write_yml")
+def test_should_write_config_to_path(write_yml_mock, setup):
+    config_manager = setup
+
+    path = "/path/to/write"
+    config = {
+        "pipeline": {"stage1": True, "stage2": False, "stage3": True},
+        "parameters": {
+            "stage1": {"stage1_parameter_1": 0},
+            "stage2": {"stage2_parameter_1": 0},
+            "stage3": {"stage3_parameter_1": 0},
+        },
+    }
+
+    config_manager.write_yml(path)
+
+    write_yml_mock.assert_called_once_with(path, config)

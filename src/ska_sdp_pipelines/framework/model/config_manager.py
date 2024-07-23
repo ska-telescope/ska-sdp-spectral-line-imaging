@@ -1,5 +1,7 @@
 import yaml
 
+from ..io_utils import write_yml
+
 
 class ConfigManager:
     """
@@ -86,6 +88,17 @@ class ConfigManager:
             Stage parameters dictionary.
         """
         return self.parameters.get(stage_name, dict())
+
+    def write_yml(self, path):
+        """
+        Writes config to provided path in yaml format.
+
+        Parameters
+        ----------
+        path: str
+            Location of config file to write to.
+        """
+        write_yml(path, self.config)
 
     @property
     def config(self):

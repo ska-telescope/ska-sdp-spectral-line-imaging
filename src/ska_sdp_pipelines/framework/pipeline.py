@@ -3,7 +3,7 @@ import logging
 
 from .constants import MANDATORY_CLI_ARGS
 from .exceptions import NoStageToExecuteException, StageNotFoundException
-from .io_utils import create_output_dir, read_dataset, write_dataset, write_yml
+from .io_utils import create_output_dir, read_dataset, write_dataset
 from .log_util import LogUtil
 from .model.cli_arguments import CLIArguments
 from .model.config_manager import ConfigManager
@@ -234,6 +234,7 @@ class Pipeline(metaclass=NamedInstance):
 
         output_pipeline_data = scheduler.execute()
         write_dataset(output_pipeline_data, output_dir)
-        write_yml(f"{output_dir}/config.yml", self.config_manager.config)
+
+        self.config_manager.write_yml(f"{output_dir}/config.yml")
 
         self.logger.info("=============== FINISH =====================")

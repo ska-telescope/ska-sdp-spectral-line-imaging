@@ -66,7 +66,9 @@ def write_mock():
 
 @pytest.fixture(scope="function", autouse=True)
 def write_yml_mock():
-    with mock.patch("ska_sdp_pipelines.framework.pipeline.write_yml") as write:
+    with mock.patch(
+        "ska_sdp_pipelines.framework.pipeline.ConfigManager.write_yml"
+    ) as write:
         yield write
 
 
@@ -402,6 +404,26 @@ def test_should_return_pipeline_defualt_configuration():
     }
 
     assert pipeline.config == expected_config
+
+
+@mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
+def test_should_write_config_to_output_yaml_file(
+    config_manager_mock, default_scheduler
+):
+    config_manager_mock.return_value = config_manager_mock
+    config_manager_mock.stages_to_run = ["stage1"]
+
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+    stage1.config = {"stage1": "stage1_config"}
+
+    pipeline = Pipeline("test", stages=[stage1])
+
+    pipeline("infile", output_path="/output")
+
+    config_manager_mock.write_yml.assert_called_once_with(
+        "./output/timestamp/config.yml"
+    )
 
 
 def test_should_get_instance_of_pipeline():
