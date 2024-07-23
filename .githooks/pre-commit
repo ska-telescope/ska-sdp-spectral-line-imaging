@@ -5,7 +5,11 @@ set -e
 exec < /dev/tty
 
 # Get staged files into an array
-readarray -t STAGED_FILES <<< "$(git diff --cached --name-only)"
+declare -a STAGED_FILES
+
+while read i; do
+  STAGED_FILES=( "${STAGED_FILES[@]}" "$i" )
+done < <(git diff --cached --name-only)
 
 # List of files to track
 FILES=("pyproject.toml" "environment.yml")
