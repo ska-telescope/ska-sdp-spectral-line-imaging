@@ -1,6 +1,7 @@
 import functools
 import logging
 
+from .configuration import Configuration
 from .constants import CONFIG_CLI_ARGS, MANDATORY_CLI_ARGS
 from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_dir, read_dataset, write_dataset
@@ -46,14 +47,19 @@ class Pipeline(metaclass=NamedInstance):
 
         self.name = name
         self._stages = [] if stages is None else stages
-        self._global_config = global_config
+        self._global_config = (
+            Configuration() if global_config is None else global_config
+        )
+
         self._cli_args = CLICommand()
+
         self._cli_args.create_sub_parser(
             "run",
             self._run,
             MANDATORY_CLI_ARGS + ([] if cli_args is None else cli_args),
             help="Run the pipeline",
         )
+
         self._cli_args.create_sub_parser(
             "install-config",
             self._install_config,
@@ -65,7 +71,9 @@ class Pipeline(metaclass=NamedInstance):
         self.logger = logging.getLogger(self.name)
 
         self.config_manager = ConfigManager(
-            pipeline=self._pipeline_config(), parameters=self._parameter()
+            pipeline=self._pipeline_config(),
+            parameters=self._parameter(),
+            global_parameters=self._global_config.items,
         )
 
     def __validate_stages(self, stages):
@@ -252,7 +260,7 @@ class Pipeline(metaclass=NamedInstance):
                     input_data=vis,
                     output_dir=output_dir,
                     cli_args=cli_args,
-                    global_config=self._global_config,
+                    global_parameters=self.config_manager.global_parameters,
                 )
 
                 executable_stages.append(stage)

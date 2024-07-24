@@ -4,12 +4,13 @@ import argparse
 class CLIArgument:
     """
     Model to hold argparser Namespace schema
+
     Attributes
     ----------
-      args:
-        Arguments
-      kwargs:
-        Key value arguments
+        args:
+            Arguments
+        kwargs:
+            Key value arguments
     """
 
     def __init__(self, *args, **kwargs):
@@ -29,15 +30,16 @@ class CLIArgument:
 class CLICommand:
     """
     Builds the argparser for CLI application initialisation
+
     Attributes
     ----------
-      parse_args: argparse.ArgumentParser
+    parse_args: argparse.ArgumentParser
         Holds the CLI arguments
     """
 
     def __init__(self):
         """
-        Instantial CLICommand object.
+        Instantiate CLICommand object.
         """
 
         self.parser = argparse.ArgumentParser()
@@ -50,8 +52,6 @@ class CLICommand:
     ):
         """
         Creates sub parser.
-        Parameters
-        ----------
             subparser_name: str
                 Name of the sub parser.
             sub_command: func

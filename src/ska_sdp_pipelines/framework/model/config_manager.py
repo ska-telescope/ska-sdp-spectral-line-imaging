@@ -6,34 +6,37 @@ from ..io_utils import write_yml
 class ConfigManager:
     """
     ConfigManager class responsible for handling all kinds of
-      pipeline configurations including default config, CLI arguments
-      and yaml config. CLI arguments being the highest priority.
+    pipeline configurations including default config, CLI arguments
+    and yaml config. CLI arguments being the highest priority.
 
     Attributes
     ----------
-        pipeline: dict
-            Pipeline stages state configuration.
-            Dictionary containing stage name as key
-            and boolean as value for enabled/disabled stage.
-        parameters: dict
-            Pipeline stages parameteres configuration.
-            Dictionary containing states as key and a stages
-            parameters dictionary as value.
+    pipeline: dict
+        Pipeline stages state configuration.
+        Dictionary containing stage name as key and
+        boolean as value for enabled/disabled stage.
+    parameters: dict
+        Pipeline stages parameteres configuration.
+        Dictionary containing states as key and
+        a stages parameters dictionary as value.
     """
 
-    def __init__(self, pipeline, parameters):
+    def __init__(self, pipeline, parameters, global_parameters):
         """
         Initialise the config manager object.
 
         Parameters
         ----------
-          pipeline: dict
-              Pipeline stages state configuration.
-          parameters: dict
-              Pipeline stages parameteres configuration.
+            pipeline: dict
+                Pipeline stages state configuration.
+            parameters: dict
+                Pipeline stages parameters configuration.
+            global_parameters: dict
+                Pipeline global parameters configuration.
         """
         self.pipeline = pipeline
         self.parameters = parameters
+        self.global_parameters = global_parameters
 
     def update_config(self, config_path=None, pipeline=None):
         """
@@ -46,23 +49,26 @@ class ConfigManager:
             Path to the config yaml file.
         pipeline: dict
             Pipeline stages state configuration.
-             Dictionary containing stage name as key and boolean
-             as value for enabled/disabled stage.
+            Dictionary containing stage name as key and boolean
+            as value for enabled/disabled stage.
         """
-        pipeline_from_config = None
-        parameters = None
+        pipeline_from_config = {}
+        parameters = {}
+        global_params = {}
 
         if config_path:
             with open(config_path, "r") as config_file:
                 config_dict = yaml.safe_load(config_file)
                 pipeline_from_config = config_dict.get("pipeline", dict())
                 parameters = config_dict.get("parameters", dict())
+                global_params = config_dict.get("global_parameters", dict())
 
-        if parameters:
-            self.parameters = {
-                key: {**value, **parameters.get(key, dict())}
-                for key, value in self.parameters.items()
-            }
+        self.parameters = {
+            key: {**value, **parameters.get(key, dict())}
+            for key, value in self.parameters.items()
+        }
+
+        self.global_parameters = {**self.global_parameters, **global_params}
 
         self.__update_pipeline(pipeline_from_config)
         self.__update_pipeline(pipeline)
@@ -111,7 +117,11 @@ class ConfigManager:
             Whole pipeline configuration as a dictionary containing
             pipelines and parameters as top level config entries.
         """
-        return {"parameters": self.parameters, "pipeline": self.pipeline}
+        return {
+            "parameters": self.parameters,
+            "pipeline": self.pipeline,
+            "global_parameters": self.global_parameters,
+        }
 
     @property
     def stages_to_run(self):
@@ -120,7 +130,7 @@ class ConfigManager:
 
         Returns
         -------
-        [str]:
+        list(str)
             List of stages names to run.
         """
         return [stage for stage in self.pipeline if self.pipeline.get(stage)]

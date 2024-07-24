@@ -150,6 +150,8 @@ def test_should_run_the_pipeline_as_cli_command(
         "stage_config1",
         "stage_config2",
     ]
+    config_manager_mock.global_parameters = {"a": 10}
+
     cli_arguments.return_value = cli_arguments
     cli_arguments.get_cli_args.return_value = {"input": "infile_path"}
     args = Mock(name="CLI_args")
@@ -171,9 +173,21 @@ def test_should_run_the_pipeline_as_cli_command(
     stage2.config = {}
     stage2.stage_config = Configuration()
 
-    pipeline = Pipeline("test_pipeline", stages=[stage1, stage2])
+    global_config = Mock(name="global_configuration")
+    global_config.items = {"a": 10}
+
+    pipeline = Pipeline(
+        "test_pipeline", stages=[stage1, stage2], global_config=global_config
+    )
     args.sub_command = pipeline._run
+
     pipeline()
+
+    config_manager_mock.assert_called_once_with(
+        pipeline={"stage1": True, "stage2": True},
+        parameters={},
+        global_parameters={"a": 10},
+    )
 
     read_mock.assert_called_once_with("infile_path")
     scheduler_factory.get_scheduler.assert_called_once_with(None)
@@ -190,7 +204,7 @@ def test_should_run_the_pipeline_as_cli_command(
         input_data="dataset",
         output_dir="./output/timestamp",
         cli_args={"input": "infile_path"},
-        global_config=None,
+        global_parameters={"a": 10},
     )
 
     stage2.update_pipeline_parameters.assert_called_once_with(
@@ -198,12 +212,14 @@ def test_should_run_the_pipeline_as_cli_command(
         input_data="dataset",
         output_dir="./output/timestamp",
         cli_args={"input": "infile_path"},
-        global_config=None,
+        global_parameters={"a": 10},
     )
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_pipelines.framework.pipeline.Configuration")
 def test_should_run_the_pipeline(
+    configuration_mock,
     config_manager_mock,
     read_mock,
     write_mock,
@@ -217,6 +233,11 @@ def test_should_run_the_pipeline(
         "stage_config1",
         "stage_config2",
     ]
+    config_manager_mock.global_parameters = {"a": 10}
+
+    configuration_mock.return_value = configuration_mock
+    configuration_mock.items = {"a": 10}
+
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.stage_config = Configuration()
@@ -230,13 +251,17 @@ def test_should_run_the_pipeline(
 
     pipeline.run("infile_path", [])
 
+    config_manager_mock.assert_called_once_with(
+        pipeline={"stage1": True, "stage2": True},
+        parameters={},
+        global_parameters={"a": 10},
+    )
     read_mock.assert_called_once_with("infile_path")
     scheduler_factory.get_scheduler.assert_called_once_with(None)
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage2],
         False,
     )
-
     create_output_mock.assert_called_once_with("./output", "test_pipeline")
     write_mock.assert_called_once_with("output", "./output/timestamp")
 
@@ -245,7 +270,7 @@ def test_should_run_the_pipeline(
         input_data="dataset",
         output_dir="./output/timestamp",
         cli_args=None,
-        global_config=None,
+        global_parameters={"a": 10},
     )
 
     stage2.update_pipeline_parameters.assert_called_once_with(
@@ -253,7 +278,7 @@ def test_should_run_the_pipeline(
         input_data="dataset",
         output_dir="./output/timestamp",
         cli_args=None,
-        global_config=None,
+        global_parameters={"a": 10},
     )
 
 
@@ -294,19 +319,17 @@ def test_should_run_the_pipeline_with_selected_stages(
     stage3.name = "stage3"
     stage3.config = {}
     stage3.stage_config = Configuration()
+
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
+    pipeline.run("infile_path", stages=["stage1", "stage3"])
 
     config_manager_mock.assert_called_once_with(
         pipeline={"stage1": True, "stage2": True, "stage3": True},
         parameters={},
+        global_parameters={},
     )
 
-    mock_stages = Mock()
-    mock_stages.return_value = {"stage1": True, "stage2": True}
-
-    pipeline.run("infile_path", stages=["stage1", "stage3"])
     read_mock.assert_called_once_with("infile_path")
-
     default_scheduler.schedule.assert_called_once_with(
         [stage1],
         False,
@@ -439,7 +462,7 @@ def test_should_raise_exception_if_wrong_stage_is_provided():
         pipeline.run("infile_path", ["stage1", "stage5"])
 
 
-def test_should_return_pipeline_defualt_configuration():
+def test_should_return_pipeline_default_configuration():
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.config = {"stage1": "stage1_config"}
@@ -452,7 +475,14 @@ def test_should_return_pipeline_defualt_configuration():
     stage3.name = "stage3"
     stage3.config = {"stage3": "stage3_config"}
 
-    pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
+    global_config = Mock(name="global_configuration")
+    global_config.items = {"global_param1": "value1"}
+
+    pipeline = Pipeline(
+        "test_pipeline",
+        stages=[stage1, stage2, stage3],
+        global_config=global_config,
+    )
 
     expected_config = {
         "pipeline": {"stage1": True, "stage2": True, "stage3": True},
@@ -461,6 +491,7 @@ def test_should_return_pipeline_defualt_configuration():
             "stage2": "stage2_config",
             "stage3": "stage3_config",
         },
+        "global_parameters": {"global_param1": "value1"},
     }
 
     assert pipeline.config == expected_config

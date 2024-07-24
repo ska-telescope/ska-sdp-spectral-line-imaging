@@ -12,7 +12,11 @@ def setup():
         "stage2": {"stage2_parameter_1": 0},
         "stage3": {"stage3_parameter_1": 0},
     }
-    yield ConfigManager(pipeline, parameters)
+    global_parameters = {
+        "global_param_1": 1,
+        "global_param_2": 1,
+    }
+    yield ConfigManager(pipeline, parameters, global_parameters)
 
 
 def test_should_instantiate_config(setup):
@@ -22,23 +26,35 @@ def test_should_instantiate_config(setup):
         "stage2": {"stage2_parameter_1": 0},
         "stage3": {"stage3_parameter_1": 0},
     }
+    global_parameters = {
+        "global_param_1": 1,
+        "global_param_2": 1,
+    }
     config_manager = setup
 
     assert config_manager.pipeline == pipeline
     assert config_manager.parameters == parameters
+    assert config_manager.global_parameters == global_parameters
 
 
 def test_should_return_the_default_config(setup):
-
     pipeline = {"stage1": True, "stage2": False, "stage3": True}
     parameters = {
         "stage1": {"stage1_parameter_1": 0},
         "stage2": {"stage2_parameter_1": 0},
         "stage3": {"stage3_parameter_1": 0},
     }
+    global_parameters = {
+        "global_param_1": 1,
+        "global_param_2": 1,
+    }
     default_config = setup.config
 
-    assert default_config == {"parameters": parameters, "pipeline": pipeline}
+    assert default_config == {
+        "parameters": parameters,
+        "pipeline": pipeline,
+        "global_parameters": global_parameters,
+    }
 
 
 @mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
@@ -52,20 +68,32 @@ def test_should_update_the_default_config_with_yaml(
         "stage2": {"stage2_parameter_1": 0},
         "stage3": {"stage3_parameter_1": 10},
     }
-    yaml_config = {"parameters": parameters, "pipeline": pipeline}
+    global_parameters = {
+        "global_param_1": 20,
+        "global_param_2": 25,
+    }
+
+    yaml_config = {
+        "parameters": parameters,
+        "pipeline": pipeline,
+        "global_parameters": global_parameters,
+    }
+
     yaml_data = yaml_mock.dump(yaml_config)
     enter_mock = MagicMock()
     enter_mock.__enter__.return_value = yaml_data
     yaml_mock.safe_load.return_value = yaml_config
-
     open_mock.return_value = enter_mock
     config_manager = setup
+
     config_manager.update_config("/path/to/yaml")
+
     open_mock.assert_called_once_with("/path/to/yaml", "r")
     yaml_mock.safe_load.assert_called_once_with(yaml_data)
 
     assert config_manager.pipeline == pipeline
     assert config_manager.parameters == parameters
+    assert config_manager.global_parameters == global_parameters
 
 
 def test_should_update_the_config_with_selected_stages_from_cli(setup):
@@ -130,6 +158,10 @@ def test_should_write_config_to_path(write_yml_mock, setup):
             "stage1": {"stage1_parameter_1": 0},
             "stage2": {"stage2_parameter_1": 0},
             "stage3": {"stage3_parameter_1": 0},
+        },
+        "global_parameters": {
+            "global_param_1": 1,
+            "global_param_2": 1,
         },
     }
 
