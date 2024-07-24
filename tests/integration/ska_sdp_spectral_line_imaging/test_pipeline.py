@@ -41,7 +41,7 @@ def test_pipeline(prepare_test_data):
     Given a MSv4 and a model image the pipepile should output a stokes cube
     """
 
-    spectral_line_imaging_pipeline(
+    spectral_line_imaging_pipeline.run(
         MSIN,
         config_path="./config.yaml",
     )

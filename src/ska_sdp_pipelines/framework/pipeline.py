@@ -1,11 +1,11 @@
 import functools
 import logging
 
-from .constants import MANDATORY_CLI_ARGS
+from .constants import CONFIG_CLI_ARGS, MANDATORY_CLI_ARGS
 from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_dir, read_dataset, write_dataset
 from .log_util import LogUtil
-from .model.cli_arguments import CLIArguments
+from .model.cli_command import CLICommand
 from .model.config_manager import ConfigManager
 from .model.named_instance import NamedInstance
 from .scheduler import SchedulerFactory
@@ -47,8 +47,18 @@ class Pipeline(metaclass=NamedInstance):
         self.name = name
         self._stages = [] if stages is None else stages
         self._global_config = global_config
-        self._cli_args = CLIArguments(
-            MANDATORY_CLI_ARGS + ([] if cli_args is None else cli_args)
+        self._cli_args = CLICommand()
+        self._cli_args.create_sub_parser(
+            "run",
+            self._run,
+            MANDATORY_CLI_ARGS + ([] if cli_args is None else cli_args),
+            help="Run the pipeline",
+        )
+        self._cli_args.create_sub_parser(
+            "install-config",
+            self._install_config,
+            CONFIG_CLI_ARGS,
+            help="Installs the default config at --config-install-path",
         )
 
         LogUtil.configure(name)
@@ -135,15 +145,17 @@ class Pipeline(metaclass=NamedInstance):
         """
         return self.config_manager.config
 
-    def run(self):
+    def _run(self, cli_args):
         """
-        Run the pipeline as a CLI command
+        Run sub command
+        Parameters
+        ----------
+            cli_args: argparse.Namespace
+                CLI arguments
         """
-        cli_args = self._cli_args.parse_args()
-
         stages = [] if cli_args.stages is None else cli_args.stages[0]
 
-        self(
+        self.run(
             cli_args.input,
             stages=stages,
             dask_scheduler=cli_args.dask_scheduler,
@@ -153,7 +165,26 @@ class Pipeline(metaclass=NamedInstance):
             cli_args=self._cli_args.get_cli_args(),
         )
 
-    def __call__(
+    def _install_config(self, cli_args):
+        """
+        Install the config
+        Parameters
+        ----------
+            cli_args: argparse.Namespace
+                CLI arguments
+        """
+        self.config_manager.write_yml(
+            f"{cli_args.config_install_path}/{self.name}.yml"
+        )
+
+    def __call__(self):
+        """
+        Run the pipeline as a CLI command
+        """
+        cli_args = self._cli_args.parse_args()
+        cli_args.sub_command(cli_args)
+
+    def run(
         self,
         infile_path,
         stages=None,

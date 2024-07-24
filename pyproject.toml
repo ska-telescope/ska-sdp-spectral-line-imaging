@@ -63,6 +63,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 sdp-pipelines = "ska_sdp_pipelines.app.cli:app"
+spectral-line-pipeline = "ska_sdp_spectral_line_imaging.pipeline:spectral_line_imaging_pipeline"
 
 [tool.coverage.run]
 branch = true

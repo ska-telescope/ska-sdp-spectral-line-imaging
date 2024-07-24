@@ -1,31 +1,44 @@
-import mock
 import pytest
+from mock import Mock, mock
 
-from ska_sdp_pipelines.framework.model.cli_arguments import (
+from ska_sdp_pipelines.framework.model.cli_command import (
     CLIArgument,
-    CLIArguments,
+    CLICommand,
 )
 
 
 @pytest.fixture(scope="function")
 def arg_parser():
     with mock.patch(
-        "ska_sdp_pipelines.framework.model.cli_arguments"
+        "ska_sdp_pipelines.framework.model.cli_command"
         ".argparse.ArgumentParser"
     ) as arg_parser_mock:
         arg_parser_mock.return_value = arg_parser_mock
         yield arg_parser_mock
 
 
-def test_should_create_cli_arguments(arg_parser):
-    additional_cli_args = [
+def test_should_create_cli_command(arg_parser):
+    cli_args = CLICommand()
+    assert cli_args.parser == arg_parser
+    arg_parser.add_subparsers.assert_called_once()
+
+
+def test_should_create_sub_parser(arg_parser):
+    subparser_mock = Mock(name="subparser_mock")
+    add_parser_mock = Mock(name="add_parser")
+
+    subparser_mock.add_parser.return_value = add_parser_mock
+    arg_parser.add_subparsers.return_value = subparser_mock
+
+    cli_args = CLICommand()
+    run_additional_cli_args = [
         CLIArgument("arg1", value1="value1", value2="value2"),
         CLIArgument("arg2", key1="key1", key2="key2"),
     ]
+    cli_args.create_sub_parser("run", "RUN", run_additional_cli_args)
 
-    CLIArguments(additional_cli_args)
-
-    arg_parser.add_argument.assert_has_calls(
+    add_parser_mock.set_defaults.assert_called_once_with(sub_command="RUN")
+    add_parser_mock.add_argument.assert_has_calls(
         [
             mock.call("arg1", value1="value1", value2="value2"),
             mock.call("arg2", key1="key1", key2="key2"),
@@ -35,7 +48,7 @@ def test_should_create_cli_arguments(arg_parser):
 
 def test_should_parse_cli_arguments(arg_parser):
     arg_parser.parse_args.return_value = "PARSED_ARGS"
-    cli_args = CLIArguments()
+    cli_args = CLICommand()
     expected = cli_args.parse_args()
 
     assert "PARSED_ARGS" == expected
@@ -52,7 +65,7 @@ def test_should_return_dictionary_of_cli_args(arg_parser):
 
     arg_parser.parse_args.return_value = parsed_args
 
-    cli_args = CLIArguments()
+    cli_args = CLICommand()
     expected = cli_args.get_cli_args()
 
     assert {"key1": "value1", "key2": "value2"} == expected

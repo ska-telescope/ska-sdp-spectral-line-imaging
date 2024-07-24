@@ -26,7 +26,7 @@ class CLIArgument:
         self.kwargs = kwargs
 
 
-class CLIArguments:
+class CLICommand:
     """
     Builds the argparser for CLI application initialisation
     Attributes
@@ -35,20 +35,36 @@ class CLIArguments:
         Holds the CLI arguments
     """
 
-    def __init__(self, cli_args=None):
+    def __init__(self):
         """
-        Instantial CLIArguments object
-        Parameters
-        ----------
-          cli_args: list(CLIArgument)
-            cli arguments to instantiate.
+        Instantial CLICommand object.
         """
-        cli_args = [] if cli_args is None else cli_args
+
         self.parser = argparse.ArgumentParser()
-        for arg in cli_args:
-            self.parser.add_argument(*arg.args, **arg.kwargs)
+        self.__subparser = self.parser.add_subparsers()
 
         self.parse_args = self.parser.parse_args
+
+    def create_sub_parser(
+        self, subparser_name, sub_command, cli_args, help=None
+    ):
+        """
+        Creates sub parser.
+        Parameters
+        ----------
+            subparser_name: str
+                Name of the sub parser.
+            sub_command: func
+                Function associated with the sub command.
+            cli_args: [CLIArgument]
+                List of CLI arguments associated with the sub command.
+            help: str
+                Help text for the sub command.
+        """
+        sub_p = self.__subparser.add_parser(subparser_name, help=help)
+        sub_p.set_defaults(sub_command=sub_command)
+        for arg in cli_args:
+            sub_p.add_argument(*arg.args, **arg.kwargs)
 
     def get_cli_args(self):
         """

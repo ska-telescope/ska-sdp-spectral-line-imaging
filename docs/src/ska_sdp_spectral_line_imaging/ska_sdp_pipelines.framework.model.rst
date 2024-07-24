@@ -4,10 +4,10 @@ ska\_sdp\_pipelines.framework.model package
 Submodules
 ----------
 
-ska\_sdp\_pipelines.framework.model.cli\_arguments module
----------------------------------------------------------
+ska\_sdp\_pipelines.framework.model.cli\_command module
+-------------------------------------------------------
 
-.. automodule:: ska_sdp_pipelines.framework.model.cli_arguments
+.. automodule:: ska_sdp_pipelines.framework.model.cli_command
    :members:
    :undoc-members:
    :show-inheritance:

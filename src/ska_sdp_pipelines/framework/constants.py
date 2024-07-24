@@ -1,4 +1,14 @@
-from .model.cli_arguments import CLIArgument
+from ska_sdp_pipelines.framework.model.cli_command import CLIArgument
+
+CONFIG_CLI_ARGS = [
+    CLIArgument(
+        "--config-install-path",
+        dest="config_install_path",
+        type=str,
+        nargs="?",
+        help="Path to place the default config.",
+    )
+]
 
 MANDATORY_CLI_ARGS = [
     CLIArgument(
