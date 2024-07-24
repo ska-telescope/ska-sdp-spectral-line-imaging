@@ -180,7 +180,7 @@ class Pipeline(metaclass=NamedInstance):
              Toggle DEBUG log level
           output_path: str
              Path to root output directory
-          cli_args: Optional[argparse.Namespace]
+          cli_args: dict
              CLI arguments
         """
         stages = [] if stages is None else stages

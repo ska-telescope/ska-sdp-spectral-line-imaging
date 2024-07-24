@@ -11,14 +11,14 @@ class ConfigManager:
 
     Attributes
     ----------
-      pipeline: dict
-        Pipeline stages state configuration.
-        Dictionary containing stage name as key
-          and boolean as value for enabled/disabled stage.
-      parameters: dict
-        Pipeline stages parameteres configuration.
-        Dictionary containing states as key and a stages
-          parameters dictionary as value.
+        pipeline: dict
+            Pipeline stages state configuration.
+            Dictionary containing stage name as key
+            and boolean as value for enabled/disabled stage.
+        parameters: dict
+            Pipeline stages parameteres configuration.
+            Dictionary containing states as key and a stages
+            parameters dictionary as value.
     """
 
     def __init__(self, pipeline, parameters):

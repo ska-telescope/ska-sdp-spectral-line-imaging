@@ -53,9 +53,10 @@ class CLIArguments:
     def get_cli_args(self):
         """
         Return dictionary containing CLI arguments
-        Retruns
+
+        Returns
         -------
-          dict
+            dict
         """
 
         cli_args = self.parser.parse_args()

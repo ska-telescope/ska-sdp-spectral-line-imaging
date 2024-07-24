@@ -45,18 +45,10 @@ class DefaultScheduler:
         Schedules the stages as dask delayed objects
         Parameters
         ----------
-          stages: [function]
+          stages: list[Stage]
             List of stages to schedule
-          vis: Any
-            Input data to be prcessed
-          config: dict
-            Pipeline configuration
-          output_dir: str
-            Output directory to store generated products
           verbose: bool
             Log debug statements
-          **kwargs:
-            Additional Key value args
         """
         output = None
         for stage in stages:
