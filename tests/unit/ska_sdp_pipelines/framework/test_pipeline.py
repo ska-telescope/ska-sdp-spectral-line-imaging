@@ -1,5 +1,6 @@
 import pytest
 from mock import Mock, mock
+from mock.mock import call
 
 from ska_sdp_pipelines.framework.configuration import Configuration
 from ska_sdp_pipelines.framework.constants import MANDATORY_CLI_ARGS
@@ -443,6 +444,33 @@ def test_should_write_config_to_output_yaml_file(
 
     config_manager_mock.write_yml.assert_called_once_with(
         "./output/timestamp/config.yml"
+    )
+
+
+@mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
+def test_should_write_config_to_output_yaml_on_failure(
+    config_manager_mock, default_scheduler
+):
+    config_manager_mock.return_value = config_manager_mock
+    config_manager_mock.stages_to_run = ["stage1"]
+
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+    stage1.config = {"stage1": "stage1_config"}
+
+    manager = Mock()
+    manager.attach_mock(config_manager_mock.write_yml, "mocked_write_yml")
+    manager.attach_mock(default_scheduler.execute, "execute_mock")
+
+    pipeline = Pipeline("test", stages=[stage1])
+
+    pipeline("infile", output_path="/output")
+
+    manager.assert_has_calls(
+        [
+            call.mocked_write_yml("./output/timestamp/config.yml"),
+            call.execute_mock(),
+        ]
     )
 
 

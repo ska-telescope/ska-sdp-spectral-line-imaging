@@ -232,11 +232,11 @@ class Pipeline(metaclass=NamedInstance):
             )}"""
         )
 
-        scheduler.schedule(executable_stages, verbose)
-
-        output_pipeline_data = scheduler.execute()
-        write_dataset(output_pipeline_data, output_dir)
-
         self.config_manager.write_yml(f"{output_dir}/config.yml")
+
+        scheduler.schedule(executable_stages, verbose)
+        output_pipeline_data = scheduler.execute()
+
+        write_dataset(output_pipeline_data, output_dir)
 
         self.logger.info("=============== FINISH =====================")
