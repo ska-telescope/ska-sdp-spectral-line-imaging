@@ -5,14 +5,18 @@ CONFIG_CLI_ARGS = [
         "--config-install-path",
         dest="config_install_path",
         type=str,
-        nargs="?",
+        required=True,
         help="Path to place the default config.",
     )
 ]
 
 MANDATORY_CLI_ARGS = [
     CLIArgument(
-        "--input", dest="input", type=str, help="Input visibility path"
+        "--input",
+        dest="input",
+        type=str,
+        required=True,
+        help="Input visibility path",
     ),
     CLIArgument(
         "--config",

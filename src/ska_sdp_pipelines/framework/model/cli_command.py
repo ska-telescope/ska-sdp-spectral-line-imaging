@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 
 class CLIArgument:
@@ -33,8 +34,8 @@ class CLICommand:
 
     Attributes
     ----------
-    parse_args: argparse.ArgumentParser
-        Holds the CLI arguments
+        parser: argparse.ArgumentParser
+            Holds the CLI arguments
     """
 
     def __init__(self):
@@ -42,10 +43,23 @@ class CLICommand:
         Instantiate CLICommand object.
         """
 
-        self.parser = argparse.ArgumentParser()
-        self.__subparser = self.parser.add_subparsers()
+        self.__parser = argparse.ArgumentParser()
+        self.__subparser = self.__parser.add_subparsers()
 
-        self.parse_args = self.parser.parse_args
+    def parse_args(self):
+        """
+        Parse CLI args.
+        Returns
+        -------
+            argparser.Namespace
+        """
+        if len(sys.argv) == 1:
+            sys.stderr.write(
+                f"{sys.argv[0]}: error: positional arguments missing.\n"
+            )
+            self.__parser.print_help()
+            sys.exit(2)
+        return self.__parser.parse_args()
 
     def create_sub_parser(
         self, subparser_name, sub_command, cli_args, help=None
@@ -66,7 +80,8 @@ class CLICommand:
         for arg in cli_args:
             sub_p.add_argument(*arg.args, **arg.kwargs)
 
-    def get_cli_args(self):
+    @property
+    def cli_args_dict(self):
         """
         Return dictionary containing CLI arguments
 
@@ -75,5 +90,5 @@ class CLICommand:
             dict
         """
 
-        cli_args = self.parser.parse_args()
+        cli_args = self.__parser.parse_args()
         return dict(cli_args._get_kwargs())

@@ -51,16 +51,16 @@ class Pipeline(metaclass=NamedInstance):
             Configuration() if global_config is None else global_config
         )
 
-        self._cli_args = CLICommand()
+        self._cli_command = CLICommand()
 
-        self._cli_args.create_sub_parser(
+        self._cli_command.create_sub_parser(
             "run",
             self._run,
             MANDATORY_CLI_ARGS + ([] if cli_args is None else cli_args),
             help="Run the pipeline",
         )
 
-        self._cli_args.create_sub_parser(
+        self._cli_command.create_sub_parser(
             "install-config",
             self._install_config,
             CONFIG_CLI_ARGS,
@@ -170,7 +170,7 @@ class Pipeline(metaclass=NamedInstance):
             config_path=cli_args.config_path,
             verbose=(cli_args.verbose != 0),
             output_path=cli_args.output_path,
-            cli_args=self._cli_args.get_cli_args(),
+            cli_args=self._cli_command.cli_args_dict,
         )
 
     def _install_config(self, cli_args):
@@ -189,7 +189,7 @@ class Pipeline(metaclass=NamedInstance):
         """
         Run the pipeline as a CLI command
         """
-        cli_args = self._cli_args.parse_args()
+        cli_args = self._cli_command.parse_args()
         cli_args.sub_command(cli_args)
 
     def run(

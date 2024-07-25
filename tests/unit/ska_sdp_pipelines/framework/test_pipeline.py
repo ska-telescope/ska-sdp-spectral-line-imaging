@@ -153,7 +153,7 @@ def test_should_run_the_pipeline_as_cli_command(
     config_manager_mock.global_parameters = {"a": 10}
 
     cli_arguments.return_value = cli_arguments
-    cli_arguments.get_cli_args.return_value = {"input": "infile_path"}
+    cli_arguments.cli_args_dict = {"input": "infile_path"}
     args = Mock(name="CLI_args")
     args.input = "infile_path"
     args.dask_scheduler = None
