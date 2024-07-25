@@ -166,12 +166,11 @@ def test_should_run_the_pipeline_as_cli_command(
 
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
-    stage1.stage_config = Configuration()
     stage1.config = {}
+
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.config = {}
-    stage2.stage_config = Configuration()
 
     global_config = Mock(name="global_configuration")
     global_config.items = {"a": 10}
@@ -193,7 +192,7 @@ def test_should_run_the_pipeline_as_cli_command(
     scheduler_factory.get_scheduler.assert_called_once_with(None)
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage2],
-        False,
+        verbose=False,
     )
 
     create_output_mock.assert_called_once_with("./output", "test_pipeline")
@@ -240,12 +239,10 @@ def test_should_run_the_pipeline(
 
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
-    stage1.stage_config = Configuration()
     stage1.config = {}
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.config = {}
-    stage2.stage_config = Configuration()
 
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2])
 
@@ -260,7 +257,7 @@ def test_should_run_the_pipeline(
     scheduler_factory.get_scheduler.assert_called_once_with(None)
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage2],
-        False,
+        verbose=False,
     )
     create_output_mock.assert_called_once_with("./output", "test_pipeline")
     write_mock.assert_called_once_with("output", "./output/timestamp")
@@ -286,7 +283,6 @@ def test_should_run_the_pipeline_with_verbose(log_util):
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.config = {}
-    stage1.stage_config = Configuration()
 
     pipeline = Pipeline("test_pipeline", stages=[stage1])
     pipeline.run("infile_path", [], verbose=True)
@@ -306,19 +302,17 @@ def test_should_run_the_pipeline_with_selected_stages(
     config_manager_mock, default_scheduler, read_mock
 ):
     config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.stages_to_run = ["stage1"]
+    config_manager_mock.stages_to_run = ["stage1", "stage3"]
+
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.config = {}
-    stage1.stage_config = Configuration()
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
     stage2.config = {}
-    stage2.stage_config = Configuration()
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
     stage3.config = {}
-    stage3.stage_config = Configuration()
 
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
     pipeline.run("infile_path", stages=["stage1", "stage3"])
@@ -329,10 +323,14 @@ def test_should_run_the_pipeline_with_selected_stages(
         global_parameters={},
     )
 
+    config_manager_mock.update_pipeline.assert_called_once_with(
+        {"stage1": True, "stage2": False, "stage3": True}
+    )
+
     read_mock.assert_called_once_with("infile_path")
     default_scheduler.schedule.assert_called_once_with(
-        [stage1],
-        False,
+        [stage1, stage3],
+        verbose=False,
     )
 
 
@@ -353,7 +351,6 @@ def test_should_not_run_if_no_stages_are_provided():
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.config = {}
-    stage1.stage_config = Configuration()
     pipeline = Pipeline("test_pipeline")
     dask_scheduler_address = "some_ip"
     with pytest.raises(NoStageToExecuteException):
@@ -370,13 +367,12 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
 
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
-    stage1.stage_config = Configuration()
+
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
-    stage2.stage_config = Configuration()
+
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
-    stage3.stage_config = Configuration()
 
     stage1.config = {}
     stage2.config = {}
@@ -399,7 +395,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
 
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage3],
-        False,
+        verbose=False,
     )
 
 
@@ -412,13 +408,12 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
 
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
-    stage1.stage_config = Configuration()
+
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
-    stage2.stage_config = Configuration()
+
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
-    stage3.stage_config = Configuration()
 
     stage1.config = {}
     stage2.config = {}
@@ -439,20 +434,19 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
 
     default_scheduler.schedule.assert_called_once_with(
         [stage1, stage2],
-        False,
+        verbose=False,
     )
 
 
 def test_should_raise_exception_if_wrong_stage_is_provided():
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
-    stage1.stage_config = Configuration()
+
     stage2 = Mock(name="mock_stage_2", return_value="Stage_2 output")
     stage2.name = "stage2"
-    stage2.stage_config = Configuration()
+
     stage3 = Mock(name="mock_stage_3", return_value="Stage_3 output")
     stage3.name = "stage3"
-    stage3.stage_config = Configuration()
 
     stage1.config = {}
     stage2.config = {}
