@@ -394,7 +394,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     )
 
     config_manager_mock.update_config.assert_called_once_with(
-        config_path="/path/to/config", pipeline=None
+        config_path="/path/to/config"
     )
 
     default_scheduler.schedule.assert_called_once_with(
@@ -432,7 +432,9 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
 
     config_manager_mock.update_config.assert_called_once_with(
         config_path="/path/to/config",
-        pipeline={"stage1": True, "stage2": True, "stage3": False},
+    )
+    config_manager_mock.update_pipeline.assert_called_once_with(
+        {"stage1": True, "stage2": True, "stage3": False},
     )
 
     default_scheduler.schedule.assert_called_once_with(

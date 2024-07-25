@@ -38,23 +38,16 @@ class ConfigManager:
         self.parameters = parameters
         self.global_parameters = global_parameters
 
-    def update_config(self, config_path=None, pipeline=None):
+    def update_config(self, config_path=None):
         """
         Updates the configurations of the pipeline given
-          from CLI and yaml file.
+            from CLI and yaml file.
 
         Parameters
         ----------
-        config_path: str
-            Path to the config yaml file.
-        pipeline: dict
-            Pipeline stages state configuration.
-            Dictionary containing stage name as key and boolean
-            as value for enabled/disabled stage.
+            config_path: str
+                Path to the config yaml file.
         """
-        pipeline_from_config = {}
-        parameters = {}
-        global_params = {}
 
         if config_path:
             with open(config_path, "r") as config_file:
@@ -63,21 +56,34 @@ class ConfigManager:
                 parameters = config_dict.get("parameters", dict())
                 global_params = config_dict.get("global_parameters", dict())
 
-        self.parameters = {
-            key: {**value, **parameters.get(key, dict())}
-            for key, value in self.parameters.items()
-        }
-
-        self.global_parameters = {**self.global_parameters, **global_params}
-
-        self.__update_pipeline(pipeline_from_config)
-        self.__update_pipeline(pipeline)
-
-    def __update_pipeline(self, pipeline=None):
-        if pipeline:
-            self.pipeline = {
-                key: pipeline.get(key, False) for key in self.pipeline
+            self.parameters = {
+                key: {**value, **parameters.get(key, dict())}
+                for key, value in self.parameters.items()
             }
+
+            self.global_parameters = {
+                **self.global_parameters,
+                **global_params,
+            }
+
+            if pipeline_from_config:
+                self.update_pipeline(pipeline_from_config)
+
+    def update_pipeline(self, pipeline):
+        """
+        Update pipeline property of the the config
+
+        Parameters
+        ----------
+            pipeline: dict
+                Pipeline stages state configuration.
+                Dictionary containing stage name as key and boolean
+                as value for enabled/disabled stage.
+        """
+
+        self.pipeline = {
+            key: pipeline.get(key, False) for key in self.pipeline
+        }
 
     def stage_config(self, stage_name):
         """

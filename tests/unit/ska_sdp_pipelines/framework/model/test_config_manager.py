@@ -64,9 +64,8 @@ def test_should_update_the_default_config_with_yaml(
 ):
     pipeline = {"stage1": False, "stage2": True, "stage3": True}
     parameters = {
-        "stage1": {"stage1_parameter_1": 0},
-        "stage2": {"stage2_parameter_1": 0},
-        "stage3": {"stage3_parameter_1": 10},
+        "stage1": {"stage1_parameter_1": 10},
+        "stage2": {"stage2_parameter_1": 20},
     }
     global_parameters = {
         "global_param_1": 20,
@@ -88,10 +87,57 @@ def test_should_update_the_default_config_with_yaml(
 
     config_manager.update_config("/path/to/yaml")
 
+    expected_parameters = {
+        "stage1": {"stage1_parameter_1": 10},
+        "stage2": {"stage2_parameter_1": 20},
+        "stage3": {"stage3_parameter_1": 0},
+    }
+
     open_mock.assert_called_once_with("/path/to/yaml", "r")
     yaml_mock.safe_load.assert_called_once_with(yaml_data)
 
     assert config_manager.pipeline == pipeline
+    assert config_manager.parameters == expected_parameters
+    assert config_manager.global_parameters == global_parameters
+
+
+@mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
+@mock.patch("builtins.open")
+def test_should_update_the_default_config_with_yaml_without_pipeline_section(
+    open_mock, yaml_mock, setup
+):
+    parameters = {
+        "stage1": {"stage1_parameter_1": 0},
+        "stage2": {"stage2_parameter_1": 0},
+        "stage3": {"stage3_parameter_1": 10},
+    }
+    global_parameters = {
+        "global_param_1": 20,
+        "global_param_2": 25,
+    }
+
+    yaml_config = {
+        "parameters": parameters,
+        "global_parameters": global_parameters,
+    }
+
+    yaml_data = yaml_mock.dump(yaml_config)
+    enter_mock = MagicMock()
+    enter_mock.__enter__.return_value = yaml_data
+    yaml_mock.safe_load.return_value = yaml_config
+    open_mock.return_value = enter_mock
+    config_manager = setup
+
+    config_manager.update_config("/path/to/yaml")
+
+    open_mock.assert_called_once_with("/path/to/yaml", "r")
+    yaml_mock.safe_load.assert_called_once_with(yaml_data)
+
+    assert config_manager.pipeline == {
+        "stage1": True,
+        "stage2": False,
+        "stage3": True,
+    }
     assert config_manager.parameters == parameters
     assert config_manager.global_parameters == global_parameters
 
@@ -99,38 +145,19 @@ def test_should_update_the_default_config_with_yaml(
 def test_should_update_the_config_with_selected_stages_from_cli(setup):
     stages = {"stage1": False, "stage2": True, "stage3": True}
     config_manager = setup
-    config_manager.update_config(pipeline=stages)
+    config_manager.update_pipeline(pipeline=stages)
 
     assert config_manager.pipeline == stages
 
 
-@mock.patch("ska_sdp_pipelines.framework.model.config_manager.yaml")
-@mock.patch("builtins.open")
-def test_should_update_the_stage_with_cli_over_yaml(
-    open_mock, yaml_mock, setup
-):
+def test_should_update_pipeline_states(setup):
 
-    pipeline = {"stage1": False, "stage2": True, "stage3": True}
-    parameters = {
-        "stage1": {"stage1_parameter_1": 0},
-        "stage2": {"stage2_parameter_1": 0},
-        "stage3": {"stage3_parameter_1": 10},
-    }
-    yaml_config = {"parameters": parameters, "pipeline": pipeline}
-    yaml_data = yaml_mock.dump(yaml_config)
-    enter_mock = MagicMock()
-    enter_mock.__enter__.return_value = yaml_data
-    yaml_mock.safe_load.return_value = yaml_config
-    open_mock.return_value = enter_mock
-    config_manager = setup
-    cli_stages = {"stage1": True, "stage2": False, "stage3": True}
+    pipeline_states = {"stage1": True, "stage2": False, "stage3": True}
     config_manager = setup
 
-    config_manager.update_config(
-        config_path="/path/to/yaml", pipeline=cli_stages
-    )
+    config_manager.update_pipeline(pipeline_states)
 
-    assert config_manager.pipeline == cli_stages
+    assert config_manager.pipeline == pipeline_states
 
 
 def test_should_return_stages_to_run(setup):

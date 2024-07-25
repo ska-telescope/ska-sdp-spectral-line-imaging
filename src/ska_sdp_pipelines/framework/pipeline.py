@@ -114,14 +114,12 @@ class Pipeline(metaclass=NamedInstance):
         dict
             Dictionary of selected stages
         """
-        if selected_stages is not None:
-            if len(selected_stages):
-                return {
-                    stage.name: stage.name in selected_stages
-                    for stage in self._stages
-                }
-            else:
-                return None
+
+        if selected_stages:
+            return {
+                stage.name: stage.name in selected_stages
+                for stage in self._stages
+            }
 
         return {stage.name: True for stage in self._stages}
 
@@ -240,10 +238,12 @@ class Pipeline(metaclass=NamedInstance):
         vis = read_dataset(infile_path)
 
         scheduler = SchedulerFactory.get_scheduler(dask_scheduler)
-        self.config_manager.update_config(
-            config_path=config_path,
-            pipeline=self._pipeline_config(selected_stages=stages),
-        )
+        self.config_manager.update_config(config_path=config_path)
+
+        if stages:
+            self.config_manager.update_pipeline(
+                self._pipeline_config(selected_stages=stages),
+            )
 
         self.__validate_stages(stages)
 
