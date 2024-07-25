@@ -257,10 +257,10 @@ class Pipeline(metaclass=NamedInstance):
             if stage.name in active_stages:
                 stage.update_pipeline_parameters(
                     self.config_manager.stage_config(stage.name),
-                    input_data=vis,
-                    output_dir=output_dir,
-                    cli_args=cli_args,
-                    global_parameters=self.config_manager.global_parameters,
+                    _input_data_=vis,
+                    _output_dir_=output_dir,
+                    _cli_args_=cli_args,
+                    _global_parameters_=self.config_manager.global_parameters,
                 )
 
                 executable_stages.append(stage)

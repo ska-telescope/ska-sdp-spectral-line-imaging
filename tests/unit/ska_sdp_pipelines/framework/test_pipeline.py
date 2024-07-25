@@ -201,18 +201,18 @@ def test_should_run_the_pipeline_as_cli_command(
 
     stage1.update_pipeline_parameters.assert_called_once_with(
         "stage_config1",
-        input_data="dataset",
-        output_dir="./output/timestamp",
-        cli_args={"input": "infile_path"},
-        global_parameters={"a": 10},
+        _input_data_="dataset",
+        _output_dir_="./output/timestamp",
+        _cli_args_={"input": "infile_path"},
+        _global_parameters_={"a": 10},
     )
 
     stage2.update_pipeline_parameters.assert_called_once_with(
         "stage_config2",
-        input_data="dataset",
-        output_dir="./output/timestamp",
-        cli_args={"input": "infile_path"},
-        global_parameters={"a": 10},
+        _input_data_="dataset",
+        _output_dir_="./output/timestamp",
+        _cli_args_={"input": "infile_path"},
+        _global_parameters_={"a": 10},
     )
 
 
@@ -267,18 +267,18 @@ def test_should_run_the_pipeline(
 
     stage1.update_pipeline_parameters.assert_called_once_with(
         "stage_config1",
-        input_data="dataset",
-        output_dir="./output/timestamp",
-        cli_args=None,
-        global_parameters={"a": 10},
+        _input_data_="dataset",
+        _output_dir_="./output/timestamp",
+        _cli_args_=None,
+        _global_parameters_={"a": 10},
     )
 
     stage2.update_pipeline_parameters.assert_called_once_with(
         "stage_config2",
-        input_data="dataset",
-        output_dir="./output/timestamp",
-        cli_args=None,
-        global_parameters={"a": 10},
+        _input_data_="dataset",
+        _output_dir_="./output/timestamp",
+        _cli_args_=None,
+        _global_parameters_={"a": 10},
     )
 
 

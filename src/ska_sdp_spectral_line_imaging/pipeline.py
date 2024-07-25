@@ -48,8 +48,8 @@ from ska_sdp_spectral_line_imaging.stages.predict_stage import predict_stage
         ddi=ConfigParam(int, 0),
     ),
 )
-def select_field(upstream_output, intent, field_id, ddi, input_data):
-    ps = input_data
+def select_field(upstream_output, intent, field_id, ddi, _input_data_):
+    ps = _input_data_
     # TODO: This is a hack to get the psname
     psname = list(ps.keys())[0].split(".ps")[0]
 
@@ -234,9 +234,9 @@ def vis_stokes_conversion(upstream_output):
         psout_name=ConfigParam(str, "residual.zarr"),
     ),
 )
-def export_residual(upstream_output, psout_name, output_dir):
+def export_residual(upstream_output, psout_name, _output_dir_):
     ps = upstream_output["ps"]
-    output_path = os.path.abspath(os.path.join(output_dir, psout_name))
+    output_path = os.path.abspath(os.path.join(_output_dir_, psout_name))
     ps.VISIBILITY.to_zarr(store=output_path)
     return upstream_output
 
@@ -247,9 +247,9 @@ def export_residual(upstream_output, psout_name, output_dir):
         image_name=ConfigParam(str, "output_image.zarr"),
     ),
 )
-def export_image(upstream_output, image_name, output_dir):
+def export_image(upstream_output, image_name, _output_dir_):
     cubes = upstream_output["cubes"]
-    output_path = os.path.join(output_dir, image_name)
+    output_path = os.path.join(_output_dir_, image_name)
 
     cubes.to_zarr(store=output_path)
     return upstream_output
