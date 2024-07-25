@@ -1,6 +1,11 @@
+import logging
+
 from typer import Option, Typer
 
+from ..framework.log_util import LogUtil
 from .executable_pipeline import ExecutablePipeline
+
+logger = logging.getLogger(__name__)
 
 app = Typer()
 
@@ -26,10 +31,13 @@ def install(
            Path to place the default config.
     """
 
+    LogUtil.configure(pipeline_name)
+    logger.info("=============== START INSTALL =====================")
     executable_pipeline = ExecutablePipeline(pipeline_name, pipeline_path)
     executable_pipeline.validate_pipeline()
     executable_pipeline.prepare_executable()
     executable_pipeline.install(config_install_path)
+    logger.info("=============== FINISH INSTALL ====================")
 
 
 @app.command()
@@ -42,7 +50,11 @@ def uninstall(pipeline_name, pipeline_path):
        pipeline_path: str
             Path to the pipeline to be uninstalled
     """
+
+    LogUtil.configure(pipeline_name)
+    logger.info("=============== START UNINSTALL =====================")
     executable_pipeline = ExecutablePipeline(pipeline_name, pipeline_path)
     executable_pipeline.validate_pipeline()
     executable_pipeline.prepare_executable()
     executable_pipeline.uninstall()
+    logger.info("=============== FINISH UNINSTALL ====================")

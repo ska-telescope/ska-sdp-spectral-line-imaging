@@ -1,4 +1,5 @@
 import importlib.util
+import logging
 import os
 import sys
 from pathlib import Path
@@ -36,6 +37,7 @@ class ExecutablePipeline:
         self._pipeline_name = pipeline_name
         self.installable_pipeline = None
         self.executable_content = None
+        self.logger = logging.getLogger(__name__)
 
     def validate_pipeline(self):
         """
@@ -48,6 +50,7 @@ class ExecutablePipeline:
             PipelineNotFoundException if the provided pipeline name
                 doesn't exist
         """
+        self.logger.info(f"Validating {self._script_path}")
         if not os.path.exists(self._script_path):
             raise FileNotFoundError(self._script_path)
 
@@ -73,6 +76,7 @@ class ExecutablePipeline:
         Prepares the content of the executable script file
         """
         file_content = ""
+        self.logger.info("Preparing executable")
         with open(self._script_path, "r") as script_file:
             file_content = script_file.readlines()
 
@@ -88,11 +92,14 @@ class ExecutablePipeline:
         The path is taken from the executable path obtained from sys.executable
         The script file is created with a execute privilage to user and group
         """
+        self.logger.info("Installing executable")
         executable_path = self.__executable_script_path()
 
         with open(executable_path, "w") as outfile:
             outfile.write(self.executable_content)
         os.chmod(executable_path, 0o750)
+
+        self.logger.info(f"Installed {executable_path}")
 
         script_path = Path(self._script_path)
         config_root = (
@@ -106,7 +113,10 @@ class ExecutablePipeline:
         """
         Removes the executable pipeline from the executable path.
         """
-        os.remove(self.__executable_script_path())
+
+        executable_path = self.__executable_script_path()
+        self.logger.info(f"Deleting {executable_path}")
+        os.remove(executable_path)
 
     def __executable_script_path(self):
         """
@@ -128,7 +138,7 @@ class ExecutablePipeline:
             config_root: str
                 Root path for configurations
         """
-
+        self.logger.info("Installing default configuration")
         if not os.path.exists(config_root):
             raise FileNotFoundError(f"Directory {config_root} not found")
 
@@ -136,3 +146,4 @@ class ExecutablePipeline:
         config_path = f"{config_root}/{pipeline.name}.yaml"
 
         write_yml(config_path, pipeline.config)
+        self.logger.info(f"Installed default config {config_path}")
