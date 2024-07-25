@@ -31,7 +31,8 @@ A custom defined pipeline can be installed as an executable using the
 :command:`sdp-pipeline install` command. The installation process creates an executable
 data processing pipeline using the pipeline name, and also extracts the
 default configuration to a path provided by the user, or in the same
-directory as the pipeline script if the path is not provided.
+directory as the pipeline script if the path is not provided. Additionaly a package manager like `poetry` can be used install a production
+ready pipeline using the framework.
 
 Post installation the pipeline can be executed via CLI to perform data
 processing and data analysis.
@@ -64,33 +65,37 @@ Defining configurable stages
 A configurable stage is defined by decorating a standard python function with 
 :py:class:`ConfigurableStage``. The wrapper allows for the definition of a stage
 having a name and the configurable parameters which are made available to the
-function as function arguments. 
+function as function arguments.
 
-The first function argument is reserved for the pipeline metadata, 
-which is a dictionary consisting of following keys:
+The stage has the function signature :py:attr:`stage_name(upstream_output, confugiration_parameters..., pipeline_metadata...)`
 
-* :py:attr:`input_data` : the input processing set
-* :py:attr:`output`: the output from the upstream stage 
-* :py:attr:`output_dir`: the output path for the pipeline which can be used for writing out data from within the stages
+The first argument is reserved for the upstream output, followed by the configurations, and the optional pipeline metadata.
+The upstream output is set to the output of the previous stages in the order of execution. It is set to `None` for the first stage.
+The arguments for the configuration parameters are mandatory. The pipeline metadata arguments can be used on need basis.
 
+The framework provides the following metadata arguments
+
+* :py:attr:`_cli_args_`: a dictionary containing the cli arguments used for running the pipeline
+* :py:attr:`_global_parameters_`: the pipeline level global configurations.
+* :py:attr:`_input_data_` : the input processing set
+* :py:attr:`_output_dir_`: the output path for the pipeline which can be used for writing out data from within the stages
+  
 :py:func:`select_field` stage
   Configurable parameters
-    * intent (str): default - None
     * field_id (int): default - 0
     * ddi (int): default - 0
 
 >>> @ConfigurableStage(
 ...     "select_field",
 ...     configuration=Configuration(
-...         intent=ConfigParam(str, None),
 ...         field_id=ConfigParam(int, 0),
 ...         ddi=ConfigParam(int, 0),
 ...     ),
 ... )
-... def select_field_from_ps(pipeline_data, intent, field_id, ddi):
-...     ps = pipeline_data["input_data"]
+... def select_field_from_ps(output, field_id, ddi, _input_data_):
+...     ps = _input_data_
 ...     psname = list(ps.keys())[0].split(".ps")[0]
-...     sel = f"{psname}.ps_ddi_{ddi}_intent_{intent}_field_id_{field_id}"
+...     sel = f"{psname}.ps_ddi_{ddi}_intent_None_field_id_{field_id}"
 ...     return {"ps": ps[sel].unify_chunks()}
 
 
@@ -104,25 +109,25 @@ which is a dictionary consisting of following keys:
 ...         multiplier=ConfigParam(float, 1.0)
 ...     ),
 ... )
-... def process_vis(pipeline_data, multiplier):
-...     ps = pipeline_data["output"]["ps"]
+... def process_vis(output, multiplier):
+...     ps = output["ps"]
 ...     processed_vis = multiplier * ps.VISIBILITY
 ...     return {"processed_vis": processed_vis}
 
 :py:func:`export_vis` stage:
 
-Note that we are using the `output_dir` key from pipeline metadata to store the 
+Note that we are using the :py:attr:`_output_dir_`  to store the 
 output zarr file.
 
   Configurable parameters
-    * output_vis_name (str): default - "output_vis.zarr"
+    * N/A
 
 >>> @ConfigurableStage(
 ...     "export_vis"
 ... )
-... def export_processed_vis(pipeline_data):
-...     vis = pipeline_data["output"]["processed_vis"]
-...     output_path = os.path.join(pipeline_data["output_dir"], "output_vis.zarr")
+... def export_processed_vis(upstream_output, _output_dir_):
+...     vis = upstream_output["processed_vis"]
+...     output_path = os.path.join(_output_dir_, "output_vis.zarr")
 ...     vis.to_zarr(store=output_path)
 
 
@@ -134,13 +139,87 @@ executes the stages in the order as provided.
 
 
 >>> Pipeline(
-...     "process_vis_pipeline",
+...     "process-vis-pipeline",
 ...     stages=[
 ...         select_field_from_ps,
 ...         process_vis,
 ...         export_processed_vis
 ...     ]
 ... )
+
+Additional CLI arguments and global configurations for the pipeline can be provide during the pipeline definition, which are accessible
+through the :py:attr:`_cli_args_` and :py:attr:`_global_parameters_` metadata argument.
+
+:py:func:`select_field` stage
+  Configurable parameters
+    * field_id (int): default - 0
+    * ddi (int): default - 0
+  CLI argument
+    * intent (str): default - None
+
+>>> @ConfigurableStage(
+...     "select_field",
+...     configuration=Configuration(
+...         field_id=ConfigParam(int, 0),
+...         ddi=ConfigParam(int, 0),
+...     ),
+... )
+... def select_field_from_ps(output, field_id, ddi, _input_data_, _cli_args_):
+...     ps = _input_data_
+...     intent = _cli_args_["intent"]
+...     psname = list(ps.keys())[0].split(".ps")[0]
+...     sel = f"{psname}.ps_ddi_{ddi}_intent_{intent}_field_id_{field_id}"
+...     return {"ps": ps[sel].unify_chunks()}
+... 
+... pipeline = Pipeline(
+...     "process-vis-pipeline",
+...     stages=[
+...         select_field_from_ps,
+...         process_vis,
+...         export_processed_vis
+...     ],
+...     cli_args=[
+...        CLIArgument(
+...            "--intent",
+...            type=str,
+...            dest="intent",
+...            default=None,
+...            help="XRADIO intent variable"
+...        )
+...     ],
+...     global_config=Configuration(
+...        processed_vis=ConfigParam(str, "processed_vis")
+...     )
+... )
+
+
+The pipeline framework exposes additional APIs to add sub parsers and bind them to functions during
+the pipeline definition. Sub parsers can be added using the :py:func:`Pipeline._cli_command.create_sub_parser` function which takes the name of the subparser,
+along with the callback function and a list of CLI arguments
+
+>>> def cleanup(args):
+...     output_path = args.output_path
+...     folder_contents = os.listdir(output_path)
+...    
+...     for content in folder_contents:
+...         timestamped_path = f"{output_path}/{content}"
+...         if (
+...               pipeline.name in content
+...               and os.path.isdir(timestamped_path)
+...         ):
+...             shutil.rmtree(timestamped_path)
+... 
+... pipeline._cli_command.create_sub_parser(
+...     "clean", cleanup, [CLIArgument(
+...          "--output-path",
+...          type=str,
+...          dest="output_path",
+...          required=True,
+...          help="Path to cleanup"
+...     )],
+...     help="Clean up output artefacts"
+... )
+
 
 --------------------------
 Entire Pipeline Definition 
@@ -150,9 +229,11 @@ Entire Pipeline Definition
 ... 
 ... import astropy.io.fits as fits
 ... import numpy as np
-... import xarray as xr
 ... import os
+... import shutil
+... import xarray as xr
 ... 
+... from ska_sdp_pipelines.framework.model.cli_command import CLIArgument
 ... from ska_sdp_pipelines.framework.configurable_stage import (
 ...     ConfigurableStage
 ... )
@@ -165,13 +246,13 @@ Entire Pipeline Definition
 ... @ConfigurableStage(
 ...     "select_field",
 ...     configuration=Configuration(
-...         intent=ConfigParam(str, None),
 ...         field_id=ConfigParam(int, 0),
 ...         ddi=ConfigParam(int, 0),
 ...     ),
 ... )
-... def select_field_from_ps(pipeline_data, intent, field_id, ddi):
-...     ps = pipeline_data["input_data"]
+... def select_field_from_ps(output, field_id, ddi, _input_data_, _cli_args_):
+...     ps = _input_data_
+...     intent = _cli_args_["intent"]
 ...     psname = list(ps.keys())[0].split(".ps")[0]
 ...     sel = f"{psname}.ps_ddi_{ddi}_intent_{intent}_field_id_{field_id}"
 ...     return {"ps": ps[sel].unify_chunks()}
@@ -182,39 +263,93 @@ Entire Pipeline Definition
 ...         multiplier=ConfigParam(float, 1.0)
 ...     ),
 ... )
-... def process_vis(pipeline_data, multiplier):
-...     ps = pipeline_data["output"]["ps"]
+... def process_vis(output, multiplier, _global_parameters_):
+...     ps = output["ps"]
+...     p_vis_key = _global_parameters_["processed_vis"]
 ...     processed_vis = multiplier * ps.VISIBILITY
-...     return {"processed_vis": processed_vis}
+...     return {p_vis_key: processed_vis}
 ... 
 ... @ConfigurableStage(
 ...     "export_vis"
 ... )
-... def export_processed_vis(pipeline_data):
-...     vis = pipeline_data["output"]["processed_vis"]
-...     output_path = os.path.join(pipeline_data["output_dir"], "output_vis.zarr")
-... 
+... def export_processed_vis(upstream_output, _output_dir_, _global_parameters_):
+...     processed_vis = _global_parameters_["processed_vis"]
+...     vis = upstream_output[processed_vis]
+...     output_path = os.path.join(_output_dir_, "output_vis.zarr")
 ...     vis.to_zarr(store=output_path)
 ... 
-... Pipeline(
-...     "process_vis_pipeline",
+... def cleanup(args):
+...     output_path = args.output_path
+...     folder_contents = os.listdir(output_path)
+...    
+...     for content in folder_contents:
+...         timestamped_path = f"{output_path}/{content}"
+...         if (
+...               pipeline.name in content
+...               and os.path.isdir(timestamped_path)
+...         ):
+...             shutil.rmtree(timestamped_path)
+... 
+... pipeline = Pipeline(
+...     "process-vis-pipeline",
 ...     stages=[
 ...         select_field_from_ps,
 ...         process_vis,
 ...         export_processed_vis
-...     ]
+...     ],
+...     cli_args=[
+...        CLIArgument(
+...            "--intent",
+...            type=str,
+...            dest="intent",
+...            default=None,
+...            help="XRADIO intent variable"
+...        )
+...     ],
+...     global_config=Configuration(
+...        processed_vis=ConfigParam(str, "processed_visibility")
+...     )
+... )
+... 
+... pipeline._cli_command.create_sub_parser(
+...     "clean", cleanup, [
+...          CLIArgument(
+...              "--output-path",
+...              type=str,
+...              dest="output_path",
+...              required=True,
+...              help="Path to cleanup"
+...     )],
+...     help="Clean up output artefacts"
 ... )
 
------------------------
-Installing the Pipeline
------------------------
+
+--------------------------------------
+Installing the Pipeline through poetry
+--------------------------------------
+
+If the pipeline definition is part of a bigger python module, poetry can be used to manage
+the dependency and generate and install the executable pipeline. 
+
+Add the following section in the :file:`pyproject.toml` file.
+
+.. code-block:: toml
+
+    [tool.poetry.scripts]
+    process-vis-pipeline = "complete.import.path.to.process_vis_pipeline:pipeline"
+
+
+
+--------------------------------
+Installing a standalone Pipeline
+--------------------------------
 
 A python file containing the above definition of the pipeline can be installed
 with the help of the :command:`sdp-pipelines` command.
 
 .. code-block:: bash
 
-  sdp-pipelines install \
+  sdp-pipelines install process-vis-pipeline \
   /path/to/process_vis_pipeline.py \
   --config-install-path=/path/to/save/default/config
 
@@ -230,20 +365,21 @@ process.
 
 .. code-block:: yaml
 
+  global_parameters:
+    processed_vis: processed_visibility
   parameters:
     export_vis: {}
     process_vis:
-        multiplier: 1.0
+      multiplier: 1.0
     select_field:
-        ddi: 0
-        field_id: 0
-        intent: null
+      ddi: 0
+      field_id: 0
   pipeline:
     export_vis: true
     process_vis: true
     select_field: true
 
-The generated configuration consists of two sections
+The generated configuration consists of three sections
 
 1. Pipeline Section
     This section indicates which all stages would be run during the pipeline
@@ -253,24 +389,54 @@ The generated configuration consists of two sections
     This section contains the list of stages and their corresponding
     configurable parameters defaulted to the values as defined in during the
     pipeline definition.
+3. Global Parameters Section
+    This section contains the list of global configurable parameters which are
+    available to all the stages through the metadata argument :py:attr:`_global_parameters_`
 
 ----------------------
 Executing the pipeline
 ----------------------
 
-Once the pipeline is installed as a CLI, it can be executed using the following
-command::
+The installed CLI application provides three sub-commands
 
-   process_vis_pipeline \
+1. :command:`run` (default provided with along with the framework)
+2. :command:`install-config` (default provided with along with the framework)
+3. :command:`clean` 
+
+
+You can run :command:`process-vis-pipeline --help`, which will show 
+the following help message
+
+.. code-block:: bash
+
+    usage: process-vis-pipeline [-h] {run,install-config,clean} ...
+    
+    positional arguments:
+      {run,install-config,clean}
+        run                 Run the pipeline
+        install-config      Installs the default config at --config-install-path
+        clean               Clean up output artefacts
+    
+    options:
+      -h, --help            show this help message and exit
+
+The pipeline can be executed using the following command
+
+.. code-block:: bash
+
+   process_vis_pipeline run\
      --input /path/to/processing_set.ps \
      --output /path/to/store/output
 
-You can run :command:`process_vis_pipeline --help`, which will show 
-the following help message::
+Default sub-command :command:`process-vis-pipeline run --help`
 
-    usage: process_vis_pipeline [-h] [--input INPUT] \
-      [--config [CONFIG_PATH]] [--output [OUTPUT_PATH]] \
-      [--stages [STAGES ...]] [--dask-scheduler DASK_SCHEDULER] [--verbose]
+.. code-block:: bash
+
+    usage: process-vis-pipeline run [-h]\
+      --input INPUT [--config [CONFIG_PATH]]\
+      [--output [OUTPUT_PATH]] [--stages [STAGES ...]]\
+      [--dask-scheduler DASK_SCHEDULER] [--verbose]\
+      [--intent INTENT]
 
     options:
       -h, --help            show this help message and exit
@@ -282,10 +448,34 @@ the following help message::
       --stages [STAGES ...]
                             Pipleline stages to be executed
       --dask-scheduler DASK_SCHEDULER
-                            Optional dask scheduler address to which to submit
-                            jobs. If specified, any eligible pipeline step will
-                            be distributed on the associated Dask cluster.
+                            Optional dask scheduler address to which to submit jobs.
+                            If specified, any eligible pipeline step will be distributed
+                            on the associated Dask cluster.
       --verbose, -v         Increase pipeline verbosity to debug level.
+      --intent INTENT       XRADIO intent variable
+
+Default  sub-command :command:`process-vis-pipeline install-config --help`
+
+.. code-block:: bash
+
+    usage: process-vis-pipeline install-config [-h] --config-install-path CONFIG_INSTALL_PATH
+
+    options:
+      -h, --help            show this help message and exit
+      --config-install-path CONFIG_INSTALL_PATH
+                            Path to place the default config.
+
+Custom  sub-command :command:`process-vis-pipeline clean --help`
+
+.. code-block:: bash
+
+    usage: process-vis-pipeline clean [-h] --output-path OUTPUT_PATH
+
+    options:
+      -h, --help            show this help message and exit
+      --output-path OUTPUT_PATH
+                            Path to cleanup
+          
 
 -------------------------
 Toggeling pipeline stages
