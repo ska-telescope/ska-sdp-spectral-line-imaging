@@ -5,7 +5,7 @@ from .command import Command
 from .configuration import Configuration
 from .constants import CONFIG_CLI_ARGS, MANDATORY_CLI_ARGS
 from .exceptions import NoStageToExecuteException, StageNotFoundException
-from .io_utils import create_output_dir, read_dataset, write_dataset
+from .io_utils import create_output_dir, read_dataset, timestamp, write_dataset
 from .log_util import LogUtil
 from .model.config_manager import ConfigManager
 from .model.named_instance import NamedInstance
@@ -260,7 +260,8 @@ class Pipeline(Command, metaclass=NamedInstance):
             )}"""
         )
 
-        self.config_manager.write_yml(f"{output_dir}/config.yml")
+        output_yaml_file = f"{output_dir}/{self.name}_{timestamp()}.config.yml"
+        self.config_manager.write_yml(output_yaml_file)
 
         scheduler.schedule(executable_stages, verbose=verbose)
         output_pipeline_data = scheduler.execute()

@@ -1,7 +1,8 @@
 import logging
-from datetime import datetime
 
 from ska_ser_logging import configure_logging
+
+from .io_utils import timestamp
 
 
 class LogUtil:
@@ -45,11 +46,7 @@ class LogUtil:
         if output_dir is None:
             return
 
-        timestamp = datetime.now()
-        log_file = (
-            f"{output_dir}/{pipeline_name}_"
-            f"{timestamp.strftime('%Y-%m-%dT%H:%M:%S')}.log"
-        )
+        log_file = f"{output_dir}/{pipeline_name}_" f"{timestamp()}.log"
         return {
             "handlers": {
                 "file": {

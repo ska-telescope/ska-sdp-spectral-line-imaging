@@ -34,8 +34,7 @@ def create_output_dir(output_path, prefix_name):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    timestamped_folder = f"{output_path}/{prefix_name}_out_{timestamp}"
+    timestamped_folder = f"{output_path}/{prefix_name}_{timestamp()}"
     os.makedirs(timestamped_folder)
     return timestamped_folder
 
@@ -43,3 +42,15 @@ def create_output_dir(output_path, prefix_name):
 def write_yml(output_path, config):
     with open(output_path, "w") as conf_file:
         yaml.dump(config, conf_file)
+
+
+def timestamp():
+    """
+    Creates timestamp with predefined format `%Y-%m-%dT%H:%M:%S`
+
+    Returns
+    -------
+        (str):
+            Timestamp.
+    """
+    return datetime.now().strftime("%Y-%m-%dT%H:%M:%S")

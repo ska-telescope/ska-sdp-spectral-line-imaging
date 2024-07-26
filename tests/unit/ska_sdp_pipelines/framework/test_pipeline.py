@@ -85,6 +85,16 @@ def create_output_mock():
         yield create_output
 
 
+@pytest.fixture(scope="function")
+def timestamp_mock():
+    with mock.patch(
+        "ska_sdp_pipelines.framework.pipeline.timestamp"
+    ) as timestamp:
+        timestamp.return_value = "FORMATTED_TIME"
+
+        yield timestamp
+
+
 def test_should_initialise_the_pipeline_with_default_cli_args(cli_arguments):
     cli_arg_mock = Mock(name="cli_arg")
     cli_arguments.return_value = cli_arg_mock
@@ -508,7 +518,7 @@ def test_should_install_default_config(config_manager_mock):
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
 def test_should_write_config_to_output_yaml_file(
-    config_manager_mock, default_scheduler
+    config_manager_mock, default_scheduler, timestamp_mock
 ):
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1"]
@@ -522,13 +532,13 @@ def test_should_write_config_to_output_yaml_file(
     pipeline.run("infile", output_path="/output")
 
     config_manager_mock.write_yml.assert_called_once_with(
-        "./output/timestamp/config.yml"
+        "./output/timestamp/test_FORMATTED_TIME.config.yml"
     )
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
 def test_should_write_config_to_output_yaml_on_failure(
-    config_manager_mock, default_scheduler
+    config_manager_mock, default_scheduler, timestamp_mock
 ):
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1"]
@@ -547,7 +557,9 @@ def test_should_write_config_to_output_yaml_on_failure(
 
     manager.assert_has_calls(
         [
-            call.mocked_write_yml("./output/timestamp/config.yml"),
+            call.mocked_write_yml(
+                "./output/timestamp/test_FORMATTED_TIME.config.yml"
+            ),
             call.execute_mock(),
         ]
     )

@@ -6,13 +6,11 @@ from ska_sdp_pipelines.framework.log_util import LogUtil
 
 
 @mock.patch("ska_sdp_pipelines.framework.log_util.configure_logging")
-@mock.patch("ska_sdp_pipelines.framework.log_util.datetime")
+@mock.patch("ska_sdp_pipelines.framework.log_util.timestamp")
 def test_should_configure_with_additional_log_config(
-    datetime_mock, configure_mock
+    timestamp_mock, configure_mock
 ):
-    now_mock_object = Mock(name="now")
-    now_mock_object.strftime.return_value = "FORMATTED_TIME"
-    datetime_mock.now.return_value = now_mock_object
+    timestamp_mock.return_value = "FORMATTED_TIME"
 
     pipeline_name = "name"
 
@@ -36,13 +34,11 @@ def test_should_configure_with_additional_log_config(
 
 
 @mock.patch("ska_sdp_pipelines.framework.log_util.configure_logging")
-@mock.patch("ska_sdp_pipelines.framework.log_util.datetime")
+@mock.patch("ska_sdp_pipelines.framework.log_util.timestamp")
 def test_should_configure_without_additional_log_config_if_no_output(
-    datetime_mock, configure_mock
+    timestamp_mock, configure_mock
 ):
-    now_mock_object = Mock(name="now")
-    now_mock_object.strftime.return_value = "FORMATTED_TIME"
-    datetime_mock.now.return_value = now_mock_object
+    timestamp_mock.return_value = "FORMATTED_TIME"
 
     pipeline_name = "name"
 
@@ -51,11 +47,10 @@ def test_should_configure_without_additional_log_config_if_no_output(
 
 
 @mock.patch("ska_sdp_pipelines.framework.log_util.configure_logging")
-@mock.patch("ska_sdp_pipelines.framework.log_util.datetime")
-def test_should_configure_verbose(datetime_mock, configure_mock):
-    now_mock_object = Mock(name="now")
-    now_mock_object.strftime.return_value = "FORMATTED_TIME"
-    datetime_mock.now.return_value = now_mock_object
+@mock.patch("ska_sdp_pipelines.framework.log_util.timestamp")
+def test_should_configure_verbose(timestamp_mock, configure_mock):
+
+    timestamp_mock.return_value = "FORMATTED_TIME"
 
     pipeline_name = "name"
 

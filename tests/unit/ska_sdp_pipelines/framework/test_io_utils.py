@@ -1,21 +1,31 @@
+import pytest
 from mock import MagicMock, Mock, mock
 
 from ska_sdp_pipelines.framework.io_utils import (
     create_output_dir,
     read_dataset,
+    timestamp,
     write_yml,
 )
 
 
+@pytest.fixture(scope="function")
+def datetime_mock():
+    with mock.patch(
+        "ska_sdp_pipelines.framework.io_utils.datetime"
+    ) as datetime_mocked:
+        now_mock = Mock(name="now")
+        datetime_mocked.now.return_value = now_mock
+        now_mock.strftime = Mock(name="strftime", return_value="timestamp")
+
+        yield datetime_mocked
+
+
 @mock.patch("ska_sdp_pipelines.framework.io_utils.os.makedirs")
 @mock.patch("ska_sdp_pipelines.framework.io_utils.os.path.exists")
-@mock.patch("ska_sdp_pipelines.framework.io_utils.datetime")
 def test_should_create_root_output_folder_and_timestamped_folder(
-    datetime_mock, exists_mock, makedirs_mock
+    exists_mock, makedirs_mock, datetime_mock
 ):
-    now_mock = Mock(name="now")
-    datetime_mock.now.return_value = now_mock
-    now_mock.strftime = Mock(name="strftime", return_value="timestamp")
     exists_mock.return_value = False
 
     outfile = create_output_dir("./output", "pipeline_name")
@@ -23,31 +33,25 @@ def test_should_create_root_output_folder_and_timestamped_folder(
     makedirs_mock.assert_has_calls(
         [
             mock.call("./output"),
-            mock.call("./output/pipeline_name_out_timestamp"),
+            mock.call("./output/pipeline_name_timestamp"),
         ]
     )
 
-    assert outfile == "./output/pipeline_name_out_timestamp"
+    assert outfile == "./output/pipeline_name_timestamp"
 
 
 @mock.patch("ska_sdp_pipelines.framework.io_utils.os.makedirs")
 @mock.patch("ska_sdp_pipelines.framework.io_utils.os.path.exists")
-@mock.patch("ska_sdp_pipelines.framework.io_utils.datetime")
 def test_should_create_only_timestamped_folder(
-    datetime_mock, exists_mock, makedirs_mock
+    exists_mock, makedirs_mock, datetime_mock
 ):
-    now_mock = Mock(name="now")
-    datetime_mock.now.return_value = now_mock
-    now_mock.strftime = Mock(name="strftime", return_value="timestamp")
     exists_mock.return_value = True
 
     outfile = create_output_dir("./output", "pipeline_name")
     exists_mock.assert_called_once_with("./output")
-    makedirs_mock.assert_called_once_with(
-        "./output/pipeline_name_out_timestamp"
-    )
+    makedirs_mock.assert_called_once_with("./output/pipeline_name_timestamp")
 
-    assert outfile == "./output/pipeline_name_out_timestamp"
+    assert outfile == "./output/pipeline_name_timestamp"
 
 
 @mock.patch(
@@ -75,3 +79,10 @@ def test_should_write_yaml_to_the_given_path(open_mock, yaml_mock):
 
     open_mock.assert_called_once_with(output_path, "w")
     yaml_mock.dump.assert_called_once_with(config, "opened_obj")
+
+
+def test_should_generate_timestamp(datetime_mock):
+    expected = "timestamp"
+    actual = timestamp()
+
+    assert actual == expected
