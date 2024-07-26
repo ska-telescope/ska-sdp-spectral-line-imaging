@@ -17,7 +17,7 @@ fi
 
 # Create a new environment from environment.yml
 echo "Creating new $ENV_NAME environment...";
-conda env create -f environment.yml > /dev/null
+conda env create -f environment.yml
 
 echo -e \
 "\nThe \033[0;34m$ENV_NAME\e[0m environment successfully created.\n\n\
