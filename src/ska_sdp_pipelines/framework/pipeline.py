@@ -1,18 +1,18 @@
 import functools
 import logging
 
+from .command import Command
 from .configuration import Configuration
 from .constants import CONFIG_CLI_ARGS, MANDATORY_CLI_ARGS
 from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_dir, read_dataset, write_dataset
 from .log_util import LogUtil
-from .model.cli_command import CLICommand
 from .model.config_manager import ConfigManager
 from .model.named_instance import NamedInstance
 from .scheduler import SchedulerFactory
 
 
-class Pipeline(metaclass=NamedInstance):
+class Pipeline(Command, metaclass=NamedInstance):
     """
     Pipeline class allows for defining a pipeline as an ordered list of
     stages, and takes care of executing those stages.
@@ -44,27 +44,11 @@ class Pipeline(metaclass=NamedInstance):
           **kwargs:
               Additional kwargs
         """
-
+        super().__init__()
         self.name = name
         self._stages = [] if stages is None else stages
         self._global_config = (
             Configuration() if global_config is None else global_config
-        )
-
-        self._cli_command = CLICommand()
-
-        self._cli_command.create_sub_parser(
-            "run",
-            self._run,
-            MANDATORY_CLI_ARGS + ([] if cli_args is None else cli_args),
-            help="Run the pipeline",
-        )
-
-        self._cli_command.create_sub_parser(
-            "install-config",
-            self._install_config,
-            CONFIG_CLI_ARGS,
-            help="Installs the default config at --config-install-path",
         )
 
         LogUtil.configure(name)
@@ -75,6 +59,18 @@ class Pipeline(metaclass=NamedInstance):
             parameters=self._parameter(),
             global_parameters=self._global_config.items,
         )
+
+        self.sub_command(
+            "run",
+            MANDATORY_CLI_ARGS + ([] if cli_args is None else cli_args),
+            help="Run the pipeline",
+        )(self._run)
+
+        self.sub_command(
+            "install-config",
+            CONFIG_CLI_ARGS,
+            help="Installs the default config at --config-install-path",
+        )(self._install_config)
 
     def __validate_stages(self, stages):
         """
@@ -182,13 +178,6 @@ class Pipeline(metaclass=NamedInstance):
         self.config_manager.write_yml(
             f"{cli_args.config_install_path}/{self.name}.yml"
         )
-
-    def __call__(self):
-        """
-        Run the pipeline as a CLI command
-        """
-        cli_args = self._cli_command.parse_args()
-        cli_args.sub_command(cli_args)
 
     def run(
         self,

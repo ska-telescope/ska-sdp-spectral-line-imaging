@@ -26,7 +26,7 @@ def log_util():
 @pytest.fixture(scope="function", autouse=True)
 def cli_arguments():
     with mock.patch(
-        "ska_sdp_pipelines.framework.pipeline.CLICommand"
+        "ska_sdp_pipelines.framework.command.CLICommand"
     ) as cli_arguments_mock:
         yield cli_arguments_mock
 

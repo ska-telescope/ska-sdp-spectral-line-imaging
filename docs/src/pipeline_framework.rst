@@ -194,10 +194,20 @@ through the :py:attr:`_cli_args_` and :py:attr:`_global_parameters_` metadata ar
 
 
 The pipeline framework exposes additional APIs to add sub parsers and bind them to functions during
-the pipeline definition. Sub parsers can be added using the :py:func:`Pipeline._cli_command.create_sub_parser` function which takes the name of the subparser,
+the pipeline definition. Sub commands can be added using the :py:func:`Pipeline.sub_command` decorator which takes the name of the subparser,
 along with the callback function and a list of CLI arguments
 
->>> def cleanup(args):
+>>> @pipeline.sub_command(
+...     "clean", [CLIArgument(
+...         "--output-path",
+...         type=str,
+...         dest="output_path",
+...         required=True,
+...         help="Path to cleanup"
+...     )],
+...     help="Clean up output artefacts"
+... )
+... def cleanup(args):
 ...     output_path = args.output_path
 ...     folder_contents = os.listdir(output_path)
 ...    
@@ -208,17 +218,6 @@ along with the callback function and a list of CLI arguments
 ...               and os.path.isdir(timestamped_path)
 ...         ):
 ...             shutil.rmtree(timestamped_path)
-... 
-... pipeline._cli_command.create_sub_parser(
-...     "clean", cleanup, [CLIArgument(
-...          "--output-path",
-...          type=str,
-...          dest="output_path",
-...          required=True,
-...          help="Path to cleanup"
-...     )],
-...     help="Clean up output artefacts"
-... )
 
 
 --------------------------
@@ -278,18 +277,6 @@ Entire Pipeline Definition
 ...     output_path = os.path.join(_output_dir_, "output_vis.zarr")
 ...     vis.to_zarr(store=output_path)
 ... 
-... def cleanup(args):
-...     output_path = args.output_path
-...     folder_contents = os.listdir(output_path)
-...    
-...     for content in folder_contents:
-...         timestamped_path = f"{output_path}/{content}"
-...         if (
-...               pipeline.name in content
-...               and os.path.isdir(timestamped_path)
-...         ):
-...             shutil.rmtree(timestamped_path)
-... 
 ... pipeline = Pipeline(
 ...     "process-vis-pipeline",
 ...     stages=[
@@ -311,17 +298,27 @@ Entire Pipeline Definition
 ...     )
 ... )
 ... 
-... pipeline._cli_command.create_sub_parser(
-...     "clean", cleanup, [
-...          CLIArgument(
-...              "--output-path",
-...              type=str,
-...              dest="output_path",
-...              required=True,
-...              help="Path to cleanup"
+... @pipeline.sub_command(
+...     "clean", [CLIArgument(
+...         "--output-path",
+...         type=str,
+...         dest="output_path",
+...         required=True,
+...         help="Path to cleanup"
 ...     )],
 ...     help="Clean up output artefacts"
 ... )
+... def cleanup(args):
+...     output_path = args.output_path
+...     folder_contents = os.listdir(output_path)
+...    
+...     for content in folder_contents:
+...         timestamped_path = f"{output_path}/{content}"
+...         if (
+...               pipeline.name in content
+...               and os.path.isdir(timestamped_path)
+...         ):
+...             shutil.rmtree(timestamped_path)
 
 
 --------------------------------------
