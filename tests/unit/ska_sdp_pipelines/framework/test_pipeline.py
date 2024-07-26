@@ -11,7 +11,7 @@ from ska_sdp_pipelines.framework.exceptions import (
     NoStageToExecuteException,
     StageNotFoundException,
 )
-from ska_sdp_pipelines.framework.model.cli_command import CLIArgument
+from ska_sdp_pipelines.framework.model.cli_command_parser import CLIArgument
 from ska_sdp_pipelines.framework.pipeline import Pipeline
 
 
@@ -26,7 +26,7 @@ def log_util():
 @pytest.fixture(scope="function", autouse=True)
 def cli_arguments():
     with mock.patch(
-        "ska_sdp_pipelines.framework.command.CLICommand"
+        "ska_sdp_pipelines.framework.command.CLICommandParser"
     ) as cli_arguments_mock:
         yield cli_arguments_mock
 
@@ -135,7 +135,7 @@ def test_should_initialise_the_pipeline_with_additional_cli_args(
 
 
 @mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
-def test_should_run_the_pipeline_as_cli_command(
+def test_should_run_the_pipeline_as_cli_command_parser(
     config_manager_mock,
     read_mock,
     write_mock,

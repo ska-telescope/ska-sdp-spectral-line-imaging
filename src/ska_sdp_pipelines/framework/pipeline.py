@@ -164,7 +164,7 @@ class Pipeline(Command, metaclass=NamedInstance):
             config_path=cli_args.config_path,
             verbose=(cli_args.verbose != 0),
             output_path=cli_args.output_path,
-            cli_args=self._cli_command.cli_args_dict,
+            cli_args=self._cli_command_parser.cli_args_dict,
         )
 
     def _install_config(self, cli_args):

@@ -28,7 +28,7 @@ class CLIArgument:
         self.kwargs = kwargs
 
 
-class CLICommand:
+class CLICommandParser:
     """
     Builds the argparser for CLI application initialisation
 
@@ -40,7 +40,7 @@ class CLICommand:
 
     def __init__(self):
         """
-        Instantiate CLICommand object.
+        Instantiate CLICommandParser object.
         """
 
         self.__parser = argparse.ArgumentParser()

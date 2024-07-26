@@ -232,7 +232,7 @@ Entire Pipeline Definition
 ... import shutil
 ... import xarray as xr
 ... 
-... from ska_sdp_pipelines.framework.model.cli_command import CLIArgument
+... from ska_sdp_pipelines.framework.model.cli_command_parser import CLIArgument
 ... from ska_sdp_pipelines.framework.configurable_stage import (
 ...     ConfigurableStage
 ... )
