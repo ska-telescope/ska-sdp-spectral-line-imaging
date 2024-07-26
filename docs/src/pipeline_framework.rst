@@ -147,6 +147,10 @@ executes the stages in the order as provided.
 ...     ]
 ... )
 
+---------------------------------------------------
+Additional Runtime parameters and global parameters
+---------------------------------------------------
+
 Additional CLI arguments and global configurations for the pipeline can be provide during the pipeline definition, which are accessible
 through the :py:attr:`_cli_args_` and :py:attr:`_global_parameters_` metadata argument.
 
@@ -193,6 +197,10 @@ through the :py:attr:`_cli_args_` and :py:attr:`_global_parameters_` metadata ar
 ... )
 
 
+------------------
+Custom subcommands
+------------------
+
 The pipeline framework exposes additional APIs to add sub parsers and bind them to functions during
 the pipeline definition. Sub commands can be added using the :py:func:`Pipeline.sub_command` decorator which takes the name of the subparser,
 along with the callback function and a list of CLI arguments
@@ -205,7 +213,7 @@ along with the callback function and a list of CLI arguments
 ...         required=True,
 ...         help="Path to cleanup"
 ...     )],
-...     help="Clean up output artefacts"
+...     help="Clean output artefacts"
 ... )
 ... def cleanup(args):
 ...     output_path = args.output_path
