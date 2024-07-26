@@ -20,8 +20,8 @@ echo "Creating new $ENV_NAME environment...";
 conda env create -f environment.yml
 
 echo -e \
-"\nThe \033[0;34m$ENV_NAME\e[0m environment successfully created.\n\n\
+"\nThe $ENV_NAME environment successfully created.\n\n\
 Next steps:\n\
-\t1.Activate the environment \033[0;32mconda activate $ENV_NAME\e[0m\n\
-\t2.Install the pipeline by running \033[0;32m./scripts/install-pipeline.sh\e[0m\n" 
+\t1.Activate the environment 'conda activate $ENV_NAME'\n\
+\t2.Install the pipeline by running './scripts/install-pipeline.sh'\n"
 

@@ -33,10 +33,10 @@ fi
 # Get commit message file path
 COMMIT_MSG_FILE="$1"
 
-echo -e "\n\e[34m\
+echo -e "\n\
 ================================\n\
     Generating commit message   \n\
-================================\e[0m\n";
+================================\n";
 
 # Ask for JIRA ticket, title, and description
 ask_input "Enter JIRA ticket" jira_ticket

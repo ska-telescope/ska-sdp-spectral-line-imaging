@@ -18,44 +18,44 @@ for file in "${FILES[@]}"; do
 done
 
 if [[ $CHECK_FOR_FILE_CHANGE -eq 1 ]] ; then
-    echo -e "\n\e[31mChanges detected in $file\e[0m"
+    echo -e "\nChanges detected in $file"
     echo
     read -rp 'Have you updated your local conda environment? [y/n] ' response
     case "$response" in
         [Yy]*) ;;
-        [Nn]*) echo -e "\nPlease run the \e[32mscripts/recreate-conda-env.sh\e[0m to update conda environment, then install the pipeline\n" ; exit 1;;
-        *) echo -e "\nPlease answer \e[31myes or no\e[0m. Exiting.\n"; exit 1 ;;
+        [Nn]*) echo -e "\nPlease run the 'scripts/recreate-conda-env.sh' to update conda environment, then install the pipeline\n" ; exit 1;;
+        *) echo -e "\nPlease answer yes or no. Exiting.\n"; exit 1 ;;
     esac
 fi
 
 # If a new file is added, check if the documentation source files are recreated
 if [[ -n $(git status --porcelain | grep "^A") ]]; then
-    echo -e "\n\e[31mSome new files have been added\e[0m"
+    echo -e "\nSome new files have been added"
     echo
     read -rp 'Have you generated the API documentation using create-doc? [y/n] ' response
     case "$response" in
         [Yy]*) ;;
-        [Nn]*) echo -e "\nPlease run \e[32mmake -C docs/ create-doc\e[0m to generate readthedocs documentation from API docstrings.\n\e[31mBe sure to review the changes\e[0m after creating documentation.\n" ; exit 1;;
-        *) echo -e "\nPlease answer \e[31myes or no\e[0m. Exiting.\n"; exit 1 ;;
+        [Nn]*) echo -e "\nPlease run 'make -C docs/ create-doc' to generate readthedocs documentation from API docstrings.\nBe sure to review the changes after creating documentation.\n" ; exit 1;;
+        *) echo -e "\nPlease answer yes or no. Exiting.\n"; exit 1 ;;
     esac
 fi
 
 exec <&-
 
 # Running format, lints, test
-echo -e "\n\e[34m\
+echo -e "\n\
 ======================================\n\
     Running python lint and tests   \n\
-======================================\e[0m\n";
+======================================\n";
 
 make python-lint;
 make python-test;
 
 # Checking if docs can be built
-echo -e "\n\e[34m\
+echo -e "\n\
 ==========================================\n\
     Building readthedocs documentation   \n\
-==========================================\e[0m\n";
+==========================================\n";
 
 make docs-build clean;
 make docs-build html;
