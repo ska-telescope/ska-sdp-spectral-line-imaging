@@ -400,7 +400,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     )
 
     config_manager_mock.update_config.assert_called_once_with(
-        config_path="/path/to/config"
+        "/path/to/config"
     )
 
     default_scheduler.schedule.assert_called_once_with(
@@ -436,7 +436,7 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     )
 
     config_manager_mock.update_config.assert_called_once_with(
-        config_path="/path/to/config",
+        "/path/to/config",
     )
     config_manager_mock.update_pipeline.assert_called_once_with(
         {"stage1": True, "stage2": True, "stage3": False},
@@ -446,6 +446,24 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
         [stage1, stage2],
         verbose=False,
     )
+
+
+@mock.patch("ska_sdp_pipelines.framework.pipeline.ConfigManager")
+def test_should_not_update_config_if_config_path_is_not_provided(
+    config_manager_mock, default_scheduler
+):
+    config_manager_mock.return_value = config_manager_mock
+
+    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
+    stage1.name = "stage1"
+
+    stage1.config = {}
+
+    pipeline = Pipeline("test_pipeline", stages=[stage1])
+
+    pipeline.run("infile_path")
+
+    assert config_manager_mock.update_config.call_count == 0
 
 
 def test_should_raise_exception_if_wrong_stage_is_provided():

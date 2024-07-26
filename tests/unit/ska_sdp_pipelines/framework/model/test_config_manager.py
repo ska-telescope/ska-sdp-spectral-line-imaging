@@ -142,17 +142,9 @@ def test_should_update_the_default_config_with_yaml_without_pipeline_section(
     assert config_manager.global_parameters == global_parameters
 
 
-def test_should_update_the_config_with_selected_stages_from_cli(setup):
-    stages = {"stage1": False, "stage2": True, "stage3": True}
-    config_manager = setup
-    config_manager.update_pipeline(pipeline=stages)
-
-    assert config_manager.pipeline == stages
-
-
 def test_should_update_pipeline_states(setup):
 
-    pipeline_states = {"stage1": True, "stage2": False, "stage3": True}
+    pipeline_states = {"stage1": False, "stage2": False, "stage3": True}
     config_manager = setup
 
     config_manager.update_pipeline(pipeline_states)

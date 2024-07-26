@@ -227,7 +227,8 @@ class Pipeline(Command, metaclass=NamedInstance):
         vis = read_dataset(infile_path)
 
         scheduler = SchedulerFactory.get_scheduler(dask_scheduler)
-        self.config_manager.update_config(config_path=config_path)
+        if config_path:
+            self.config_manager.update_config(config_path)
 
         if stages:
             self.config_manager.update_pipeline(

@@ -38,7 +38,7 @@ class ConfigManager:
         self.parameters = parameters
         self.global_parameters = global_parameters
 
-    def update_config(self, config_path=None):
+    def update_config(self, config_path):
         """
         Updates the configurations of the pipeline given
             from CLI and yaml file.
@@ -49,25 +49,24 @@ class ConfigManager:
                 Path to the config yaml file.
         """
 
-        if config_path:
-            with open(config_path, "r") as config_file:
-                config_dict = yaml.safe_load(config_file)
-                pipeline_from_config = config_dict.get("pipeline", dict())
-                parameters = config_dict.get("parameters", dict())
-                global_params = config_dict.get("global_parameters", dict())
+        with open(config_path, "r") as config_file:
+            config_dict = yaml.safe_load(config_file)
+            pipeline_from_config = config_dict.get("pipeline", dict())
+            parameters = config_dict.get("parameters", dict())
+            global_params = config_dict.get("global_parameters", dict())
 
-            self.parameters = {
-                key: {**value, **parameters.get(key, dict())}
-                for key, value in self.parameters.items()
-            }
+        self.parameters = {
+            key: {**value, **parameters.get(key, dict())}
+            for key, value in self.parameters.items()
+        }
 
-            self.global_parameters = {
-                **self.global_parameters,
-                **global_params,
-            }
+        self.global_parameters = {
+            **self.global_parameters,
+            **global_params,
+        }
 
-            if pipeline_from_config:
-                self.update_pipeline(pipeline_from_config)
+        if pipeline_from_config:
+            self.update_pipeline(pipeline_from_config)
 
     def update_pipeline(self, pipeline):
         """
