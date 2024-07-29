@@ -1,11 +1,16 @@
 ska\_sdp\_spectral\_line\_imaging package
 =========================================
 
+.. automodule:: ska_sdp_spectral_line_imaging
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    ska_sdp_spectral_line_imaging.stages
    ska_sdp_spectral_line_imaging.stubs
@@ -13,18 +18,7 @@ Subpackages
 Submodules
 ----------
 
-ska\_sdp\_spectral\_line\_imaging.pipeline module
--------------------------------------------------
+.. toctree::
+   :maxdepth: 1
 
-.. automodule:: ska_sdp_spectral_line_imaging.pipeline
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: ska_sdp_spectral_line_imaging
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   ska_sdp_spectral_line_imaging.pipeline

@@ -1,8 +1,8 @@
-Modules
-=======
+API
+===
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    ska_sdp_pipelines
    ska_sdp_spectral_line_imaging

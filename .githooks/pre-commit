@@ -28,9 +28,9 @@ if [[ $CHECK_FOR_FILE_CHANGE -eq 1 ]] ; then
     esac
 fi
 
-# If a new file is added, check if the documentation source files are recreated
-if [[ -n $(git status --porcelain | grep "^A") ]]; then
-    echo -e "\nSome new files have been added"
+# If a new file is added or existing file is renamed, check if the documentation source files are recreated
+if [[ -n $(git status --porcelain | grep -E "^[AR]") ]]; then
+    echo -e "\nNew files have been added / files have been renamed"
     echo
     read -rp 'Have you generated the API documentation using create-doc? [y/n] ' response
     case "$response" in

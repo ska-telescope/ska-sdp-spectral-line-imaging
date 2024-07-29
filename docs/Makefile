@@ -16,7 +16,7 @@ help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 create-doc:
-	sphinx-apidoc -o "$(SPHINXSRC)" "$(DOCSOURCE)" -H Modules -f
+	sphinx-apidoc -o "$(SPHINXSRC)" "$(DOCSOURCE)" -H API -f -M -e -d 1
 
 
 .PHONY: help Makefile create-doc
