@@ -1,22 +1,25 @@
 # pylint: disable=import-error,no-name-in-module,no-member
-import ducc0.wgridder
+import ducc0.wgridder as wgridder
+import numpy as np
 import xarray as xr
 
 
-def predict_ducc(
+def image_ducc(
     weight,
     flag,
     uvw,
     freq,
-    model_image,
+    vis,
     cell_size,
+    nx,
+    ny,
     epsilon,
     nchan,
     ntime,
     nbaseline,
 ):
     """
-    Perform prediction using ducc0.gridder
+    Perform imaging using ducc0.gridder
     Parameters
     ----------
         weight: numpy.array
@@ -27,10 +30,14 @@ def predict_ducc(
             Polarization array
         freq: numpy.array
             Frequency array
-        model_image: numpy.array
-            Model image
+        vis: numpy.array
+            Visibility array
         cell_size: float
             Cell size in arcsecond
+        nx: int
+            Size of image X
+        ny: int
+            Size of image y
         epsilon: float
             Epsilon
         nchan: int
@@ -44,62 +51,63 @@ def predict_ducc(
         xarray.DataArray
     """
 
+    # Note: There is a conversion to float 32 here
+    vis_grid = vis.reshape(ntime * nbaseline, nchan).astype(np.complex64)
     uvw_grid = uvw.reshape(ntime * nbaseline, 3)
-    weight_grid = weight.reshape(ntime * nbaseline, nchan)
+    weight_grid = weight.reshape(ntime * nbaseline, nchan).astype(np.float32)
     freq_grid = freq.reshape(nchan)
 
-    model = ducc0.wgridder.dirty2ms(
+    dirty = wgridder.ms2dirty(
         uvw_grid,
         freq_grid,
-        model_image,
+        vis_grid,
         weight_grid,
+        nx,
+        ny,
         cell_size,
         cell_size,
         0,
         0,
         epsilon,
-        nthreads=1,
+        nthreads=1
+        #         mask=flag_xx
     )
 
-    model = model.reshape(ntime, nbaseline)
-
-    return model
+    return xr.DataArray(dirty, dims=["ra", "dec"])
 
 
-def predict(ps, model_image, **kwargs):
+def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
     """
-    Predict model column for processing set
+    Perform spectral cube imaging
     Parameters
     ----------
         ps: ProcessingSet
             Processing set
-        model_image: numpy.array
-            Model image
-        **kwargs:
-            Additional keyword arguments
-    Returns
-    -------
-        xarray.DataArray
+        cell_size: float
+            Cell size
+        nx: int
+            Image size X
+        ny: int
+            Image size Y
+        epsilon: float
+            Epsilon
     """
 
-    cell_size = kwargs["cell_size"]
-    epsilon = kwargs["epsilon"]
-
-    model_vec = xr.apply_ufunc(
-        predict_ducc,
+    image_vec = xr.apply_ufunc(
+        image_ducc,
         ps.WEIGHT,
         ps.FLAG,
         ps.UVW,
         ps.frequency,
-        model_image,
+        ps.VISIBILITY,
         input_core_dims=[
             ["time", "baseline_id"],
             ["time", "baseline_id"],
             ["time", "baseline_id", "uvw_label"],
             [],
-            ["ra", "dec"],
+            ["time", "baseline_id"],
         ],
-        output_core_dims=[["time", "baseline_id"]],
+        output_core_dims=[["ra", "dec"]],
         vectorize=True,
         kwargs=dict(
             nchan=1,
@@ -107,10 +115,12 @@ def predict(ps, model_image, **kwargs):
             nbaseline=ps.baseline_id.size,
             cell_size=cell_size,
             epsilon=epsilon,
+            nx=nx,
+            ny=ny,
         ),
     )
 
     return xr.DataArray(
-        model_vec.data,
-        dims=["frequency", "polarization", "time", "baseline_id"],
+        image_vec.data,
+        dims=["frequency", "polarization", "ra", "dec"],
     )

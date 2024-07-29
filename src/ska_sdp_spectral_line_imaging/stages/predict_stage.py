@@ -20,7 +20,22 @@ from ..stubs.predict import predict
         ),
     ),
 )
-def predict_stage(upstream_output, epsilon=None, cell_size=None):
+def predict_stage(upstream_output, epsilon, cell_size):
+    """
+    Perform model prediction
+    Parameters
+    ----------
+        upstream_output: Any
+            Output from the upstream stage
+        epsilon: float
+            Epsilon
+        cell_size: float
+            Cell size in arcsecond
+    Returns
+    -------
+        upstream_output
+    """
+
     ps = upstream_output["ps"]
     model_image = upstream_output["model_image"]
 

@@ -17,11 +17,11 @@
 # --config spectral_line_imaging_pipeline.yaml
 #
 # pylint: disable=no-member,import-error
+
 import os
 
 import astropy.io.fits as fits
 import astropy.units as au
-import ducc0.wgridder as wgridder
 import numpy as np
 import xarray as xr
 from ska_sdp_datamodels.science_data_model.polarisation_functions import (
@@ -38,6 +38,7 @@ from ska_sdp_pipelines.framework.configuration import (
 )
 from ska_sdp_pipelines.framework.pipeline import Pipeline
 from ska_sdp_spectral_line_imaging.stages.predict_stage import predict_stage
+from ska_sdp_spectral_line_imaging.stubs.imaging import cube_imaging
 
 
 @ConfigurableStage(
@@ -49,6 +50,25 @@ from ska_sdp_spectral_line_imaging.stages.predict_stage import predict_stage
     ),
 )
 def select_field(upstream_output, intent, field_id, ddi, _input_data_):
+    """
+    Selects the field from processing set
+    Parameters
+    ----------
+        upstream_output: Any
+            Output from the upstream stage
+        intent: str
+            Name of the intent field
+        field_id: int
+            ID of the field in the processing set
+        ddi: int
+            Data description ID
+        _input_data_: ProcessingSet
+            Input processing set
+    Returns
+    -------
+        Dictionary
+    """
+
     ps = _input_data_
     # TODO: This is a hack to get the psname
     psname = list(ps.keys())[0].split(".ps")[0]
@@ -68,6 +88,21 @@ def select_field(upstream_output, intent, field_id, ddi, _input_data_):
     ),
 )
 def read_model(upstream_output, image_name, pols):
+    """
+    Read model from the image
+    Parameters
+    ----------
+        upstream_output: Any
+            Output from the upstream stage
+        image_name: str
+            Name of the image to be read
+        pos: list(str)
+            Polarizations to be included
+    Returns
+    -------
+        Dictionary
+    """
+
     ps = upstream_output["ps"]
     images = []
 
@@ -84,83 +119,21 @@ def read_model(upstream_output, image_name, pols):
 
 @ConfigurableStage("continuum_subtraction")
 def cont_sub(upstream_output):
+    """
+    Perform continuum subtraction
+    Parameters
+    ----------
+        upstream_output: Any
+            Output from the upstream stage
+    Returns
+    -------
+        Dictionary
+    """
+
     ps = upstream_output["ps"]
     model = upstream_output["model_vis"]
 
     return {"ps": ps.assign({"VISIBILITY": ps.VISIBILITY - model})}
-
-
-def image_ducc(
-    weight,
-    flag,
-    uvw,
-    freq,
-    vis,
-    cell_size,
-    nx,
-    ny,
-    epsilon,
-    nchan,
-    ntime,
-    nbaseline,
-):
-    # Note: There is a conversion to float 32 here
-    vis_grid = vis.reshape(ntime * nbaseline, nchan).astype(np.complex64)
-    uvw_grid = uvw.reshape(ntime * nbaseline, 3)
-    weight_grid = weight.reshape(ntime * nbaseline, nchan).astype(np.float32)
-    freq_grid = freq.reshape(nchan)
-
-    dirty = wgridder.ms2dirty(
-        uvw_grid,
-        freq_grid,
-        vis_grid,
-        weight_grid,
-        nx,
-        ny,
-        cell_size,
-        cell_size,
-        0,
-        0,
-        epsilon,
-        nthreads=1
-        #         mask=flag_xx
-    )
-
-    return xr.DataArray(dirty, dims=["ra", "dec"])
-
-
-def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
-    image_vec = xr.apply_ufunc(
-        image_ducc,
-        ps.WEIGHT,
-        ps.FLAG,
-        ps.UVW,
-        ps.frequency,
-        ps.VISIBILITY,
-        input_core_dims=[
-            ["time", "baseline_id"],
-            ["time", "baseline_id"],
-            ["time", "baseline_id", "uvw_label"],
-            [],
-            ["time", "baseline_id"],
-        ],
-        output_core_dims=[["ra", "dec"]],
-        vectorize=True,
-        kwargs=dict(
-            nchan=1,
-            ntime=ps.time.size,
-            nbaseline=ps.baseline_id.size,
-            cell_size=cell_size,
-            epsilon=epsilon,
-            nx=nx,
-            ny=ny,
-        ),
-    )
-
-    return xr.DataArray(
-        image_vec.data,
-        dims=["frequency", "polarization", "ra", "dec"],
-    )
 
 
 @ConfigurableStage(
@@ -175,6 +148,25 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
     ),
 )
 def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
+    """
+    Creates a dirty image using ducc0.gridder
+    Parameters
+    ----------
+        upstream_output: Any
+            Output from the upstream stage
+        epsilon: float
+            Epsilon
+        cell_size: float
+            Cell size in arcsecond
+        nx: int
+            Image size x
+        ny: int
+            Image size y
+    Returns
+    -------
+        Dictionary
+    """
+
     ps = upstream_output["ps"]
 
     template_core_dims = ["frequency", "polarization", "ra", "dec"]
@@ -212,6 +204,17 @@ def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
 
 @ConfigurableStage("vis_stokes_conversion")
 def vis_stokes_conversion(upstream_output):
+    """
+    Visibility to stokes conversion
+    Parameters
+    ----------
+        upstream_output: Any
+            Output from the upstream stage
+    Returns
+    -------
+        Dictionary
+    """
+
     ps = upstream_output["ps"]
 
     converted_vis = xr.apply_ufunc(
@@ -235,6 +238,21 @@ def vis_stokes_conversion(upstream_output):
     ),
 )
 def export_residual(upstream_output, psout_name, _output_dir_):
+    """
+    Export continuum subtracted residual
+    Parameters
+    ----------
+        upstream_output: Any
+            Output from the upstream stage
+        psout_name: str
+            Output file name
+        _output_dir_: str
+            Output directory created for the run
+    Returns
+    -------
+        upstream_output
+    """
+
     ps = upstream_output["ps"]
     output_path = os.path.abspath(os.path.join(_output_dir_, psout_name))
     ps.VISIBILITY.to_zarr(store=output_path)
@@ -248,6 +266,20 @@ def export_residual(upstream_output, psout_name, _output_dir_):
     ),
 )
 def export_image(upstream_output, image_name, _output_dir_):
+    """
+    Export the generated cube image
+    Parameters
+    ----------
+        upstream_output: Any
+            Output from the upstream stage
+        image_name: str
+            Output file name
+        _output_dir_: str
+            Output directory created for the run
+    Returns
+    -------
+        upstream_output
+    """
     cubes = upstream_output["cubes"]
     output_path = os.path.join(_output_dir_, image_name)
 
