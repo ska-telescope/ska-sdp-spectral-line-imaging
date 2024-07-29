@@ -10,42 +10,33 @@ git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-spectral-line-imaging.git
 
 ### Install the framework
 
-The poetry is used for dependency management and installation. Following command will install the pipeline framework as a command line executable.
+The poetry is used for dependency management and installation. Following command will install spectral line imaging pipeline.
 
 ```bash
 poetry install --only main
 ```
 
-### Installing a  pipeline
+Above command will also install the **pipeline framework**. To know more about the usage please refer to this [page](./pipeline_framework.rst).
 
-Following command installs a pipeline and generates default
-config YAML file.
+### Install the config and run the pipeline
+
+Install the default config YAML of the pipeline to a specific directory using the `install-config` subcommand.
 
 ```bash
-    sdp-pipeline install pipeline_name path/to/pipeline-definition
-        [--config-install-path]=/path/to/install/location
+spectral-line-imaging-pipeline install-config --config-install-path path/to/dir
 ```
 
-### Install spectral line pipeline
-
-Following command installs spectral line pipeline and generates default
-config YAML file.
+Run the spectral line pipeline using the `run` subcommand.
 
 ```bash
-sdp-pipeline install spectral_line_imaging_pipeline src/ska_sdp_spectral_line_imaging/pipeline.py
-    [--config-install-path]=/path/to/dir
-```
-
-### Run the pipeline
-
-```bash
-spectral_line_imaging_pipeline --input /path/to/processing_set \
+spectral-line-imaging-pipeline run --input /path/to/processing_set \
     --config /path/to/config \
-    --output /path/to/output 
-    --dask-scheduler /url/of/the/dask/scheduler
+    --output /path/to/output \
+    --dask-scheduler /url/of/the/dask/scheduler \
+    --stages STAGES
 ```
 
-Run `spectral_line_imaging_pipeline --help` for more information.
+Run `spectral-line-imaging-pipeline --help` for more information.
 
 ## Developer Setup
 
