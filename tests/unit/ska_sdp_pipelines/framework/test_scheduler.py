@@ -55,18 +55,14 @@ def test_should_schedule_stages_with_configuration_params(
 
     delayed_mock_call_1.assert_called_once_with(
         False,
-        "stage1_definition",
+        stage1,
         None,
-        arg1=1,
     )
-    delayed_mock_call_2.assert_called_once_with(
-        False, "stage2_definition", "DELAYED_1", arg2=2
-    )
+    delayed_mock_call_2.assert_called_once_with(False, stage2, "DELAYED_1")
     delayed_mock_call_3.assert_called_once_with(
         False,
-        "stage3_definition",
+        stage3,
         "DELAYED_2",
-        arg3=3,
     )
 
     assert default_scheduler.delayed_outputs == [

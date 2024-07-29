@@ -54,9 +54,8 @@ class DefaultScheduler:
         for stage in stages:
             output = dask.delayed(LogUtil.with_log)(
                 verbose,
-                stage.stage_definition,
+                stage,
                 output,
-                **stage.get_stage_arguments()
             )
 
             self.delayed_outputs.append(output)

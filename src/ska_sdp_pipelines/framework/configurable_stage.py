@@ -1,4 +1,5 @@
 import inspect
+from functools import wraps
 
 from .configuration import Configuration
 from .exceptions import PipelineMetadataMissingException
@@ -47,7 +48,9 @@ class ConfigurableStage:
             Wrapped stage_definition
         """
 
-        stage = Stage(self.name, stage_definition, self._stage_configurations)
+        stage = wraps(stage_definition)(
+            Stage(self.name, stage_definition, self._stage_configurations)
+        )
 
         return stage
 
@@ -85,7 +88,6 @@ class Stage:
         """
         self.name = name
         self.stage_definition = stage_definition
-        self.stage_definition.name = name
         self.params = inspect.getfullargspec(stage_definition).args
 
         self.__config = configuration
@@ -117,32 +119,32 @@ class Stage:
         """
         self.__pipeline_parameters = dict(config=config, kwargs=kwargs)
 
-    def get_stage_arguments(self):
+    def __call__(self, upstream_output):
         """
-        Returns the runtime argument for the stage definition
-
-        Returns
-        -------
-           dict
-
-        Raises
-        ------
-            PipelineMetadataMissingException:
-                If stage's pipeline parameters are not initialized
+        Execute stage definition with upstream output
+        and prepared paramenters
+        Parameters
+        ----------
+            upstream_output: Any
+                Output from the upstream stage
         """
+
         if self.__pipeline_parameters is None:
             raise PipelineMetadataMissingException(
                 f"Pipeline parameters not initialised for {self.name}"
             )
+
         non_positional_arguments = self.params[1:]
         additional_params = (
             set(non_positional_arguments)
             - self.__pipeline_parameters["config"].keys()
         )
-        return {
+        stage_args = {
             **self.__pipeline_parameters["config"],
             **{
                 keyword: self.__pipeline_parameters["kwargs"][keyword]
                 for keyword in additional_params
             },
         }
+
+        return self.stage_definition(upstream_output, **stage_args)

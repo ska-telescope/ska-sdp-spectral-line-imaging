@@ -1,3 +1,4 @@
+import mock
 import pytest
 
 from ska_sdp_pipelines.framework.configurable_stage import (
@@ -75,9 +76,17 @@ def test_should_raise_exception_if_function_arguments_are_invalide():
             pass
 
 
-def test_should_update_pipeline_params_for_stage_and_return_the_stage_args():
-    def test(vis, config_param, additional_param_1):
-        pass
+@mock.patch(
+    "ska_sdp_pipelines.framework.configurable_stage.inspect.getfullargspec"
+)
+def test_should_update_pipeline_params_for_stage_and_return_the_stage_args(
+    argspec_mock,
+):
+    test = mock.Mock(name="test")
+
+    args_mock = mock.Mock(name="args_mock")
+    args_mock.args = ["vis", "config_param", "additional_param_1"]
+    argspec_mock.return_value = args_mock
 
     stage = Stage(
         "test", test, Configuration(config_param=ConfigParam("number", 20))
@@ -89,10 +98,11 @@ def test_should_update_pipeline_params_for_stage_and_return_the_stage_args():
         additional_param_2=30,
     )
 
-    assert stage.get_stage_arguments() == {
-        "config_param": 30,
-        "additional_param_1": 40,
-    }
+    stage("UPSTREAM_OUTPUT")
+
+    test.assert_called_once_with(
+        "UPSTREAM_OUTPUT", config_param=30, additional_param_1=40
+    )
 
 
 def test_should_raise_exception_if_pipeline_parameters_is_not_initialised():
@@ -104,4 +114,4 @@ def test_should_raise_exception_if_pipeline_parameters_is_not_initialised():
     )
 
     with pytest.raises(PipelineMetadataMissingException):
-        stage.get_stage_arguments()
+        stage("UPSTREAM_OUTPUT")
