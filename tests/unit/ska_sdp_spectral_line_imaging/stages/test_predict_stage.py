@@ -1,11 +1,11 @@
 from mock import Mock, mock
 
-from ska_sdp_spectral_line_imaging.stages.predict_stage import predict_stage
+from ska_sdp_spectral_line_imaging.stages.predict import predict_stage
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stages.predict_stage.predict")
-@mock.patch("ska_sdp_spectral_line_imaging.stages.predict_stage.xr.DataArray")
-@mock.patch("ska_sdp_spectral_line_imaging.stages.predict_stage.xr.map_blocks")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.predict.predict")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.predict.xr.DataArray")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.predict.xr.map_blocks")
 def test_should_be_able_to_distribute_predict(
     map_block_mock, dataarray_mock, predict_mock
 ):

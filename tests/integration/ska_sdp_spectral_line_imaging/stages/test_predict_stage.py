@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 
-from ska_sdp_spectral_line_imaging.stages.predict_stage import predict_stage
+from ska_sdp_spectral_line_imaging.stages.predict import predict_stage
 
 
 def test_should_run_predict_stage(result_msv4):
