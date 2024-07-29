@@ -4,11 +4,11 @@ import logging
 from .command import Command
 from .configuration import Configuration
 from .constants import CONFIG_CLI_ARGS, MANDATORY_CLI_ARGS
-from .exceptions import NoStageToExecuteException, StageNotFoundException
 from .io_utils import create_output_dir, read_dataset, timestamp, write_dataset
 from .log_util import LogUtil
 from .model.config_manager import ConfigManager
 from .model.named_instance import NamedInstance
+from .model.stages import Stages
 from .scheduler import SchedulerFactory
 
 
@@ -46,13 +46,14 @@ class Pipeline(Command, metaclass=NamedInstance):
         """
         super().__init__()
         self.name = name
-        self._stages = [] if stages is None else stages
         self._global_config = (
             Configuration() if global_config is None else global_config
         )
 
         LogUtil.configure(name)
         self.logger = logging.getLogger(self.name)
+
+        self._stages = Stages(stages)
 
         self.config_manager = ConfigManager(
             pipeline=self._pipeline_config(),
@@ -71,30 +72,6 @@ class Pipeline(Command, metaclass=NamedInstance):
             CONFIG_CLI_ARGS,
             help="Installs the default config at --config-install-path",
         )(self._install_config)
-
-    def __validate_stages(self, stages):
-        """
-        Validates the stages name with the pipeline definition stages.
-
-        Parameters
-        ----------
-        stages: [str]
-            Stages names
-
-        Raises
-        ------
-        StageNotFoundException
-            If any non-existing stage found.
-        """
-        stages_names = [stage.name for stage in self._stages]
-
-        non_existing_stages = [
-            stage for stage in stages if stage not in stages_names
-        ]
-        if non_existing_stages:
-            raise StageNotFoundException(
-                f"Stages not found: {non_existing_stages}"
-            )
 
     def _pipeline_config(self, selected_stages=None):
         """
@@ -235,25 +212,20 @@ class Pipeline(Command, metaclass=NamedInstance):
                 self._pipeline_config(selected_stages=stages),
             )
 
-        self.__validate_stages(stages)
+        self._stages.validate(self.config_manager.stages_to_run)
 
-        active_stages = self.config_manager.stages_to_run
+        self._stages.update_pipeline_parameters(
+            self.config_manager.stages_to_run,
+            self.config_manager.parameters,
+            _input_data_=vis,
+            _output_dir_=output_dir,
+            _cli_args_=cli_args,
+            _global_parameters_=self.config_manager.global_parameters,
+        )
 
-        if not active_stages:
-            raise NoStageToExecuteException("Selected stages empty")
-
-        executable_stages = []
-        for stage in self._stages:
-            if stage.name in active_stages:
-                stage.update_pipeline_parameters(
-                    self.config_manager.stage_config(stage.name),
-                    _input_data_=vis,
-                    _output_dir_=output_dir,
-                    _cli_args_=cli_args,
-                    _global_parameters_=self.config_manager.global_parameters,
-                )
-
-                executable_stages.append(stage)
+        executable_stages = self._stages.get_stages(
+            self.config_manager.stages_to_run
+        )
 
         self.logger.info(
             f"""Selected stages to run: {', '.join(
