@@ -26,6 +26,7 @@ from ska_sdp_pipelines.framework.configuration import (
 def read_model(upstream_output, image_name, pols):
     """
     Read model from the image
+
     Parameters
     ----------
         upstream_output: Any
@@ -34,6 +35,7 @@ def read_model(upstream_output, image_name, pols):
             Name of the image to be read
         pos: list(str)
             Polarizations to be included
+
     Returns
     -------
         Dictionary
@@ -57,13 +59,15 @@ def read_model(upstream_output, image_name, pols):
 def vis_stokes_conversion(upstream_output):
     """
     Visibility to stokes conversion
+
     Parameters
     ----------
         upstream_output: Any
             Output from the upstream stage
+
     Returns
     -------
-        Dictionary
+        dict
     """
 
     ps = upstream_output["ps"]
@@ -86,10 +90,12 @@ def vis_stokes_conversion(upstream_output):
 def cont_sub(upstream_output):
     """
     Perform continuum subtraction
+
     Parameters
     ----------
         upstream_output: Any
             Output from the upstream stage
+
     Returns
     -------
         Dictionary

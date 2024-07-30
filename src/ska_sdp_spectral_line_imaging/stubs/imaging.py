@@ -20,6 +20,7 @@ def image_ducc(
 ):
     """
     Perform imaging using ducc0.gridder
+
     Parameters
     ----------
         weight: numpy.array
@@ -46,6 +47,7 @@ def image_ducc(
             Number of time dimension
         nbaseline: int
             Number of baseline dimension
+
     Returns
     -------
         xarray.DataArray
@@ -79,6 +81,7 @@ def image_ducc(
 def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
     """
     Perform spectral cube imaging
+
     Parameters
     ----------
         ps: ProcessingSet
@@ -91,6 +94,10 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
             Image size Y
         epsilon: float
             Epsilon
+
+    Returns
+    -------
+        xarray.DataArray
     """
 
     image_vec = xr.apply_ufunc(

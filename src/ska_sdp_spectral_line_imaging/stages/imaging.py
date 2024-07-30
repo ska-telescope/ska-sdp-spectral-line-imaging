@@ -25,6 +25,7 @@ from ska_sdp_spectral_line_imaging.stubs.imaging import cube_imaging
 def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
     """
     Creates a dirty image using ducc0.gridder
+
     Parameters
     ----------
         upstream_output: Any
@@ -37,9 +38,10 @@ def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
             Image size x
         ny: int
             Image size y
+
     Returns
     -------
-        Dictionary
+        dict
     """
 
     ps = upstream_output["ps"]

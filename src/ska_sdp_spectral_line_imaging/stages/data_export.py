@@ -16,6 +16,7 @@ from ska_sdp_pipelines.framework.configuration import (
 def export_residual(upstream_output, psout_name, _output_dir_):
     """
     Export continuum subtracted residual
+
     Parameters
     ----------
         upstream_output: Any
@@ -24,6 +25,7 @@ def export_residual(upstream_output, psout_name, _output_dir_):
             Output file name
         _output_dir_: str
             Output directory created for the run
+
     Returns
     -------
         upstream_output
@@ -44,6 +46,7 @@ def export_residual(upstream_output, psout_name, _output_dir_):
 def export_image(upstream_output, image_name, _output_dir_):
     """
     Export the generated cube image
+
     Parameters
     ----------
         upstream_output: Any
@@ -52,6 +55,7 @@ def export_image(upstream_output, image_name, _output_dir_):
             Output file name
         _output_dir_: str
             Output directory created for the run
+
     Returns
     -------
         upstream_output

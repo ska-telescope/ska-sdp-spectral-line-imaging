@@ -17,6 +17,7 @@ def predict_ducc(
 ):
     """
     Perform prediction using ducc0.gridder
+
     Parameters
     ----------
         weight: numpy.array
@@ -39,6 +40,7 @@ def predict_ducc(
             Number of time dimension
         nbaseline: int
             Number of baseline dimension
+
     Returns
     -------
         xarray.DataArray
@@ -69,6 +71,7 @@ def predict_ducc(
 def predict(ps, model_image, **kwargs):
     """
     Predict model column for processing set
+
     Parameters
     ----------
         ps: ProcessingSet
@@ -77,6 +80,7 @@ def predict(ps, model_image, **kwargs):
             Model image
         **kwargs:
             Additional keyword arguments
+
     Returns
     -------
         xarray.DataArray
