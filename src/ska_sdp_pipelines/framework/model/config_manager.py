@@ -102,12 +102,14 @@ class ConfigManager:
 
     def write_yml(self, path):
         """
-        Writes config to provided path in yaml format.
+        Writes a config to output path as yaml
 
         Parameters
         ----------
-        path: str
-            Location of config file to write to.
+            output_path: str
+                Path of the yaml file
+            config: dict
+                Data to write
         """
         write_yml(path, self.config)
 

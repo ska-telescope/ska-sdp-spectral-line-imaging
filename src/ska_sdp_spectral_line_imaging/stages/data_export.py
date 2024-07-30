@@ -19,7 +19,7 @@ def export_residual(upstream_output, psout_name, _output_dir_):
 
     Parameters
     ----------
-        upstream_output: Any
+        upstream_output: dict
             Output from the upstream stage
         psout_name: str
             Output file name
@@ -49,7 +49,7 @@ def export_image(upstream_output, image_name, _output_dir_):
 
     Parameters
     ----------
-        upstream_output: Any
+        upstream_output: dict
             Output from the upstream stage
         image_name: str
             Output file name

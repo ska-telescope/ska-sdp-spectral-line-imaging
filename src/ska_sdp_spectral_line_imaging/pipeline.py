@@ -62,7 +62,7 @@ def select_field(upstream_output, intent, field_id, ddi, _input_data_):
             Input processing set
     Returns
     -------
-        Dictionary
+        dict
     """
 
     ps = _input_data_

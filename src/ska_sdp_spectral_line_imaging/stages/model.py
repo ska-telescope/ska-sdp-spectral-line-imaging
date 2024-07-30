@@ -29,7 +29,7 @@ def read_model(upstream_output, image_name, pols):
 
     Parameters
     ----------
-        upstream_output: Any
+        upstream_output: dict
             Output from the upstream stage
         image_name: str
             Name of the image to be read
@@ -38,7 +38,7 @@ def read_model(upstream_output, image_name, pols):
 
     Returns
     -------
-        Dictionary
+        dict
     """
 
     ps = upstream_output["ps"]
@@ -62,7 +62,7 @@ def vis_stokes_conversion(upstream_output):
 
     Parameters
     ----------
-        upstream_output: Any
+        upstream_output: dict
             Output from the upstream stage
 
     Returns
@@ -93,12 +93,12 @@ def cont_sub(upstream_output):
 
     Parameters
     ----------
-        upstream_output: Any
+        upstream_output: dict
             Output from the upstream stage
 
     Returns
     -------
-        Dictionary
+        dict
     """
 
     ps = upstream_output["ps"]

@@ -25,7 +25,7 @@ def predict_stage(upstream_output, epsilon, cell_size):
     Perform model prediction
     Parameters
     ----------
-        upstream_output: Any
+        upstream_output: dict
             Output from the upstream stage
         epsilon: float
             Epsilon
@@ -33,7 +33,7 @@ def predict_stage(upstream_output, epsilon, cell_size):
             Cell size in arcsecond
     Returns
     -------
-        upstream_output
+        dict
     """
 
     ps = upstream_output["ps"]

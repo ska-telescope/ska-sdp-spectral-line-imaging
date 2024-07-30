@@ -28,7 +28,7 @@ def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
 
     Parameters
     ----------
-        upstream_output: Any
+        upstream_output: dict
             Output from the upstream stage
         epsilon: float
             Epsilon
