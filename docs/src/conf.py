@@ -50,6 +50,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     "myst_parser",
+    "ska_sdp_pipelines.extensions.sphynx_stage"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

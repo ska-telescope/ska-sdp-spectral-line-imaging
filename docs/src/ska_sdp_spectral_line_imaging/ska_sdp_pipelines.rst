@@ -13,4 +13,5 @@ Subpackages
    :maxdepth: 1
 
    ska_sdp_pipelines.app
+   ska_sdp_pipelines.extensions
    ska_sdp_pipelines.framework

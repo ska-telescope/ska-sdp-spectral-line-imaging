@@ -73,6 +73,9 @@ source = [
 
 [tool.coverage.report]
 fail_under = 80
+exclude_also = [
+    "(?s)\\A.*# pragma: exclude file.*\\Z",
+    ]
 
 [tool.pytest.ini_options]
 addopts = "--cov --json-report --json-report-file=htmlcov/report.json --cov-report term --cov-report html --cov-report xml --pylint --pylint-error-types=EF --junitxml=./build/reports/unit-tests.xml"
