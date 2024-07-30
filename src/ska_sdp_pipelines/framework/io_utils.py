@@ -40,6 +40,16 @@ def create_output_dir(output_path, prefix_name):
 
 
 def write_yml(output_path, config):
+    """
+    Writes a config to output path as yaml
+
+    Parameters
+    ----------
+        output_path: str
+            Location of yaml file to write to.
+        config: dict
+            Data to write
+    """
     with open(output_path, "w") as conf_file:
         yaml.dump(config, conf_file)
 

@@ -23,6 +23,7 @@ from ..stubs.predict import predict
 def predict_stage(upstream_output, epsilon, cell_size):
     """
     Perform model prediction
+
     Parameters
     ----------
         upstream_output: dict
@@ -31,6 +32,7 @@ def predict_stage(upstream_output, epsilon, cell_size):
             Epsilon
         cell_size: float
             Cell size in arcsecond
+
     Returns
     -------
         dict

@@ -48,6 +48,7 @@ from ska_sdp_spectral_line_imaging.stages.predict import predict_stage
 def select_field(upstream_output, intent, field_id, ddi, _input_data_):
     """
     Selects the field from processing set
+
     Parameters
     ----------
         upstream_output: Any
@@ -60,6 +61,7 @@ def select_field(upstream_output, intent, field_id, ddi, _input_data_):
             Data description ID
         _input_data_: ProcessingSet
             Input processing set
+
     Returns
     -------
         dict
