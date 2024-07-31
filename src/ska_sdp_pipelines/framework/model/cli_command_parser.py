@@ -1,6 +1,8 @@
 import argparse
 import sys
 
+from ..io_utils import write_yml
+
 
 class CLIArgument:
     """
@@ -92,3 +94,19 @@ class CLICommandParser:
 
         cli_args = self.__parser.parse_args()
         return dict(cli_args._get_kwargs())
+
+    def write_yml(self, path):
+        """
+        Writes cli arguments to provided path in yaml format.
+
+        Parameters
+        ----------
+            path: str
+                Location of config file to write to.
+        """
+
+        cli_args = self.cli_args_dict
+        if "sub_command" in cli_args:
+            del cli_args["sub_command"]
+
+        write_yml(path, cli_args)

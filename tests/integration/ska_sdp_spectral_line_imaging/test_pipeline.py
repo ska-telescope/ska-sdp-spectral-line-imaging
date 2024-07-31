@@ -41,13 +41,13 @@ def test_pipeline(prepare_test_data):
     Given a MSv4 and a model image the pipepile should output a stokes cube
     """
 
+    output_dir = "./pipeline_output"
+    os.makedirs(output_dir)
+
     spectral_line_imaging_pipeline.run(
-        MSIN,
-        config_path="./config.yaml",
+        MSIN, output_dir, config_path="./config.yaml"
     )
 
-    output_path = os.listdir("./output")
-
-    assert len(output_path) > 0
-    assert os.path.isdir(f"./output/{output_path[0]}/test_cube.zarr")
-    assert os.path.isdir(f"./output/{output_path[0]}/residual.zarr")
+    assert len(output_dir) > 0
+    assert os.path.isdir(f"./{output_dir}/test_cube.zarr")
+    assert os.path.isdir(f"./{output_dir}/residual.zarr")

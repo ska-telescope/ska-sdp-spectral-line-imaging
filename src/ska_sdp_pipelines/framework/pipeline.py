@@ -127,6 +127,7 @@ class Pipeline(Command, metaclass=NamedInstance):
     def _run(self, cli_args):
         """
         Run sub command
+
         Parameters
         ----------
             cli_args: argparse.Namespace
@@ -134,13 +135,23 @@ class Pipeline(Command, metaclass=NamedInstance):
         """
         stages = [] if cli_args.stages is None else cli_args.stages[0]
 
+        output_path = (
+            "./output"
+            if cli_args.output_path is None
+            else cli_args.output_path
+        )
+        output_dir = create_output_dir(output_path, self.name)
+
+        cli_output_file = f"{output_dir}/{self.name}_{timestamp()}.cli.yml"
+        self._cli_command_parser.write_yml(cli_output_file)
+
         self.run(
             cli_args.input,
             stages=stages,
             dask_scheduler=cli_args.dask_scheduler,
             config_path=cli_args.config_path,
             verbose=(cli_args.verbose != 0),
-            output_path=cli_args.output_path,
+            output_dir=output_dir,
             cli_args=self._cli_command_parser.cli_args_dict,
         )
 
@@ -159,11 +170,11 @@ class Pipeline(Command, metaclass=NamedInstance):
     def run(
         self,
         infile_path,
+        output_dir,
         stages=None,
         dask_scheduler=None,
         config_path=None,
         verbose=False,
-        output_path=None,
         cli_args=None,
     ):
         """
@@ -173,6 +184,8 @@ class Pipeline(Command, metaclass=NamedInstance):
         ----------
           infile_path : str
              Path to input file
+          output_dir: str
+             Path to output directory
           stages: list[str]
              Names of the stages to be executed
           dask_scheduler: str
@@ -181,15 +194,10 @@ class Pipeline(Command, metaclass=NamedInstance):
              Configuration yaml file path
           verbose: bool
              Toggle DEBUG log level
-          output_path: str
-             Path to root output directory
           cli_args: dict
              CLI arguments
         """
         stages = [] if stages is None else stages
-        if output_path is None:
-            output_path = "./output"
-        output_dir = create_output_dir(output_path, self.name)
 
         LogUtil.configure(self.name, output_dir=output_dir, verbose=verbose)
 
@@ -233,8 +241,10 @@ class Pipeline(Command, metaclass=NamedInstance):
             )}"""
         )
 
-        output_yaml_file = f"{output_dir}/{self.name}_{timestamp()}.config.yml"
-        self.config_manager.write_yml(output_yaml_file)
+        config_output_file = (
+            f"{output_dir}/{self.name}_{timestamp()}.config.yml"
+        )
+        self.config_manager.write_yml(config_output_file)
 
         scheduler.schedule(executable_stages, verbose=verbose)
         output_pipeline_data = scheduler.execute()

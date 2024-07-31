@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from functools import cache
 
 import yaml
 from xradio.vis.read_processing_set import read_processing_set
@@ -54,9 +55,17 @@ def write_yml(output_path, config):
         yaml.dump(config, conf_file)
 
 
-def timestamp():
+@cache
+def timestamp(cache_breaker=0):
     """
     Creates timestamp with predefined format `%Y-%m-%dT%H:%M:%S`
+    Caches the result between calls to keep the timestamp consistent
+    within a run
+
+    Parameters
+    ----------
+        cache_breaker: Any
+            Change value to return a new timestamp
 
     Returns
     -------
