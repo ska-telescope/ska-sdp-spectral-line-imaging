@@ -8,3 +8,4 @@ coverage.xml
 .history
 *.log
 /output/
+dist/

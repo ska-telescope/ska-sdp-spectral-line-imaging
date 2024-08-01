@@ -5,7 +5,8 @@ description = "SKA SDP Spectral Line Imaging Pipeline"
 authors = ["DHRUVA <DHRUVA-team@SKA>"]
 license = "BSD-3-Clause"
 packages = [
-    { include = "ska_sdp_spectral_line_imaging", from = "src" }
+    { include = "ska_sdp_spectral_line_imaging", from = "src" },
+    { include = "ska_sdp_pipelines", from = "src" }
 ]
 
 [[tool.poetry.source]]
