@@ -5,19 +5,19 @@ set -e
 exec < /dev/tty
 
 # List of files to track
-FILES=("pyproject.toml" "environment.yml")
+ENV_FILES=("pyproject.toml" "environment.yml")
 
 # Check if any of the specified files are staged for commit
 STAGED_FILES=$(git diff --cached --name-only)
-CHECK_FOR_FILE_CHANGE=0
-for file in "${FILES[@]}"; do
+CHECK_FOR_ENV_FILE_CHANGE=0
+for file in "${ENV_FILES[@]}"; do
     if [[ " ${STAGED_FILES} " == *"$file"* ]]; then
-        CHECK_FOR_FILE_CHANGE=1
+        CHECK_FOR_ENV_FILE_CHANGE=1
         break
     fi
 done
 
-if [[ $CHECK_FOR_FILE_CHANGE -eq 1 ]] ; then
+if [[ $CHECK_FOR_ENV_FILE_CHANGE -eq 1 ]] ; then
     echo -e "\nChanges detected in $file"
     echo
     read -rp 'Have you updated your local conda environment? [y/n] ' response
@@ -27,6 +27,19 @@ if [[ $CHECK_FOR_FILE_CHANGE -eq 1 ]] ; then
         *) echo -e "\nPlease answer yes or no. Exiting.\n"; exit 1 ;;
     esac
 fi
+
+# check for change in Dockerfile
+if [[ " ${STAGED_FILES} " == *"Dockerfile"*  ]] ; then
+    echo -e "\nChanges detected in Dockerfile"
+    echo
+    read -rp 'Have you performed linting of Dockerfile [y/n] ' response
+    case "$response" in
+        [Yy]*) ;;
+        [Nn]*) echo -e "\nPlease run the 'make oci-lint' to lint the Dockerfile\n" ; exit 1;;
+        *) echo -e "\nPlease answer yes or no. Exiting.\n"; exit 1 ;;
+    esac
+fi
+
 
 # If a new file is added or existing file is renamed, check if the documentation source files are recreated
 if [[ -n $(git status --porcelain | grep -E "^[AR]") ]]; then
