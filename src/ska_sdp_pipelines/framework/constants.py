@@ -10,7 +10,7 @@ CONFIG_CLI_ARGS = [
     )
 ]
 
-MANDATORY_CLI_ARGS = [
+DEFAULT_CLI_ARGS = [
     CLIArgument(
         "--input",
         dest="input",

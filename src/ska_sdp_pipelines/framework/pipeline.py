@@ -3,7 +3,7 @@ import logging
 
 from .command import Command
 from .configuration import Configuration
-from .constants import CONFIG_CLI_ARGS, MANDATORY_CLI_ARGS
+from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
 from .io_utils import create_output_dir, read_dataset, timestamp, write_dataset
 from .log_util import LogUtil
 from .model.config_manager import ConfigManager
@@ -63,7 +63,7 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self.sub_command(
             "run",
-            MANDATORY_CLI_ARGS + ([] if cli_args is None else cli_args),
+            DEFAULT_CLI_ARGS + ([] if cli_args is None else cli_args),
             help="Run the pipeline",
         )(self._run)
 

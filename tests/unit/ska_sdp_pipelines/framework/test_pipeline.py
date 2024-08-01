@@ -4,7 +4,7 @@ from mock import Mock, mock
 from ska_sdp_pipelines.framework.configuration import Configuration
 from ska_sdp_pipelines.framework.constants import (
     CONFIG_CLI_ARGS,
-    MANDATORY_CLI_ARGS,
+    DEFAULT_CLI_ARGS,
 )
 from ska_sdp_pipelines.framework.model.cli_command_parser import CLIArgument
 from ska_sdp_pipelines.framework.pipeline import Pipeline
@@ -128,7 +128,7 @@ def test_should_initialise_the_pipeline_with_default_cli_args(
             mock.call(
                 "run",
                 pipeline._run,
-                MANDATORY_CLI_ARGS,
+                DEFAULT_CLI_ARGS,
                 help="Run the pipeline",
             ),
             mock.call(
@@ -154,7 +154,7 @@ def test_should_initialise_the_pipeline_with_additional_cli_args(
             mock.call(
                 "run",
                 pipeline._run,
-                MANDATORY_CLI_ARGS + cli_args,
+                DEFAULT_CLI_ARGS + cli_args,
                 help="Run the pipeline",
             ),
             mock.call(
