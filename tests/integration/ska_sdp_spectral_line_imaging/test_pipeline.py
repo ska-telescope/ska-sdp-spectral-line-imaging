@@ -51,3 +51,4 @@ def test_pipeline(prepare_test_data):
     assert len(output_dir) > 0
     assert os.path.isdir(f"./{output_dir}/test_cube.zarr")
     assert os.path.isdir(f"./{output_dir}/residual.zarr")
+    assert os.path.isdir(f"./{output_dir}/model.zarr")

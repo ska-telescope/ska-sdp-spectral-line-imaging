@@ -52,7 +52,8 @@ def predict_stage(upstream_output, epsilon, cell_size):
                 ps.sizes["polarization"],
                 ps.sizes["time"],
                 ps.sizes["baseline_id"],
-            )
+            ),
+            dtype=np.complex64,
         ),
         dims=template_core_dims,
     ).chunk(template_chunk_sizes)

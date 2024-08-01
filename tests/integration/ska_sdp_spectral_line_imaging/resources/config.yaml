@@ -15,6 +15,7 @@ parameters:
     intent: null
 pipeline:
   continuum_subtraction: true
+  export_model: true
   export_residual: true
   export_zarr: true
   imaging: true

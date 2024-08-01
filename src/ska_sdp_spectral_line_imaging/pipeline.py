@@ -26,6 +26,7 @@ from ska_sdp_pipelines.framework.configuration import (
 from ska_sdp_pipelines.framework.pipeline import Pipeline
 from ska_sdp_spectral_line_imaging.stages.data_export import (
     export_image,
+    export_model,
     export_residual,
 )
 from ska_sdp_spectral_line_imaging.stages.imaging import imaging_stage
@@ -85,6 +86,7 @@ spectral_line_imaging_pipeline = Pipeline(
         vis_stokes_conversion,
         read_model,
         predict_stage,
+        export_model,
         cont_sub,
         imaging_stage,
         export_residual,
