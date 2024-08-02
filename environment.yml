@@ -5,6 +5,7 @@ dependencies:
   - pip=24.0
   - python=3.10
   - casacore=3.5.0
+  - python-casacore=3.5.2
   - pip:
       - poetry==1.8.3
       - casadata==2024.5.22
