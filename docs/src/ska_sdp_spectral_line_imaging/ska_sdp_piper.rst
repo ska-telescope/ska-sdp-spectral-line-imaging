@@ -14,4 +14,4 @@ Subpackages
 
    ska_sdp_piper.app
    ska_sdp_piper.extensions
-   ska_sdp_piper.framework
+   ska_sdp_piper.piper

@@ -1,17 +1,15 @@
 import pytest
 from mock import Mock, mock
 
-from ska_sdp_piper.framework.configuration import Configuration
-from ska_sdp_piper.framework.constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
-from ska_sdp_piper.framework.model.cli_command_parser import CLIArgument
-from ska_sdp_piper.framework.pipeline import Pipeline
+from ska_sdp_piper.piper.configuration import Configuration
+from ska_sdp_piper.piper.constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
+from ska_sdp_piper.piper.model.cli_command_parser import CLIArgument
+from ska_sdp_piper.piper.pipeline import Pipeline
 
 
 @pytest.fixture(scope="function", autouse=True)
 def log_util():
-    with mock.patch(
-        "ska_sdp_piper.framework.pipeline.LogUtil"
-    ) as log_util_mock:
+    with mock.patch("ska_sdp_piper.piper.pipeline.LogUtil") as log_util_mock:
         yield log_util_mock
 
 
@@ -34,7 +32,7 @@ def mock_stages():
 
 @pytest.fixture(scope="function")
 def stages():
-    with mock.patch("ska_sdp_piper.framework.pipeline.Stages") as stages_mock:
+    with mock.patch("ska_sdp_piper.piper.pipeline.Stages") as stages_mock:
         stages_mock.return_value = stages_mock
         yield stages_mock
 
@@ -42,7 +40,7 @@ def stages():
 @pytest.fixture(scope="function", autouse=True)
 def cli_command_parser():
     with mock.patch(
-        "ska_sdp_piper.framework.command.CLICommandParser"
+        "ska_sdp_piper.piper.command.CLICommandParser"
     ) as cli_arguments_mock:
         yield cli_arguments_mock
 
@@ -50,7 +48,7 @@ def cli_command_parser():
 @pytest.fixture(scope="function")
 def default_scheduler():
     with mock.patch(
-        "ska_sdp_piper.framework.scheduler.DefaultScheduler"
+        "ska_sdp_piper.piper.scheduler.DefaultScheduler"
     ) as default_scheduler_mock:
 
         default_scheduler_mock.execute.return_value = "output"
@@ -61,7 +59,7 @@ def default_scheduler():
 @pytest.fixture(scope="function", autouse=True)
 def scheduler_factory(default_scheduler):
     with mock.patch(
-        "ska_sdp_piper.framework.pipeline.SchedulerFactory"
+        "ska_sdp_piper.piper.pipeline.SchedulerFactory"
     ) as scheduler_factory_mock:
         scheduler_factory_mock.get_scheduler.return_value = default_scheduler
         yield scheduler_factory_mock
@@ -70,7 +68,7 @@ def scheduler_factory(default_scheduler):
 @pytest.fixture(scope="function", autouse=True)
 def read_mock():
     with mock.patch(
-        "ska_sdp_piper.framework.pipeline.read_dataset",
+        "ska_sdp_piper.piper.pipeline.read_dataset",
         return_value="dataset",
     ) as read:
         yield read
@@ -78,14 +76,14 @@ def read_mock():
 
 @pytest.fixture(scope="function", autouse=True)
 def write_mock():
-    with mock.patch("ska_sdp_piper.framework.pipeline.write_dataset") as write:
+    with mock.patch("ska_sdp_piper.piper.pipeline.write_dataset") as write:
         yield write
 
 
 @pytest.fixture(scope="function", autouse=True)
 def write_yml_mock():
     with mock.patch(
-        "ska_sdp_piper.framework.pipeline.ConfigManager.write_yml"
+        "ska_sdp_piper.piper.pipeline.ConfigManager.write_yml"
     ) as write:
         yield write
 
@@ -93,7 +91,7 @@ def write_yml_mock():
 @pytest.fixture(scope="function", autouse=True)
 def create_output_mock():
     with mock.patch(
-        "ska_sdp_piper.framework.pipeline.create_output_dir",
+        "ska_sdp_piper.piper.pipeline.create_output_dir",
         return_value="./output/timestamp",
     ) as create_output:
         yield create_output
@@ -101,7 +99,7 @@ def create_output_mock():
 
 @pytest.fixture(scope="function")
 def timestamp_mock():
-    with mock.patch("ska_sdp_piper.framework.pipeline.timestamp") as timestamp:
+    with mock.patch("ska_sdp_piper.piper.pipeline.timestamp") as timestamp:
         timestamp.return_value = "FORMATTED_TIME"
 
         yield timestamp
@@ -230,8 +228,8 @@ def test_should_run_the_pipeline_from_cli_command_with_default_output(
     )
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
-@mock.patch("ska_sdp_piper.framework.pipeline.Configuration")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.Configuration")
 def test_should_run_the_pipeline(
     configuration_mock,
     config_manager_mock,
@@ -306,7 +304,7 @@ def test_should_run_the_pipeline_with_verbose(log_util):
     )
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_run_the_pipeline_with_selected_stages(
     config_manager_mock, default_scheduler, read_mock, mock_stages
 ):
@@ -349,7 +347,7 @@ def test_should_instantiate_dask_client(scheduler_factory):
     )
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_run_the_pipeline_with_selected_stages_from_config(
     config_manager_mock, default_scheduler, create_output_mock, mock_stages
 ):
@@ -376,7 +374,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     )
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     config_manager_mock, default_scheduler, mock_stages
 ):
@@ -406,7 +404,7 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     )
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_not_update_config_if_config_path_is_not_provided(
     config_manager_mock, default_scheduler
 ):
@@ -424,7 +422,7 @@ def test_should_not_update_config_if_config_path_is_not_provided(
     assert config_manager_mock.update_config.call_count == 0
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_return_pipeline_default_configuration(config_manager_mock):
 
     config_manager_mock.return_value = config_manager_mock
@@ -435,7 +433,7 @@ def test_should_return_pipeline_default_configuration(config_manager_mock):
     assert pipeline.config == {"config": "config"}
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_install_default_config(config_manager_mock):
     config_manager_mock.return_value = config_manager_mock
     args_mock = Mock(name="arg_mock")
@@ -448,7 +446,7 @@ def test_should_install_default_config(config_manager_mock):
     )
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_write_config_to_output_yaml_file(
     config_manager_mock, timestamp_mock
 ):
@@ -468,7 +466,7 @@ def test_should_write_config_to_output_yaml_file(
     )
 
 
-@mock.patch("ska_sdp_piper.framework.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_write_config_to_output_yaml_on_failure(
     config_manager_mock, default_scheduler, timestamp_mock
 ):

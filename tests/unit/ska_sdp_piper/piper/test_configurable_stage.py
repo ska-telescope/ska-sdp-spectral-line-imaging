@@ -1,9 +1,9 @@
 import mock
 import pytest
 
-from ska_sdp_piper.framework.configurable_stage import ConfigurableStage, Stage
-from ska_sdp_piper.framework.configuration import ConfigParam, Configuration
-from ska_sdp_piper.framework.exceptions import (
+from ska_sdp_piper.piper.configurable_stage import ConfigurableStage, Stage
+from ska_sdp_piper.piper.configuration import ConfigParam, Configuration
+from ska_sdp_piper.piper.exceptions import (
     ArgumentMismatchException,
     PipelineMetadataMissingException,
 )
@@ -70,9 +70,7 @@ def test_should_raise_exception_if_function_arguments_are_invalide():
             pass
 
 
-@mock.patch(
-    "ska_sdp_piper.framework.configurable_stage.inspect.getfullargspec"
-)
+@mock.patch("ska_sdp_piper.piper.configurable_stage.inspect.getfullargspec")
 def test_should_update_pipeline_params_for_stage_and_return_the_stage_args(
     argspec_mock,
 ):

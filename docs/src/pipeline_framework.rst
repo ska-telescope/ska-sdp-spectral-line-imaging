@@ -1,9 +1,9 @@
-##################
-Pipeline Framework
-##################
+#####
+Piper
+#####
 
 A complete installable data analysis pipeline can be defined with the help of
-the `ska-sdp-pipeline` module.
+the `ska-sdp-piper` module.
 
 A pipeline consisting of the stages, and their default configurations can be
 defined by decorating a standard python function using
@@ -28,7 +28,7 @@ based approach removes the need to manage dask all together from the pipeline
 definition.
 
 A custom defined pipeline can be installed as an executable using the
-:command:`sdp-pipeline install` command. The installation process creates an executable
+:command:`piper install` command. The installation process creates an executable
 data processing pipeline using the pipeline name, and also extracts the
 default configuration to a path provided by the user, or in the same
 directory as the pipeline script if the path is not provided. Additionaly a package manager like `poetry` can be used install a production
@@ -201,7 +201,7 @@ through the :py:attr:`_cli_args_` and :py:attr:`_global_parameters_` metadata ar
 Custom subcommands
 ------------------
 
-The pipeline framework exposes additional APIs to add sub parsers and bind them to functions during
+Piper exposes additional APIs to add sub parsers and bind them to functions during
 the pipeline definition. Sub commands can be added using the :py:func:`Pipeline.sub_command` decorator which takes the name of the subparser,
 along with the callback function and a list of CLI arguments
 
@@ -240,15 +240,15 @@ Entire Pipeline Definition
 ... import shutil
 ... import xarray as xr
 ... 
-... from ska_sdp_piper.framework.model.cli_command_parser import CLIArgument
-... from ska_sdp_piper.framework.configurable_stage import (
+... from ska_sdp_piper.piper.model.cli_command_parser import CLIArgument
+... from ska_sdp_piper.piper.configurable_stage import (
 ...     ConfigurableStage
 ... )
-... from ska_sdp_piper.framework.configuration import (
+... from ska_sdp_piper.piper.configuration import (
 ...     ConfigParam,
 ...     Configuration,
 ... )
-... from ska_sdp_piper.framework.pipeline import Pipeline
+... from ska_sdp_piper.piper.pipeline import Pipeline
 ... 
 ... @ConfigurableStage(
 ...     "select_field",

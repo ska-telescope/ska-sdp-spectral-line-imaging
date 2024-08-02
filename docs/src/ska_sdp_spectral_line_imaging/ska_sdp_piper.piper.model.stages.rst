@@ -1,7 +1,7 @@
-ska\_sdp\_piper.framework.pipeline module
+ska\_sdp\_piper.piper.model.stages module
 =========================================
 
-.. automodule:: ska_sdp_piper.framework.pipeline
+.. automodule:: ska_sdp_piper.piper.model.stages
    :members:
    :undoc-members:
    :show-inheritance:

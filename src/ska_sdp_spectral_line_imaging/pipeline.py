@@ -18,9 +18,9 @@
 #
 # pylint: disable=no-member,import-error
 
-from ska_sdp_piper.framework.configurable_stage import ConfigurableStage
-from ska_sdp_piper.framework.configuration import ConfigParam, Configuration
-from ska_sdp_piper.framework.pipeline import Pipeline
+from ska_sdp_piper.piper.configurable_stage import ConfigurableStage
+from ska_sdp_piper.piper.configuration import ConfigParam, Configuration
+from ska_sdp_piper.piper.pipeline import Pipeline
 from ska_sdp_spectral_line_imaging.stages.data_export import (
     export_image,
     export_model,

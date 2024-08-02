@@ -9,8 +9,8 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
     PolarisationFrame,
 )
 
-from ska_sdp_piper.framework.configurable_stage import ConfigurableStage
-from ska_sdp_piper.framework.configuration import ConfigParam, Configuration
+from ska_sdp_piper.piper.configurable_stage import ConfigurableStage
+from ska_sdp_piper.piper.configuration import ConfigParam, Configuration
 
 
 @ConfigurableStage(

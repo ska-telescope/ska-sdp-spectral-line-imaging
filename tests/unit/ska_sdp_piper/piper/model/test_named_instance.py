@@ -1,6 +1,6 @@
 import pytest
 
-from ska_sdp_piper.framework.model.named_instance import NamedInstance
+from ska_sdp_piper.piper.model.named_instance import NamedInstance
 
 
 @pytest.fixture(scope="function", autouse=True)

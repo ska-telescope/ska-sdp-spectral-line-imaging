@@ -1,11 +1,11 @@
 import pytest
 from mock import Mock
 
-from ska_sdp_piper.framework.exceptions import (
+from ska_sdp_piper.piper.exceptions import (
     NoStageToExecuteException,
     StageNotFoundException,
 )
-from ska_sdp_piper.framework.model.stages import Stages
+from ska_sdp_piper.piper.model.stages import Stages
 
 
 @pytest.fixture(scope="function")

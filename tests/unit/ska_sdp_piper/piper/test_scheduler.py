@@ -1,7 +1,7 @@
 from mock import Mock, mock
 
-from ska_sdp_piper.framework.log_util import LogUtil
-from ska_sdp_piper.framework.scheduler import (
+from ska_sdp_piper.piper.log_util import LogUtil
+from ska_sdp_piper.piper.scheduler import (
     DaskScheduler,
     DefaultScheduler,
     SchedulerFactory,
@@ -13,13 +13,13 @@ def test_should_get_default_scheduler():
     assert isinstance(actual, DefaultScheduler)
 
 
-@mock.patch("ska_sdp_piper.framework.scheduler.Client")
+@mock.patch("ska_sdp_piper.piper.scheduler.Client")
 def test_should_get_dask_scheduler(client_mock):
     actual = SchedulerFactory.get_scheduler(dask_scheduler="url")
     assert isinstance(actual, DaskScheduler)
 
 
-@mock.patch("ska_sdp_piper.framework.scheduler.dask.delayed")
+@mock.patch("ska_sdp_piper.piper.scheduler.dask.delayed")
 def test_should_schedule_stages_with_configuration_params(
     delayed_mock,
 ):
@@ -72,7 +72,7 @@ def test_should_schedule_stages_with_configuration_params(
     ]
 
 
-@mock.patch("ska_sdp_piper.framework.scheduler.dask.compute")
+@mock.patch("ska_sdp_piper.piper.scheduler.dask.compute")
 def test_should_execute_scheduled_stages(compute_mock):
     scheduler = DefaultScheduler()
     scheduler.delayed_outputs = ["OUT_1", "OUT_2", "OUT_3"]
@@ -81,7 +81,7 @@ def test_should_execute_scheduled_stages(compute_mock):
     compute_mock.assert_called_once_with("OUT_1", "OUT_2", "OUT_3")
 
 
-@mock.patch("ska_sdp_piper.framework.scheduler.Client")
+@mock.patch("ska_sdp_piper.piper.scheduler.Client")
 def test_should_create_dask_client_with_logging_forwarded(client_mock):
     client_mock.return_value = client_mock
 

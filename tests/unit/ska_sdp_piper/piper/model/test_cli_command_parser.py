@@ -1,7 +1,7 @@
 import pytest
 from mock import Mock, mock
 
-from ska_sdp_piper.framework.model.cli_command_parser import (
+from ska_sdp_piper.piper.model.cli_command_parser import (
     CLIArgument,
     CLICommandParser,
 )
@@ -10,7 +10,7 @@ from ska_sdp_piper.framework.model.cli_command_parser import (
 @pytest.fixture(scope="function")
 def arg_parser():
     with mock.patch(
-        "ska_sdp_piper.framework.model.cli_command_parser"
+        "ska_sdp_piper.piper.model.cli_command_parser"
         ".argparse.ArgumentParser"
     ) as arg_parser_mock:
         arg_parser_mock.return_value = arg_parser_mock
@@ -45,7 +45,7 @@ def test_should_create_sub_parser(arg_parser):
     )
 
 
-@mock.patch("ska_sdp_piper.framework.model.cli_command_parser.sys")
+@mock.patch("ska_sdp_piper.piper.model.cli_command_parser.sys")
 def test_should_parse_cli_arguments(sys_mock, arg_parser):
     sys_mock.argv = ["EXEC", "PARSED_ARGS"]
     arg_parser.parse_args.return_value = "PARSED_ARGS"
@@ -57,7 +57,7 @@ def test_should_parse_cli_arguments(sys_mock, arg_parser):
     arg_parser.parse_args.assert_called_once()
 
 
-@mock.patch("ska_sdp_piper.framework.model.cli_command_parser.sys")
+@mock.patch("ska_sdp_piper.piper.model.cli_command_parser.sys")
 def test_should_exit_with_status_two_if_no_sub_commands_given(
     sys_mock, arg_parser
 ):
@@ -88,7 +88,7 @@ def test_should_return_dictionary_of_cli_args(arg_parser):
     arg_parser.parse_args.assert_called_once()
 
 
-@mock.patch("ska_sdp_piper.framework.model.cli_command_parser.write_yml")
+@mock.patch("ska_sdp_piper.piper.model.cli_command_parser.write_yml")
 def test_should_write_cli_args_to_yaml_file(write_yml_mock, arg_parser):
     parsed_args = mock.Mock(name="parsed_args")
     parsed_args._get_kwargs.return_value = [
@@ -106,7 +106,7 @@ def test_should_write_cli_args_to_yaml_file(write_yml_mock, arg_parser):
     )
 
 
-@mock.patch("ska_sdp_piper.framework.model.cli_command_parser.write_yml")
+@mock.patch("ska_sdp_piper.piper.model.cli_command_parser.write_yml")
 def test_should_write_cli_args_to_yaml_file_without_sub_commands(
     write_yml_mock, arg_parser
 ):

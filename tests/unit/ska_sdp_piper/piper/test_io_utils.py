@@ -1,7 +1,7 @@
 import pytest
 from mock import MagicMock, Mock, mock
 
-from ska_sdp_piper.framework.io_utils import (
+from ska_sdp_piper.piper.io_utils import (
     create_output_dir,
     read_dataset,
     timestamp,
@@ -12,14 +12,14 @@ from ska_sdp_piper.framework.io_utils import (
 @pytest.fixture(scope="function")
 def timestamp_mock():
     with mock.patch(
-        "ska_sdp_piper.framework.io_utils.timestamp"
+        "ska_sdp_piper.piper.io_utils.timestamp"
     ) as timestamp_mocked:
         timestamp_mocked.return_value = "timestamp"
         yield timestamp_mocked
 
 
-@mock.patch("ska_sdp_piper.framework.io_utils.os.makedirs")
-@mock.patch("ska_sdp_piper.framework.io_utils.os.path.exists")
+@mock.patch("ska_sdp_piper.piper.io_utils.os.makedirs")
+@mock.patch("ska_sdp_piper.piper.io_utils.os.path.exists")
 def test_should_create_root_output_folder_and_timestamped_folder(
     exists_mock, makedirs_mock, timestamp_mock
 ):
@@ -37,8 +37,8 @@ def test_should_create_root_output_folder_and_timestamped_folder(
     assert outfile == "./output/pipeline_name_timestamp"
 
 
-@mock.patch("ska_sdp_piper.framework.io_utils.os.makedirs")
-@mock.patch("ska_sdp_piper.framework.io_utils.os.path.exists")
+@mock.patch("ska_sdp_piper.piper.io_utils.os.makedirs")
+@mock.patch("ska_sdp_piper.piper.io_utils.os.path.exists")
 def test_should_create_only_timestamped_folder(
     exists_mock, makedirs_mock, timestamp_mock
 ):
@@ -52,7 +52,7 @@ def test_should_create_only_timestamped_folder(
 
 
 @mock.patch(
-    "ska_sdp_piper.framework.io_utils.read_processing_set",
+    "ska_sdp_piper.piper.io_utils.read_processing_set",
     return_value="PROCESSING_SET",
 )
 def test_should_read_given_dataset(read_processing_set_mock):
@@ -63,7 +63,7 @@ def test_should_read_given_dataset(read_processing_set_mock):
     assert ps == "PROCESSING_SET"
 
 
-@mock.patch("ska_sdp_piper.framework.io_utils.yaml")
+@mock.patch("ska_sdp_piper.piper.io_utils.yaml")
 @mock.patch("builtins.open")
 def test_should_write_yaml_to_the_given_path(open_mock, yaml_mock):
     output_path = "./output.yml"
@@ -80,7 +80,7 @@ def test_should_write_yaml_to_the_given_path(open_mock, yaml_mock):
 
 def test_should_generate_timestamp():
     with mock.patch(
-        "ska_sdp_piper.framework.io_utils.datetime"
+        "ska_sdp_piper.piper.io_utils.datetime"
     ) as datetime_mocked:
         now_mock = Mock(name="now")
         datetime_mocked.now.return_value = now_mock

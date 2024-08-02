@@ -1,13 +1,13 @@
 import pytest
 from mock import Mock, mock
 
-from ska_sdp_piper.framework.command import Command
+from ska_sdp_piper.piper.command import Command
 
 
 @pytest.fixture(scope="function", autouse=True)
 def cli_command_parser():
     with mock.patch(
-        "ska_sdp_piper.framework.command.CLICommandParser"
+        "ska_sdp_piper.piper.command.CLICommandParser"
     ) as cli_arguments_mock:
         yield cli_arguments_mock
 

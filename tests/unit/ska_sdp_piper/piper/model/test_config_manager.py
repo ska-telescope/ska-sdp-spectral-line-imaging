@@ -1,7 +1,7 @@
 import pytest
 from mock import MagicMock, mock
 
-from ska_sdp_piper.framework.model.config_manager import ConfigManager
+from ska_sdp_piper.piper.model.config_manager import ConfigManager
 
 
 @pytest.fixture(autouse=True)
@@ -57,7 +57,7 @@ def test_should_return_the_default_config(setup):
     }
 
 
-@mock.patch("ska_sdp_piper.framework.model.config_manager.yaml")
+@mock.patch("ska_sdp_piper.piper.model.config_manager.yaml")
 @mock.patch("builtins.open")
 def test_should_update_the_default_config_with_yaml(
     open_mock, yaml_mock, setup
@@ -101,7 +101,7 @@ def test_should_update_the_default_config_with_yaml(
     assert config_manager.global_parameters == global_parameters
 
 
-@mock.patch("ska_sdp_piper.framework.model.config_manager.yaml")
+@mock.patch("ska_sdp_piper.piper.model.config_manager.yaml")
 @mock.patch("builtins.open")
 def test_should_update_the_default_config_with_yaml_without_pipeline_section(
     open_mock, yaml_mock, setup
@@ -166,7 +166,7 @@ def test_should_return_stages_config(setup):
     assert expected_stage_config == config_manager.stage_config("stage2")
 
 
-@mock.patch("ska_sdp_piper.framework.model.config_manager.write_yml")
+@mock.patch("ska_sdp_piper.piper.model.config_manager.write_yml")
 def test_should_write_config_to_path(write_yml_mock, setup):
     config_manager = setup
 

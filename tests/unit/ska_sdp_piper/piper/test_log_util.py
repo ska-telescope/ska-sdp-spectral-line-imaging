@@ -2,11 +2,11 @@ import logging
 
 from mock import Mock, mock
 
-from ska_sdp_piper.framework.log_util import LogUtil
+from ska_sdp_piper.piper.log_util import LogUtil
 
 
-@mock.patch("ska_sdp_piper.framework.log_util.configure_logging")
-@mock.patch("ska_sdp_piper.framework.log_util.timestamp")
+@mock.patch("ska_sdp_piper.piper.log_util.configure_logging")
+@mock.patch("ska_sdp_piper.piper.log_util.timestamp")
 def test_should_configure_with_additional_log_config(
     timestamp_mock, configure_mock
 ):
@@ -33,8 +33,8 @@ def test_should_configure_with_additional_log_config(
     )
 
 
-@mock.patch("ska_sdp_piper.framework.log_util.configure_logging")
-@mock.patch("ska_sdp_piper.framework.log_util.timestamp")
+@mock.patch("ska_sdp_piper.piper.log_util.configure_logging")
+@mock.patch("ska_sdp_piper.piper.log_util.timestamp")
 def test_should_configure_without_additional_log_config_if_no_output(
     timestamp_mock, configure_mock
 ):
@@ -46,8 +46,8 @@ def test_should_configure_without_additional_log_config_if_no_output(
     configure_mock.assert_called_once_with(level=logging.INFO, overrides=None)
 
 
-@mock.patch("ska_sdp_piper.framework.log_util.configure_logging")
-@mock.patch("ska_sdp_piper.framework.log_util.timestamp")
+@mock.patch("ska_sdp_piper.piper.log_util.configure_logging")
+@mock.patch("ska_sdp_piper.piper.log_util.timestamp")
 def test_should_configure_verbose(timestamp_mock, configure_mock):
 
     timestamp_mock.return_value = "FORMATTED_TIME"
@@ -73,7 +73,7 @@ def test_should_execute_stage_with_logs():
     )
 
 
-@mock.patch("ska_sdp_piper.framework.log_util.logging.getLogger")
+@mock.patch("ska_sdp_piper.piper.log_util.logging.getLogger")
 def test_should_execute_stage_with_logs_as_verbose(get_logger_mock):
     logger_mock = Mock(name="logger")
     get_logger_mock.return_value = logger_mock

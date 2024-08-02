@@ -1,8 +1,8 @@
 import pytest
 from mock import Mock
 
-from ska_sdp_piper.framework.configuration import ConfigParam, Configuration
-from ska_sdp_piper.framework.exceptions import (
+from ska_sdp_piper.piper.configuration import ConfigParam, Configuration
+from ska_sdp_piper.piper.exceptions import (
     ArgumentMismatchException,
     PipelineMetadataMissingException,
 )

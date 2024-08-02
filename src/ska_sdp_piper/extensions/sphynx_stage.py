@@ -6,7 +6,7 @@ from docutils import nodes
 from sphinx.domains.python import PyFunction
 from sphinx.ext.autodoc import FunctionDocumenter
 
-from ..framework.configurable_stage import Stage
+from ..piper.configurable_stage import Stage
 
 
 class StageDocumenter(FunctionDocumenter):

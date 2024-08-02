@@ -1,7 +1,7 @@
-ska\_sdp\_piper.framework.constants module
+ska\_sdp\_piper.piper.configuration module
 ==========================================
 
-.. automodule:: ska_sdp_piper.framework.constants
+.. automodule:: ska_sdp_piper.piper.configuration
    :members:
    :undoc-members:
    :show-inheritance:

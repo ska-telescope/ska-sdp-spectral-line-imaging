@@ -4,9 +4,9 @@ import os
 import sys
 from pathlib import Path
 
-from ..framework.exceptions import PipelineNotFoundException
-from ..framework.io_utils import write_yml
-from ..framework.pipeline import Pipeline
+from ..piper.exceptions import PipelineNotFoundException
+from ..piper.io_utils import write_yml
+from ..piper.pipeline import Pipeline
 from .constants import MAIN_ENTRY_POINT, SHEBANG_HEADER
 
 

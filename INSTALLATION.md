@@ -16,7 +16,7 @@ The poetry is used for dependency management and installation. Following command
 poetry install --only main
 ```
 
-Above command will also install the **pipeline framework**. To know more about the usage please refer to this [page](./pipeline_framework.rst).
+Above command will also install  **piper**. To know more about the usage please refer to this [page](./pipeline_framework.rst).
 
 ### Install the config and run the pipeline
 
