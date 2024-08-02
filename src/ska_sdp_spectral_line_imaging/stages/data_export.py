@@ -1,10 +1,7 @@
 import os
 
-from ska_sdp_pipelines.framework.configurable_stage import ConfigurableStage
-from ska_sdp_pipelines.framework.configuration import (
-    ConfigParam,
-    Configuration,
-)
+from ska_sdp_piper.framework.configurable_stage import ConfigurableStage
+from ska_sdp_piper.framework.configuration import ConfigParam, Configuration
 
 
 @ConfigurableStage(

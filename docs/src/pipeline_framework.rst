@@ -240,15 +240,15 @@ Entire Pipeline Definition
 ... import shutil
 ... import xarray as xr
 ... 
-... from ska_sdp_pipelines.framework.model.cli_command_parser import CLIArgument
-... from ska_sdp_pipelines.framework.configurable_stage import (
+... from ska_sdp_piper.framework.model.cli_command_parser import CLIArgument
+... from ska_sdp_piper.framework.configurable_stage import (
 ...     ConfigurableStage
 ... )
-... from ska_sdp_pipelines.framework.configuration import (
+... from ska_sdp_piper.framework.configuration import (
 ...     ConfigParam,
 ...     Configuration,
 ... )
-... from ska_sdp_pipelines.framework.pipeline import Pipeline
+... from ska_sdp_piper.framework.pipeline import Pipeline
 ... 
 ... @ConfigurableStage(
 ...     "select_field",
@@ -350,11 +350,11 @@ Installing a standalone Pipeline
 --------------------------------
 
 A python file containing the above definition of the pipeline can be installed
-with the help of the :command:`sdp-pipelines` command.
+with the help of the :command:`piper` command.
 
 .. code-block:: bash
 
-  sdp-pipelines install process-vis-pipeline \
+  piper install process-vis-pipeline \
   /path/to/process_vis_pipeline.py \
   --config-install-path=/path/to/save/default/config
 
