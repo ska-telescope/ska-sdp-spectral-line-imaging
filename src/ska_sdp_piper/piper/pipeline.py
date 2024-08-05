@@ -2,7 +2,8 @@ import functools
 import logging
 
 from .command import Command
-from .configurations import ConfigManager, Configuration
+from .configurations import Configuration
+from .configurations.config_manager import ConfigManager
 from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
 from .named_instance import NamedInstance
 from .scheduler import SchedulerFactory

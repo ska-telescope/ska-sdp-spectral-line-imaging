@@ -1,7 +1,7 @@
 import pytest
 from mock import mock
 
-from ska_sdp_piper.piper.configurations import ConfigManager
+from ska_sdp_piper.piper.configurations.config_manager import ConfigManager
 
 
 @pytest.fixture(autouse=True)
