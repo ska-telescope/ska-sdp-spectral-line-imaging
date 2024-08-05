@@ -10,7 +10,7 @@ git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-spectral-line-imaging.git
 
 ### Install the framework
 
-The poetry is used for dependency management and installation. Following command will install spectral line imaging pipeline.
+`poetry` is used for dependency management and installation. Following command will install spectral line imaging pipeline.
 
 ```bash
 poetry install --only main
@@ -37,6 +37,22 @@ spectral-line-imaging-pipeline run --input /path/to/processing_set \
 ```
 
 Run `spectral-line-imaging-pipeline --help` for more information.
+
+### Docker based setup
+
+The pipeline can also be deployed as a container.
+
+#### How to build
+<u>Option-1</u>
+Using the make file: `make oci-build-all`
+
+<u>Option-2</u>
+Locally build the image: `docker build -t <image-name> .`
+
+#### How to use
+1. Pull image
+1. Run image with volume mounts to enable read write to storage.
+    - `docker run [-v local:container] <image-name> [run | install-config] ...`
 
 ## Developer Setup
 

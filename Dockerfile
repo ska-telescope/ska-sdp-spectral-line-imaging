@@ -13,6 +13,6 @@ WORKDIR /install
 COPY --from=build /build/dist/*.whl /build/requirements.txt ./
 RUN pip install --no-cache-dir --no-compile -r requirements.txt ska_sdp_spectral_line_imaging*.whl
 
-WORKDIR /
+WORKDIR /app
 
 ENTRYPOINT ["spectral-line-imaging-pipeline"]
