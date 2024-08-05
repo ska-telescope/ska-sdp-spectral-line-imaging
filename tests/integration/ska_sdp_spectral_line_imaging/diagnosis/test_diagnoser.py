@@ -22,15 +22,15 @@ def prepare_test_sandbox(tmp_path):
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis"
     + ".spectral_line_diagnoser.create_output_dir",
-    return_value="diagnosis/timestamped",
+    return_value="diagnosis-out/timestamped",
 )
 def test_should_create_plots(create_output_dir_mock, prepare_test_sandbox):
     cli_args = Mock("cli-args")
     temp_path = prepare_test_sandbox
     cli_args.input = temp_path
-    cli_args.output = "./diagnosis"
+    cli_args.output = "./diagnosis-out"
 
-    os.makedirs("diagnosis/timestamped/")
+    os.makedirs("diagnosis-out/timestamped/")
 
     diagnoser = SpectralLineDiagnoser()
     diagnoser.diagnose(cli_args)
@@ -46,4 +46,4 @@ def test_should_create_plots(create_output_dir_mock, prepare_test_sandbox):
         "single-stoke-i-amp-vs-channel-residual-vis.png",
     ]
 
-    assert plots.sort() == os.listdir("diagnosis/timestamped/").sort()
+    assert plots.sort() == os.listdir("diagnosis-out/timestamped/").sort()

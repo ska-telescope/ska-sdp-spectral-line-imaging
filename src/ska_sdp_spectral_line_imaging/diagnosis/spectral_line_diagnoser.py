@@ -135,7 +135,7 @@ class SpectralLineDiagnoser(Diagnoser):
         Create a timestamped output directory for the diagnosis.
         """
         self.output_dir = Path(
-            create_output_dir(self.output_dir.name, "pipeline-qa")
+            create_output_dir(self.output_dir.as_posix(), "pipeline-qa")
         )
 
     def plot_amp_vs_channel_stoke_i(self):

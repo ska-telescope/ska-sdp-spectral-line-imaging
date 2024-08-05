@@ -24,6 +24,7 @@ Submodules
    ska_sdp_piper.piper.configurable_stage
    ska_sdp_piper.piper.configuration
    ska_sdp_piper.piper.constants
+   ska_sdp_piper.piper.diagnoser
    ska_sdp_piper.piper.exceptions
    ska_sdp_piper.piper.io_utils
    ska_sdp_piper.piper.log_util
