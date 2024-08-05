@@ -2,14 +2,18 @@ import functools
 import logging
 
 from .command import Command
-from .configuration import Configuration
+from .configurations import ConfigManager, Configuration
 from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
-from .io_utils import create_output_dir, read_dataset, timestamp, write_dataset
-from .log_util import LogUtil
-from .model.config_manager import ConfigManager
-from .model.named_instance import NamedInstance
-from .model.stages import Stages
+from .named_instance import NamedInstance
 from .scheduler import SchedulerFactory
+from .stage import Stages
+from .utils import (
+    LogUtil,
+    create_output_dir,
+    read_dataset,
+    timestamp,
+    write_dataset,
+)
 
 
 class Pipeline(Command, metaclass=NamedInstance):
@@ -21,7 +25,7 @@ class Pipeline(Command, metaclass=NamedInstance):
     ----------
       name: str
           Name of the pipeline
-      _stages: list[ConfigurableStage]
+      _stages: list[stage.ConfigurableStage]
           Stage to be executed
     """
 
@@ -40,7 +44,7 @@ class Pipeline(Command, metaclass=NamedInstance):
         ----------
           name: str
               Name of the pipeline
-          stages: list[ConfigurableStage]
+          stages: list[stage.ConfigurableStage]
               Stages to be executed
           global_config: Configuration
               Pipeline level configurations

@@ -19,25 +19,16 @@
 # pylint: disable=no-member,import-error
 from pathlib import Path
 
-from ska_sdp_piper.piper.io_utils import create_output_dir
 from ska_sdp_piper.piper.pipeline import Pipeline
-from ska_sdp_spectral_line_imaging.diagnosis import SpectralLineDiagnoser
-from ska_sdp_spectral_line_imaging.diagnosis.cli_arguments import (
-    DIAGNOSTIC_CLI_ARGS,
-)
-from ska_sdp_spectral_line_imaging.stages.data_export import (
-    export_image,
-    export_model,
-    export_residual,
-)
-from ska_sdp_spectral_line_imaging.stages.imaging import imaging_stage
-from ska_sdp_spectral_line_imaging.stages.model import (
-    cont_sub,
-    read_model,
-    vis_stokes_conversion,
-)
-from ska_sdp_spectral_line_imaging.stages.predict import predict_stage
-from ska_sdp_spectral_line_imaging.stages.select_vis import select_field
+from ska_sdp_piper.piper.utils import create_output_dir
+
+from .diagnosis import SpectralLineDiagnoser
+from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
+from .stages.data_export import export_image, export_model, export_residual
+from .stages.imaging import imaging_stage
+from .stages.model import cont_sub, read_model, vis_stokes_conversion
+from .stages.predict import predict_stage
+from .stages.select_vis import select_field
 
 spectral_line_imaging_pipeline = Pipeline(
     "spectral_line_imaging_pipeline",

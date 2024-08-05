@@ -1,4 +1,4 @@
-from ska_sdp_piper.piper.model.cli_command_parser import CLIArgument
+from .command.cli_command_parser import CLIArgument
 
 CONFIG_CLI_ARGS = [
     CLIArgument(

@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 
 from ..piper.exceptions import PipelineNotFoundException
-from ..piper.io_utils import write_yml
 from ..piper.pipeline import Pipeline
+from ..piper.utils import write_yml
 from .constants import MAIN_ENTRY_POINT, SHEBANG_HEADER
 
 

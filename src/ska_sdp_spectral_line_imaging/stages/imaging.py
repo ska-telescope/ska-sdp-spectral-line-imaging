@@ -3,9 +3,10 @@ import astropy.units as au
 import numpy as np
 import xarray as xr
 
-from ska_sdp_piper.piper.configurable_stage import ConfigurableStage
-from ska_sdp_piper.piper.configuration import ConfigParam, Configuration
-from ska_sdp_spectral_line_imaging.stubs.imaging import cube_imaging
+from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
+from ska_sdp_piper.piper.stage import ConfigurableStage
+
+from ..stubs.imaging import cube_imaging
 
 
 @ConfigurableStage(

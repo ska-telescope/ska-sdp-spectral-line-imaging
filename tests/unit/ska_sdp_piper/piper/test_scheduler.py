@@ -1,11 +1,11 @@
 from mock import Mock, mock
 
-from ska_sdp_piper.piper.log_util import LogUtil
 from ska_sdp_piper.piper.scheduler import (
     DaskScheduler,
     DefaultScheduler,
     SchedulerFactory,
 )
+from ska_sdp_piper.piper.utils import LogUtil
 
 
 def test_should_get_default_scheduler():

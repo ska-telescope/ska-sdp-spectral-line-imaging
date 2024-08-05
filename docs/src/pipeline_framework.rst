@@ -240,14 +240,12 @@ Entire Pipeline Definition
 ... import shutil
 ... import xarray as xr
 ... 
-... from ska_sdp_piper.piper.model.cli_command_parser import CLIArgument
-... from ska_sdp_piper.piper.configurable_stage import (
-...     ConfigurableStage
-... )
-... from ska_sdp_piper.piper.configuration import (
+... from ska_sdp_piper.piper.command import CLIArgument
+... from ska_sdp_piper.piper.configurations import (
 ...     ConfigParam,
 ...     Configuration,
 ... )
+... from ska_sdp_piper.stage import ConfigurableStage
 ... from ska_sdp_piper.piper.pipeline import Pipeline
 ... 
 ... @ConfigurableStage(

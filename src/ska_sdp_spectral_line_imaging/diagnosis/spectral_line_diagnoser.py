@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import xarray as xr
 
-from ska_sdp_piper.piper.io_utils import read_dataset, read_yml
+from ska_sdp_piper.piper.utils import read_dataset, read_yml
 from ska_sdp_spectral_line_imaging.diagnosis.plot import (
     amp_vs_channel_plot,
     amp_vs_uv_distance_plot,

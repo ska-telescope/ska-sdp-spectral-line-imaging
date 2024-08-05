@@ -2,7 +2,7 @@ import logging
 
 from typer import Option, Typer
 
-from ..piper.log_util import LogUtil
+from ..piper.utils import LogUtil
 from .executable_pipeline import ExecutablePipeline
 
 logger = logging.getLogger(__name__)

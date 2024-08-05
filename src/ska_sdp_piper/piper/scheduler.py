@@ -1,7 +1,7 @@
 import dask
 from dask.distributed import Client
 
-from .log_util import LogUtil
+from .utils import LogUtil
 
 
 class SchedulerFactory:

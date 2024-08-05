@@ -12,7 +12,10 @@ Subpackages
 .. toctree::
    :maxdepth: 1
 
-   ska_sdp_piper.piper.model
+   ska_sdp_piper.piper.command
+   ska_sdp_piper.piper.configurations
+   ska_sdp_piper.piper.stage
+   ska_sdp_piper.piper.utils
 
 Submodules
 ----------
@@ -20,12 +23,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   ska_sdp_piper.piper.command
-   ska_sdp_piper.piper.configurable_stage
-   ska_sdp_piper.piper.configuration
    ska_sdp_piper.piper.constants
    ska_sdp_piper.piper.exceptions
-   ska_sdp_piper.piper.io_utils
-   ska_sdp_piper.piper.log_util
+   ska_sdp_piper.piper.named_instance
    ska_sdp_piper.piper.pipeline
    ska_sdp_piper.piper.scheduler

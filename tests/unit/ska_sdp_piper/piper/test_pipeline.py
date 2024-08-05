@@ -1,9 +1,9 @@
 import pytest
 from mock import Mock, mock
 
-from ska_sdp_piper.piper.configuration import Configuration
+from ska_sdp_piper.piper.command.cli_command_parser import CLIArgument
+from ska_sdp_piper.piper.configurations import Configuration
 from ska_sdp_piper.piper.constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
-from ska_sdp_piper.piper.model.cli_command_parser import CLIArgument
 from ska_sdp_piper.piper.pipeline import Pipeline
 
 
@@ -40,7 +40,7 @@ def stages():
 @pytest.fixture(scope="function", autouse=True)
 def cli_command_parser():
     with mock.patch(
-        "ska_sdp_piper.piper.command.CLICommandParser"
+        "ska_sdp_piper.piper.command.command.CLICommandParser"
     ) as cli_arguments_mock:
         yield cli_arguments_mock
 
