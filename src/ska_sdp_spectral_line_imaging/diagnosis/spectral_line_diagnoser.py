@@ -1,13 +1,9 @@
 import logging
-from pathlib import Path
 
 import numpy as np
 import xarray as xr
-import yaml
-from xradio.vis.read_processing_set import read_processing_set
 
-from ska_sdp_piper.piper.diagnoser import Diagnoser
-from ska_sdp_piper.piper.io_utils import create_output_dir
+from ska_sdp_piper.piper.io_utils import read_dataset, read_yml
 from ska_sdp_spectral_line_imaging.diagnosis.plot import (
     amp_vs_channel_plot,
     amp_vs_uv_distance_plot,
@@ -17,7 +13,7 @@ from ska_sdp_spectral_line_imaging.stages.select_vis import select_field
 logger = logging.getLogger()
 
 
-class SpectralLineDiagnoser(Diagnoser):
+class SpectralLineDiagnoser:
     """
     Spectral line imaging pipeline diagnoser class.
 
@@ -40,75 +36,104 @@ class SpectralLineDiagnoser(Diagnoser):
           Model used in continuum subtraction stage in pipeline.
     """
 
-    def __init__(self):
+    def __init__(self, input_path, output_path):
         """
         Initialise the Diagnoser object
         """
-        self.input_path = None
-        self.output_dir = None
-        self.pipeline_args = None
-        self.pipeline_config = None
+        self.input_path = input_path
+        self.output_dir = output_path
+
+        cli_yaml_path = next(input_path.glob("*.cli.yml"))
+        self.pipeline_args = read_yml(cli_yaml_path)
+
+        config_yaml_path = next(self.input_path.glob("*.config.yml"))
+        self.pipeline_config = read_yml(config_yaml_path)
+
         self.input_ps = None
         self.residual = None
         self.model = None
 
-    def diagnose(self, cli_args):
+        self.__read_input_data()
+
+    def diagnose(self):
         """
         Main method that runs the diagnosis steps.
-        Parameters
-        ----------
-            cli_args: argparse.Namespace
-                CLI arguments
         """
-        self.input_path = Path(cli_args.input)
-        self.output_dir = (
-            Path("./diagnosis")
-            if not cli_args.output
-            else Path(cli_args.output)
-        )
 
         logger.info("==========================================")
         logger.info("=============== DIAGNOSE =================")
         logger.info("==========================================")
 
-        logger.info("Extracting pipeline cli arguments...")
-        self.extract_pipeline_args()
-
-        logger.info("Extracting pipeline configuration...")
-        self.extract_pipeline_config()
-
-        logger.info("Creating diagnosis output directory...")
-        self.create_output_dir()
-        logger.info(f"Created directory at {self.output_dir}")
-
-        logger.info("Reading input processing set, residual and model...")
-        self.read()
-
         logger.info("Creating plots...")
-        self.plot_amp_vs_channel_stoke_i()
-        self.plot_amp_vs_channel_all_stokes()
-        self.plot_amp_vs_uv_distance()
+        uv_distance = self.__get_uv_dist()
+
+        self.__plot_visibility(
+            self.input_ps.VISIBILITY,
+            uv_distance,
+            "Input Visibilities",
+            "input-vis",
+        )
+        if self.model is not None:
+            self.__plot_model()
+        if self.residual is not None:
+            self.__plot_visibility(
+                self.residual.VISIBILITY,
+                uv_distance,
+                "Residual Visibilities",
+                "residual-vis",
+            )
 
         logger.info("=========== DIAGNOSE COMPLETED ===========")
 
-    def extract_pipeline_args(self):
-        """
-        Extract pipeline arguments from cli yaml file that pipeline generated.
-        """
-        cli_yaml_path = next(self.input_path.glob("*.cli.yml"))
-        with open(cli_yaml_path, "r") as config_file:
-            self.pipeline_args = yaml.safe_load(config_file)
+    def __plot_model(self):
+        logger.info("Creating model plots")
 
-    def extract_pipeline_config(self):
-        """
-        Extract pipeline configuration from
-         config yaml file that pipeline generated.
-        """
-        config_yaml_path = next(self.input_path.glob("*.config.yml"))
-        with open(config_yaml_path, "r") as config_file:
-            self.pipeline_config = yaml.safe_load(config_file)
+        amp_vs_channel_plot(
+            self.model,
+            title="Single Stoke I Amp Vs Channel on Model Visibilities",
+            path=self.output_dir
+            / "single-stoke-i-amp-vs-channel-model-vis.png",
+        )
+        amp_vs_channel_plot(
+            self.model,
+            title="Amp Vs Channel on Model Visibilities",
+            path=self.output_dir / "amp-vs-channel-model-vis.png",
+            all_stokes=True,
+        )
 
-    def read(self):
+    def __plot_visibility(
+        self,
+        visibility,
+        uv_distance,
+        plot_title_postfix,
+        file_postfix,
+        channel=1,
+    ):
+        logger.info(f"Creating {plot_title_postfix}")
+
+        amp_vs_channel_plot(
+            visibility,
+            title=f"Single Stoke I Amp Vs Channel on {plot_title_postfix}",
+            path=self.output_dir
+            / f"single-stoke-i-amp-vs-channel-{file_postfix}.png",
+        )
+
+        amp_vs_channel_plot(
+            visibility,
+            title="Amp Vs Channel on Residual Visibilities",
+            path=self.output_dir / "amp-vs-channel-residual-vis.png",
+            all_stokes=True,
+        )
+
+        amp_vs_uv_distance_plot(
+            uv_distance,
+            visibility,
+            channel=channel,  # TODO: should pass channel from outside?
+            title="Amp vs UV Distance after Continnum Subtraction",
+            path=self.output_dir / "amp-vs-uv-distance-after-cont-sub.png",
+        )
+
+    def __read_input_data(self):
         """
         Read
             - input processing set
@@ -117,102 +142,37 @@ class SpectralLineDiagnoser(Diagnoser):
 
         required for diagnosis.
         """
+
+        pipeline_parameter = self.pipeline_config["parameters"]
+        select_vis_config = pipeline_parameter["select_vis"]
+        pipeline_run_config = self.pipeline_config["pipeline"]
+        input_ps = read_dataset(self.pipeline_args["input"])
+        logger.info("Reading input visibility")
         self.input_ps = select_field.stage_definition(
             None,
-            self.pipeline_config["parameters"]["select_vis"]["intent"],
-            self.pipeline_config["parameters"]["select_vis"]["field_id"],
-            self.pipeline_config["parameters"]["select_vis"]["ddi"],
-            read_processing_set(self.pipeline_args["input"]),
+            **select_vis_config,
+            _input_data_=input_ps,
         )["ps"]
 
-        self.residual = xr.open_zarr(self.input_path / "residual.zarr")
-        self.model = xr.open_zarr(self.input_path / "model.zarr")[
-            "__xarray_dataarray_variable__"
-        ]
+        if pipeline_run_config.get("export_model"):
+            logger.info("Reading model data")
+            ps_out = pipeline_parameter["export_model"]["psout_name"]
+            self.model = xr.open_zarr(self.input_path / ps_out)[
+                "__xarray_dataarray_variable__"
+            ]
+        else:
+            logger.info("Export model stage not run.")
 
-    def create_output_dir(self):
-        """
-        Create a timestamped output directory for the diagnosis.
-        """
-        self.output_dir = Path(
-            create_output_dir(self.output_dir.as_posix(), "pipeline-qa")
-        )
+        if pipeline_run_config.get("export_residual"):
+            logger.info("Reading residual data")
+            ps_out = pipeline_parameter["export_residual"]["psout_name"]
+            self.residual = xr.open_zarr(self.input_path / ps_out)
+        else:
+            logger.info("Export residual stage not run.")
 
-    def plot_amp_vs_channel_stoke_i(self):
-        """
-        Create amp vs channel plot for single stoke I
-        for input processing set, residual and model.
-        """
-        amp_vs_channel_plot(
-            self.input_ps.VISIBILITY,
-            title="Single Stoke I Amp Vs Channel on Input Visibilities",
-            path=self.output_dir
-            / "single-stoke-i-amp-vs-channel-input-vis.png",
-        )
-
-        amp_vs_channel_plot(
-            self.residual.VISIBILITY,
-            title="Single Stoke I Amp Vs Channel on Residual Visibilities",
-            path=self.output_dir
-            / "single-stoke-i-amp-vs-channel-residual-vis.png",
-        )
-
-        amp_vs_channel_plot(
-            self.model,
-            title="Single Stoke I Amp Vs Channel on Model Visibilities",
-            path=self.output_dir
-            / "single-stoke-i-amp-vs-channel-model-vis.png",
-        )
-
-    def plot_amp_vs_channel_all_stokes(self):
-        """
-        Create amp vs channel plot for all stokes for
-         input processing set, residual and model.
-        """
-        amp_vs_channel_plot(
-            self.input_ps.VISIBILITY,
-            title="Amp Vs Channel on Input Visibilities",
-            path=self.output_dir / "amp-vs-channel-input-vis.png",
-            all_stokes=True,
-        )
-
-        amp_vs_channel_plot(
-            self.residual.VISIBILITY,
-            title="Amp Vs Channel on Residual Visibilities",
-            path=self.output_dir / "amp-vs-channel-residual-vis.png",
-            all_stokes=True,
-        )
-
-        amp_vs_channel_plot(
-            self.model,
-            title="Amp Vs Channel on Model Visibilities",
-            path=self.output_dir / "amp-vs-channel-model-vis.png",
-            all_stokes=True,
-        )
-
-    def plot_amp_vs_uv_distance(self):
-        """
-        Create amp vs uv-distance plot for visibilities pre-post cont sub.
-        """
+    def __get_uv_dist(self):
         vec_cal_uv_distance = np.vectorize(
             lambda uvw: (uvw[0] ** 2 + uvw[1] ** 2) ** 0.5, signature="(n)->()"
         )
         uv_distance = vec_cal_uv_distance(self.input_ps.UVW.mean(dim="time"))
-
-        # before cont sub
-        amp_vs_uv_distance_plot(
-            uv_distance,
-            self.input_ps.VISIBILITY,
-            channel=1,  # TODO: should pass channel from outside?
-            title="Amp vs UV Distance before Continnum Subtraction",
-            path=self.output_dir / "amp-vs-uv-distance-before-cont-sub.png",
-        )
-
-        # after cont sub
-        amp_vs_uv_distance_plot(
-            uv_distance,
-            self.residual.VISIBILITY,
-            channel=1,  # TODO: should pass channel from outside?
-            title="Amp vs UV Distance after Continnum Subtraction",
-            path=self.output_dir / "amp-vs-uv-distance-after-cont-sub.png",
-        )
+        return uv_distance

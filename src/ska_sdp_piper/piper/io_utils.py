@@ -55,6 +55,24 @@ def write_yml(output_path, config):
         yaml.dump(config, conf_file)
 
 
+def read_yml(input_path):
+    """
+    Reads a yaml file as python dictionary
+
+    Parameters
+    ----------
+        input_path: str
+            Location of yaml file to read from.
+
+    Returns
+    -------
+        dict
+
+    """
+    with open(input_path, "r") as input_file:
+        return yaml.safe_load(input_file)
+
+
 @cache
 def timestamp(cache_breaker=0):
     """

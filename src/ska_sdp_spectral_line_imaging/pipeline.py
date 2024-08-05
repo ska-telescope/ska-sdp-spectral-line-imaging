@@ -17,9 +17,14 @@
 # --config spectral_line_imaging_pipeline.yaml
 #
 # pylint: disable=no-member,import-error
+from pathlib import Path
 
+from ska_sdp_piper.piper.io_utils import create_output_dir
 from ska_sdp_piper.piper.pipeline import Pipeline
 from ska_sdp_spectral_line_imaging.diagnosis import SpectralLineDiagnoser
+from ska_sdp_spectral_line_imaging.diagnosis.cli_arguments import (
+    DIAGNOSTIC_CLI_ARGS,
+)
 from ska_sdp_spectral_line_imaging.stages.data_export import (
     export_image,
     export_model,
@@ -47,5 +52,18 @@ spectral_line_imaging_pipeline = Pipeline(
         export_residual,
         export_image,
     ],
-    diagnoser=SpectralLineDiagnoser(),
 )
+
+
+@spectral_line_imaging_pipeline.sub_command(
+    "diagnose",
+    DIAGNOSTIC_CLI_ARGS,
+    help="Diagnose the pipeline",
+)
+def pipeline_diagnostic(cli_args):
+    input_path = Path(cli_args.input)
+    output_dir = "./diagnosis" if cli_args.output is None else cli_args.output
+
+    timestamped_output_dir = Path(create_output_dir(output_dir, "pipeline-qa"))
+    diagnoser = SpectralLineDiagnoser(input_path, timestamped_output_dir)
+    diagnoser.diagnose()

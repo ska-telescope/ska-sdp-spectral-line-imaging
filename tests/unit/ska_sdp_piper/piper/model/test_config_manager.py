@@ -1,5 +1,5 @@
 import pytest
-from mock import MagicMock, mock
+from mock import mock
 
 from ska_sdp_piper.piper.model.config_manager import ConfigManager
 
@@ -57,11 +57,8 @@ def test_should_return_the_default_config(setup):
     }
 
 
-@mock.patch("ska_sdp_piper.piper.model.config_manager.yaml")
-@mock.patch("builtins.open")
-def test_should_update_the_default_config_with_yaml(
-    open_mock, yaml_mock, setup
-):
+@mock.patch("ska_sdp_piper.piper.model.config_manager.read_yml")
+def test_should_update_the_default_config_with_yaml(read_yml, setup):
     pipeline = {"stage1": False, "stage2": True, "stage3": True}
     parameters = {
         "stage1": {"stage1_parameter_1": 10},
@@ -78,11 +75,8 @@ def test_should_update_the_default_config_with_yaml(
         "global_parameters": global_parameters,
     }
 
-    yaml_data = yaml_mock.dump(yaml_config)
-    enter_mock = MagicMock()
-    enter_mock.__enter__.return_value = yaml_data
-    yaml_mock.safe_load.return_value = yaml_config
-    open_mock.return_value = enter_mock
+    read_yml.return_value = yaml_config
+
     config_manager = setup
 
     config_manager.update_config("/path/to/yaml")
@@ -93,18 +87,16 @@ def test_should_update_the_default_config_with_yaml(
         "stage3": {"stage3_parameter_1": 0},
     }
 
-    open_mock.assert_called_once_with("/path/to/yaml", "r")
-    yaml_mock.safe_load.assert_called_once_with(yaml_data)
+    read_yml.assert_called_once_with("/path/to/yaml")
 
     assert config_manager.pipeline == pipeline
     assert config_manager.parameters == expected_parameters
     assert config_manager.global_parameters == global_parameters
 
 
-@mock.patch("ska_sdp_piper.piper.model.config_manager.yaml")
-@mock.patch("builtins.open")
+@mock.patch("ska_sdp_piper.piper.model.config_manager.read_yml")
 def test_should_update_the_default_config_with_yaml_without_pipeline_section(
-    open_mock, yaml_mock, setup
+    read_yml_mock, setup
 ):
     parameters = {
         "stage1": {"stage1_parameter_1": 0},
@@ -121,17 +113,12 @@ def test_should_update_the_default_config_with_yaml_without_pipeline_section(
         "global_parameters": global_parameters,
     }
 
-    yaml_data = yaml_mock.dump(yaml_config)
-    enter_mock = MagicMock()
-    enter_mock.__enter__.return_value = yaml_data
-    yaml_mock.safe_load.return_value = yaml_config
-    open_mock.return_value = enter_mock
+    read_yml_mock.return_value = yaml_config
     config_manager = setup
 
     config_manager.update_config("/path/to/yaml")
 
-    open_mock.assert_called_once_with("/path/to/yaml", "r")
-    yaml_mock.safe_load.assert_called_once_with(yaml_data)
+    read_yml_mock.assert_called_once_with("/path/to/yaml")
 
     assert config_manager.pipeline == {
         "stage1": True,

@@ -1,8 +1,7 @@
 import os
+from pathlib import Path
 
-import mock
 import pytest
-from mock.mock import Mock
 
 from ska_sdp_spectral_line_imaging.diagnosis import SpectralLineDiagnoser
 from tests.integration.ska_sdp_spectral_line_imaging.test_pipeline import (
@@ -19,21 +18,14 @@ def prepare_test_sandbox(tmp_path):
     yield tmp_path
 
 
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis"
-    + ".spectral_line_diagnoser.create_output_dir",
-    return_value="diagnosis-out/timestamped",
-)
-def test_should_create_plots(create_output_dir_mock, prepare_test_sandbox):
-    cli_args = Mock("cli-args")
+def test_should_create_plots(prepare_test_sandbox):
     temp_path = prepare_test_sandbox
-    cli_args.input = temp_path
-    cli_args.output = "./diagnosis-out"
 
-    os.makedirs("diagnosis-out/timestamped/")
+    timestamped_output_dir = Path("diagnosis-out/timestamped/")
+    os.makedirs(timestamped_output_dir)
 
-    diagnoser = SpectralLineDiagnoser()
-    diagnoser.diagnose(cli_args)
+    diagnoser = SpectralLineDiagnoser(Path(temp_path), timestamped_output_dir)
+    diagnoser.diagnose()
 
     plots = [
         "amp-vs-channel-input-vis.png",
@@ -46,4 +38,4 @@ def test_should_create_plots(create_output_dir_mock, prepare_test_sandbox):
         "single-stoke-i-amp-vs-channel-residual-vis.png",
     ]
 
-    assert plots.sort() == os.listdir("diagnosis-out/timestamped/").sort()
+    assert plots.sort() == os.listdir(timestamped_output_dir).sort()

@@ -1,6 +1,4 @@
-import yaml
-
-from ..io_utils import write_yml
+from ..io_utils import read_yml, write_yml
 
 
 class ConfigManager:
@@ -49,11 +47,10 @@ class ConfigManager:
                 Path to the config yaml file.
         """
 
-        with open(config_path, "r") as config_file:
-            config_dict = yaml.safe_load(config_file)
-            pipeline_from_config = config_dict.get("pipeline", dict())
-            parameters = config_dict.get("parameters", dict())
-            global_params = config_dict.get("global_parameters", dict())
+        config_dict = read_yml(config_path)
+        pipeline_from_config = config_dict.get("pipeline", dict())
+        parameters = config_dict.get("parameters", dict())
+        global_params = config_dict.get("global_parameters", dict())
 
         self.parameters = {
             key: {**value, **parameters.get(key, dict())}
