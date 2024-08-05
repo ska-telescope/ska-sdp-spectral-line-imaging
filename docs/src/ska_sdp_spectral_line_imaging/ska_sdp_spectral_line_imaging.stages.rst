@@ -16,3 +16,4 @@ Submodules
    ska_sdp_spectral_line_imaging.stages.imaging
    ska_sdp_spectral_line_imaging.stages.model
    ska_sdp_spectral_line_imaging.stages.predict
+   ska_sdp_spectral_line_imaging.stages.select_vis

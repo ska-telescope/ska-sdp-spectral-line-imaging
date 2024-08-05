@@ -83,3 +83,6 @@ addopts = "--cov --json-report --json-report-file=htmlcov/report.json --cov-repo
 testpaths = [
     "tests",
 ]
+pythonpath = [
+  "."
+]

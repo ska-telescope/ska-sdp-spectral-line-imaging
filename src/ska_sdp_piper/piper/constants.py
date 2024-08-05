@@ -10,6 +10,23 @@ CONFIG_CLI_ARGS = [
     )
 ]
 
+DIAGNOSE_CLI_ARGS = [
+    CLIArgument(
+        "--input",
+        dest="input",
+        type=str,
+        required=True,
+        help="Path of the pipeline run output.",
+    ),
+    CLIArgument(
+        "--output",
+        dest="output",
+        type=str,
+        required=False,
+        help="Path to place the diagnosis output.",
+    ),
+]
+
 DEFAULT_CLI_ARGS = [
     CLIArgument(
         "--input",

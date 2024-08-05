@@ -3,7 +3,7 @@ import logging
 
 from .command import Command
 from .configuration import Configuration
-from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
+from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS, DIAGNOSE_CLI_ARGS
 from .io_utils import create_output_dir, read_dataset, timestamp, write_dataset
 from .log_util import LogUtil
 from .model.config_manager import ConfigManager
@@ -26,7 +26,13 @@ class Pipeline(Command, metaclass=NamedInstance):
     """
 
     def __init__(
-        self, name, stages=None, global_config=None, cli_args=None, **kwargs
+        self,
+        name,
+        stages=None,
+        global_config=None,
+        cli_args=None,
+        diagnoser=None,
+        **kwargs,
     ):
         """
         Initialise the pipeline object
@@ -41,6 +47,8 @@ class Pipeline(Command, metaclass=NamedInstance):
               Pipeline level configurations
           cli_args: list[CLIArgument]
               Runtime arguments for the pipeline
+          diagnoser: Diagnoser
+              Pipeline diagnoser
           **kwargs:
               Additional kwargs
         """
@@ -60,6 +68,7 @@ class Pipeline(Command, metaclass=NamedInstance):
             parameters=self._parameter(),
             global_parameters=self._global_config.items,
         )
+        self.diagnoser = diagnoser
 
         self.sub_command(
             "run",
@@ -72,6 +81,12 @@ class Pipeline(Command, metaclass=NamedInstance):
             CONFIG_CLI_ARGS,
             help="Installs the default config at --config-install-path",
         )(self._install_config)
+
+        self.sub_command(
+            "diagnose",
+            DIAGNOSE_CLI_ARGS + ([] if cli_args is None else cli_args),
+            help="Diagnose the pipeline",
+        )(self.diagnose)
 
     def _pipeline_config(self, selected_stages=None):
         """
@@ -123,6 +138,9 @@ class Pipeline(Command, metaclass=NamedInstance):
                 - `pipelines`
         """
         return self.config_manager.config
+
+    def diagnose(self, cli_args):
+        self.diagnoser.diagnose(cli_args)
 
     def _run(self, cli_args):
         """

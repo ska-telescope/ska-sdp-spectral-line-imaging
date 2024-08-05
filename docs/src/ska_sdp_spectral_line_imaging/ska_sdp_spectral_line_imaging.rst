@@ -12,6 +12,7 @@ Subpackages
 .. toctree::
    :maxdepth: 1
 
+   ska_sdp_spectral_line_imaging.diagnosis
    ska_sdp_spectral_line_imaging.stages
    ska_sdp_spectral_line_imaging.stubs
 
