@@ -74,4 +74,4 @@ def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
         ),
     )
 
-    return {"ps": ps, "cubes": image_cube}
+    return {"ps": ps, "image_cube": image_cube}

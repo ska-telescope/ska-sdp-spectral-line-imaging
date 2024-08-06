@@ -1,6 +1,11 @@
+global_parameters: {}
 parameters:
-  export_zarr:
+  export_image:
     image_name: test_cube.zarr
+  export_model:
+    psout_name: model.zarr
+  export_residual:
+    psout_name: residual.zarr
   imaging:
     cell_size: 60.0
     nx: 16
@@ -10,14 +15,13 @@ parameters:
   read_model:
     image_name: tMS
   select_vis:
-    ddi: 0
-    field_id: 0
-    intent: null
+    obs_mode: 0
+  vis_stokes_conversion: {}
 pipeline:
   continuum_subtraction: true
+  export_image: true
   export_model: true
   export_residual: true
-  export_zarr: true
   imaging: true
   predict_stage: true
   read_model: true

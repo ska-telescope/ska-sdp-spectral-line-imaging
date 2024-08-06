@@ -3434,6 +3434,19 @@ files = [
     {file = "pyarrow-17.0.0-cp312-cp312-win_amd64.whl", hash = "sha256:392bc9feabc647338e6c89267635e111d71edad5fcffba204425a7c8d13610d7"},
     {file = "pyarrow-17.0.0-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:af5ff82a04b2171415f1410cff7ebb79861afc5dae50be73ce06d6e870615204"},
     {file = "pyarrow-17.0.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:edca18eaca89cd6382dfbcff3dd2d87633433043650c07375d095cd3517561d8"},
+    {file = "pyarrow-17.0.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7c7916bff914ac5d4a8fe25b7a25e432ff921e72f6f2b7547d1e325c1ad9d155"},
+    {file = "pyarrow-17.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f553ca691b9e94b202ff741bdd40f6ccb70cdd5fbf65c187af132f1317de6145"},
+    {file = "pyarrow-17.0.0-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:0cdb0e627c86c373205a2f94a510ac4376fdc523f8bb36beab2e7f204416163c"},
+    {file = "pyarrow-17.0.0-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:d7d192305d9d8bc9082d10f361fc70a73590a4c65cf31c3e6926cd72b76bc35c"},
+    {file = "pyarrow-17.0.0-cp38-cp38-win_amd64.whl", hash = "sha256:02dae06ce212d8b3244dd3e7d12d9c4d3046945a5933d28026598e9dbbda1fca"},
+    {file = "pyarrow-17.0.0-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:13d7a460b412f31e4c0efa1148e1d29bdf18ad1411eb6757d38f8fbdcc8645fb"},
+    {file = "pyarrow-17.0.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:9b564a51fbccfab5a04a80453e5ac6c9954a9c5ef2890d1bcf63741909c3f8df"},
+    {file = "pyarrow-17.0.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:32503827abbc5aadedfa235f5ece8c4f8f8b0a3cf01066bc8d29de7539532687"},
+    {file = "pyarrow-17.0.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a155acc7f154b9ffcc85497509bcd0d43efb80d6f733b0dc3bb14e281f131c8b"},
+    {file = "pyarrow-17.0.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:dec8d129254d0188a49f8a1fc99e0560dc1b85f60af729f47de4046015f9b0a5"},
+    {file = "pyarrow-17.0.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:a48ddf5c3c6a6c505904545c25a4ae13646ae1f8ba703c4df4a1bfe4f4006bda"},
+    {file = "pyarrow-17.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:42bf93249a083aca230ba7e2786c5f673507fa97bbd9725a1e2754715151a204"},
+    {file = "pyarrow-17.0.0.tar.gz", hash = "sha256:4beca9521ed2c0921c1023e68d097d0299b62c362639ea315572a58f3f50fd28"},
 ]
 
 [package.dependencies]
@@ -4809,6 +4822,24 @@ docs = ["myst-parser", "pydata-sphinx-theme", "sphinx"]
 test = ["argcomplete (>=3.0.3)", "mypy (>=1.7.0)", "pre-commit", "pytest (>=7.0,<8.2)", "pytest-mock", "pytest-mypy-testing"]
 
 [[package]]
+name = "typeguard"
+version = "4.3.0"
+description = "Run-time type checker for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "typeguard-4.3.0-py3-none-any.whl", hash = "sha256:4d24c5b39a117f8a895b9da7a9b3114f04eb63bade45a4492de49b175b6f7dfa"},
+    {file = "typeguard-4.3.0.tar.gz", hash = "sha256:92ee6a0aec9135181eae6067ebd617fd9de8d75d714fb548728a4933b1dea651"},
+]
+
+[package.dependencies]
+typing-extensions = ">=4.10.0"
+
+[package.extras]
+doc = ["Sphinx (>=7)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme (>=1.3.0)"]
+test = ["coverage[toml] (>=7)", "mypy (>=1.2.0)", "pytest (>=7)"]
+
+[[package]]
 name = "typer"
 version = "0.12.3"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
@@ -5058,26 +5089,24 @@ viz = ["matplotlib", "nc-time-axis", "seaborn"]
 
 [[package]]
 name = "xradio"
-version = "0.0.28"
+version = "0.0.31"
 description = "Xarray Radio Astronomy Data IO"
 optional = false
 python-versions = "<3.12,>=3.9"
 files = [
-    {file = "xradio-0.0.28-py3-none-any.whl", hash = "sha256:2acb3fc030cf764ed3e87d62c5ca1197075f33029a6b61941b05c55eabd46fe7"},
-    {file = "xradio-0.0.28.tar.gz", hash = "sha256:743033b30e0d161a9a0acdc00c4ef6d0e9946d5d2f848380d1ab981a165dd323"},
+    {file = "xradio-0.0.31-py3-none-any.whl", hash = "sha256:53807f1429de813702f974e5326279832ac944f568caf3cae2f35d5b8e8b636d"},
+    {file = "xradio-0.0.31.tar.gz", hash = "sha256:e30de0dc296ae772d6ae5e67f74d9ce57de209f116c1479b9c3eeb1834a77c2a"},
 ]
 
 [package.dependencies]
 astropy = "*"
-bokeh = "*"
 casadata = "*"
 dask = "*"
 distributed = "*"
 graphviper = "*"
-jupyterlab = "*"
 matplotlib = "*"
 numba = ">=0.57.0"
-numpy = "*"
+numpy = "<2.0.0"
 prettytable = "*"
 pyarrow = "*"
 pytest = "*"
@@ -5087,11 +5116,12 @@ python-casacore = {version = ">=3.5.2", markers = "sys_platform != \"darwin\""}
 s3fs = "*"
 scipy = "*"
 tqdm = "*"
+typeguard = "*"
 xarray = "*"
 zarr = "*"
 
 [package.extras]
-docs = ["ipykernel", "ipympl", "ipython", "jupyter-client", "nbsphinx", "pandoc", "recommonmark", "scanpydoc", "sphinx-autoapi", "sphinx-autosummary-accessors", "sphinx-rtd-theme", "twine"]
+docs = ["ipykernel", "ipympl", "ipython", "jupyter-client", "jupyterlab", "nbsphinx", "pandoc", "recommonmark", "scanpydoc", "sphinx-autoapi", "sphinx-autosummary-accessors", "sphinx-rtd-theme", "twine"]
 
 [[package]]
 name = "xyzservices"
@@ -5257,4 +5287,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "abd20581cfdbfc6df9b07956fe1f228cf9bd8b363493143c250150c074f106ec"
+content-hash = "5114e446e7fdca14b7142f674379566db8b4961829b4aa7830a918512a5077f9"

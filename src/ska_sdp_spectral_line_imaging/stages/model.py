@@ -99,6 +99,7 @@ def cont_sub(upstream_output):
     """
 
     ps = upstream_output["ps"]
-    model = upstream_output["model_vis"]
 
-    return {"ps": ps.assign({"VISIBILITY": ps.VISIBILITY - model})}
+    return {
+        "ps": ps.assign({"VISIBILITY": ps.VISIBILITY - ps.VISIBILITY_MODEL})
+    }

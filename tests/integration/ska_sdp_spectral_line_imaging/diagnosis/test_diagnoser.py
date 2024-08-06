@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from tests.integration.ska_sdp_spectral_line_imaging.test_pipeline import (
 def prepare_test_sandbox(tmp_path):
     untar(f"{RESOURCE_DIR}/diagnosis-input.tgz", tmp_path)
     untar(f"{RESOURCE_DIR}/tMS.ps.tgz", tmp_path)
+    shutil.copy(f"{RESOURCE_DIR}/test.config.yml", tmp_path)
     os.chdir(tmp_path)
     yield tmp_path
 

@@ -57,14 +57,14 @@ def export_model(upstream_output, psout_name, _output_dir_):
     -------
         upstream_output
     """
-    model_vis = upstream_output["model_vis"]
+    ps = upstream_output["ps"]
     output_path = os.path.abspath(os.path.join(_output_dir_, psout_name))
-    model_vis.to_zarr(store=output_path)
+    ps.VISIBILITY_MODEL.to_zarr(store=output_path)
     return upstream_output
 
 
 @ConfigurableStage(
-    "export_zarr",
+    "export_image",
     Configuration(
         image_name=ConfigParam(str, "output_image.zarr"),
     ),
@@ -86,8 +86,8 @@ def export_image(upstream_output, image_name, _output_dir_):
     -------
         upstream_output
     """
-    cubes = upstream_output["cubes"]
+    cube = upstream_output["image_cube"]
     output_path = os.path.join(_output_dir_, image_name)
 
-    cubes.to_zarr(store=output_path)
+    cube.to_zarr(store=output_path)
     return upstream_output

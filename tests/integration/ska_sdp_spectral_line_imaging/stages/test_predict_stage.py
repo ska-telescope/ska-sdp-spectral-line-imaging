@@ -15,7 +15,7 @@ def test_should_run_predict_stage(result_msv4):
         {"ps": result_msv4, "model_image": model}, epsilon=1e-4, cell_size=15.0
     )
 
-    assert stage_result["model_vis"].shape == (8, 1, 8, 21)
+    assert stage_result["ps"].VISIBILITY_MODEL.shape == (8, 1, 8, 21)
 
 
 def test_should_run_dask_distributed(result_msv4):
@@ -36,4 +36,4 @@ def test_should_run_dask_distributed(result_msv4):
         cell_size=15.0,
     )
 
-    assert stage_result["model_vis"].shape == (8, 1, 8, 21)
+    assert stage_result["ps"].VISIBILITY_MODEL.shape == (8, 1, 8, 21)

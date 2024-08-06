@@ -30,7 +30,7 @@ def prepare_test_data(tmp_path):
     untar(f"{RESOURCE_DIR}/tMS.ps.tgz", tmp_path)
     for stoke in "IQUV":
         shutil.copy(f"{RESOURCE_DIR}/tMS-{stoke}-image.fits", tmp_path)
-    shutil.copy(f"{RESOURCE_DIR}/config.yaml", tmp_path)
+    shutil.copy(f"{RESOURCE_DIR}/test.config.yml", tmp_path)
     os.chdir(tmp_path)
 
     yield tmp_path
@@ -45,7 +45,7 @@ def test_pipeline(prepare_test_data):
     os.makedirs(output_dir)
 
     spectral_line_imaging_pipeline.run(
-        MSIN, output_dir, config_path="./config.yaml"
+        MSIN, output_dir, config_path="./test.config.yml"
     )
 
     assert len(output_dir) > 0

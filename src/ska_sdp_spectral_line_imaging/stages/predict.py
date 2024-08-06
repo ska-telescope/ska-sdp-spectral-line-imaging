@@ -57,16 +57,19 @@ def predict_stage(upstream_output, epsilon, cell_size):
 
     cell_size_radian = (cell_size * au.arcsecond).to(au.rad).value
 
-    return {
-        "ps": ps,
-        "model_vis": xr.map_blocks(
-            predict,
-            ps,
-            template=output_xr,
-            kwargs=dict(
-                model_image=model_image,
-                epsilon=epsilon,
-                cell_size=cell_size_radian,
-            ),
-        ),
-    }
+    ps = ps.assign(
+        {
+            "VISIBILITY_MODEL": xr.map_blocks(
+                predict,
+                ps,
+                template=output_xr,
+                kwargs=dict(
+                    model_image=model_image,
+                    epsilon=epsilon,
+                    cell_size=cell_size_radian,
+                ),
+            )
+        }
+    )
+
+    return {"ps": ps}
