@@ -16,7 +16,7 @@ git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-spectral-line-imaging.git
 poetry install --only main
 ```
 
-Above command will also install  **piper**. To know more about the usage please refer to this [page](./pipeline_framework.rst).
+Above command will also install  **piper**. To know more about the usage please refer to this [page](./piper.rst).
 
 ### Install the config and run the pipeline
 

@@ -8,7 +8,7 @@ These are all the packages, functions and scripts that form part of the project.
    :caption: Contents
 
    INSTALLATION
-   pipeline_framework
+   piper
    launching_dask
    ska_sdp_spectral_line_imaging/modules
    CHANGELOG
