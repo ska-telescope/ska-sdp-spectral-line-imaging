@@ -4,6 +4,7 @@ from mock import MagicMock, Mock, mock
 from ska_sdp_piper.piper.utils.io_utils import (
     create_output_dir,
     read_dataset,
+    read_yml,
     timestamp,
     write_yml,
 )
@@ -76,6 +77,21 @@ def test_should_write_yaml_to_the_given_path(open_mock, yaml_mock):
 
     open_mock.assert_called_once_with(output_path, "w")
     yaml_mock.dump.assert_called_once_with(config, "opened_obj")
+
+
+@mock.patch("ska_sdp_piper.piper.utils.io_utils.yaml")
+@mock.patch("builtins.open")
+def test_should_read_yaml_file(open_mock, yaml_mock):
+    input_path = "./input.yml"
+
+    enter_mock = MagicMock()
+    enter_mock.__enter__.return_value = "opened_obj"
+    open_mock.return_value = enter_mock
+
+    read_yml(input_path)
+
+    open_mock.assert_called_once_with(input_path, "r")
+    yaml_mock.safe_load.assert_called_once_with("opened_obj")
 
 
 def test_should_generate_timestamp():

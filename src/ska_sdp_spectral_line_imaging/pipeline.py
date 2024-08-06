@@ -17,6 +17,7 @@
 # --config spectral_line_imaging_pipeline.yaml
 #
 # pylint: disable=no-member,import-error
+import logging
 from pathlib import Path
 
 from ska_sdp_piper.piper.pipeline import Pipeline
@@ -29,6 +30,9 @@ from .stages.imaging import imaging_stage
 from .stages.model import cont_sub, read_model, vis_stokes_conversion
 from .stages.predict import predict_stage
 from .stages.select_vis import select_field
+
+logger = logging.getLogger()
+
 
 spectral_line_imaging_pipeline = Pipeline(
     "spectral_line_imaging_pipeline",
@@ -56,5 +60,8 @@ def pipeline_diagnostic(cli_args):
     output_dir = "./diagnosis" if cli_args.output is None else cli_args.output
 
     timestamped_output_dir = Path(create_output_dir(output_dir, "pipeline-qa"))
+    logger.info("==========================================")
+    logger.info("=============== DIAGNOSE =================")
+    logger.info("==========================================")
     diagnoser = SpectralLineDiagnoser(input_path, timestamped_output_dir)
     diagnoser.diagnose()

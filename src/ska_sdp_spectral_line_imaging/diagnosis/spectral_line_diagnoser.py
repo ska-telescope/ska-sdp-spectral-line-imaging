@@ -60,16 +60,11 @@ class SpectralLineDiagnoser:
         Main method that runs the diagnosis steps.
         """
 
-        logger.info("==========================================")
-        logger.info("=============== DIAGNOSE =================")
-        logger.info("==========================================")
-
         logger.info("Creating plots...")
-        uv_distance = self.__get_uv_dist()
+        self.__plot_uv_distance()
 
         self.__plot_visibility(
             self.input_ps.VISIBILITY,
-            uv_distance,
             "Input Visibilities",
             "input-vis",
         )
@@ -78,7 +73,6 @@ class SpectralLineDiagnoser:
         if self.residual is not None:
             self.__plot_visibility(
                 self.residual.VISIBILITY,
-                uv_distance,
                 "Residual Visibilities",
                 "residual-vis",
             )
@@ -96,18 +90,16 @@ class SpectralLineDiagnoser:
         )
         amp_vs_channel_plot(
             self.model,
-            title="Amp Vs Channel on Model Visibilities",
-            path=self.output_dir / "amp-vs-channel-model-vis.png",
+            title="All stokes Amp Vs Channel on Model Visibilities",
+            path=self.output_dir / "all-stokes-amp-vs-channel-model-vis.png",
             all_stokes=True,
         )
 
     def __plot_visibility(
         self,
         visibility,
-        uv_distance,
         plot_title_postfix,
         file_postfix,
-        channel=1,
     ):
         logger.info(f"Creating {plot_title_postfix}")
 
@@ -120,18 +112,30 @@ class SpectralLineDiagnoser:
 
         amp_vs_channel_plot(
             visibility,
-            title="Amp Vs Channel on Residual Visibilities",
-            path=self.output_dir / "amp-vs-channel-residual-vis.png",
+            title=f"All stokes Amp Vs Channel on {plot_title_postfix}",
+            path=self.output_dir
+            / f"all-stokes-amp-vs-channel-{file_postfix}.png",
             all_stokes=True,
         )
 
+    def __plot_uv_distance(self, channel=1):
+        uv_distance = self.__get_uv_dist()
         amp_vs_uv_distance_plot(
             uv_distance,
-            visibility,
+            self.input_ps.VISIBILITY,
             channel=channel,  # TODO: should pass channel from outside?
-            title="Amp vs UV Distance after Continnum Subtraction",
-            path=self.output_dir / "amp-vs-uv-distance-after-cont-sub.png",
+            title="Amp vs UV Distance before Continnum Subtraction",
+            path=self.output_dir / "amp-vs-uv-distance-before-cont-sub.png",
         )
+
+        if self.residual is not None:
+            amp_vs_uv_distance_plot(
+                uv_distance,
+                self.residual.VISIBILITY,
+                channel=channel,  # TODO: should pass channel from outside?
+                title="Amp vs UV Distance after Continnum Subtraction",
+                path=self.output_dir / "amp-vs-uv-distance-after-cont-sub.png",
+            )
 
     def __read_input_data(self):
         """
@@ -158,7 +162,7 @@ class SpectralLineDiagnoser:
             logger.info("Reading model data")
             ps_out = pipeline_parameter["export_model"]["psout_name"]
             self.model = xr.open_zarr(self.input_path / ps_out)[
-                "__xarray_dataarray_variable__"
+                "VISIBILITY_MODEL"
             ]
         else:
             logger.info("Export model stage not run.")

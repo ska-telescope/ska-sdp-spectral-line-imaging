@@ -29,15 +29,17 @@ def test_should_create_plots(prepare_test_sandbox):
     diagnoser = SpectralLineDiagnoser(Path(temp_path), timestamped_output_dir)
     diagnoser.diagnose()
 
-    plots = [
-        "amp-vs-channel-input-vis.png",
-        "amp-vs-channel-model-vis.png",
-        "amp-vs-channel-residual-vis.png",
+    expected_plots = [
+        "all-stokes-amp-vs-channel-input-vis.png",
+        "all-stokes-amp-vs-channel-model-vis.png",
+        "all-stokes-amp-vs-channel-residual-vis.png",
         "amp-vs-uv-distance-after-cont-sub.png",
         "amp-vs-uv-distance-before-cont-sub.png",
         "single-stoke-i-amp-vs-channel-input-vis.png",
         "single-stoke-i-amp-vs-channel-model-vis.png",
         "single-stoke-i-amp-vs-channel-residual-vis.png",
     ]
-
-    assert plots.sort() == os.listdir(timestamped_output_dir).sort()
+    created_plots = os.listdir(timestamped_output_dir)
+    created_plots.sort()
+    expected_plots.sort()
+    assert expected_plots == created_plots
