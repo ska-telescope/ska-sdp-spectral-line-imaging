@@ -6,14 +6,14 @@
 #
 # Installing the pipeline
 #
-# sdp-pipeline install pipeline.py
+# poetry install
 #
 # Running the pipline
 #
-# spectral_line_imaging_pipeline --input <input.ms>
+# spectral-line-imaging-pipeline --input <input.ms>
 #
 # With config overridden
-# spectral_line_imaging_pipeline --input <input.ms> \
+# spectral-line-imaging-pipeline --input <input.ms> \
 # --config spectral_line_imaging_pipeline.yaml
 #
 # pylint: disable=no-member,import-error
@@ -56,6 +56,14 @@ spectral_line_imaging_pipeline = Pipeline(
     help="Diagnose the pipeline",
 )
 def pipeline_diagnostic(cli_args):
+    """
+    Pipeline diagnostics sub_command
+
+    Parameters
+    ----------
+        cli_args: argparse.Namespace
+            CLI arguments
+    """
     input_path = Path(cli_args.input)
     output_dir = "./diagnosis" if cli_args.output is None else cli_args.output
 
