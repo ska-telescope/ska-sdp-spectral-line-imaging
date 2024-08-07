@@ -1,3 +1,6 @@
+import builtins
+import logging
+
 from .cli_command_parser import CLICommandParser
 
 
@@ -15,6 +18,7 @@ class Command:
         Instantiate command object
         """
         self._cli_command_parser = CLICommandParser()
+        self.logger = logging.getLogger()
 
     def sub_command(self, name, cli_args, help=None):
         """
@@ -56,4 +60,9 @@ class Command:
         Run the pipeline as a CLI command
         """
         cli_args = self._cli_command_parser.parse_args()
-        cli_args.sub_command(cli_args)
+
+        try:
+            cli_args.sub_command(cli_args)
+        except builtins.BaseException as ex:
+            self.logger.exception(ex)
+            raise ex
