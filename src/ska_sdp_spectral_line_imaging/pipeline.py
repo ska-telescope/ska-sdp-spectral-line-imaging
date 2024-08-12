@@ -71,5 +71,9 @@ def pipeline_diagnostic(cli_args):
     logger.info("==========================================")
     logger.info("=============== DIAGNOSE =================")
     logger.info("==========================================")
-    diagnoser = SpectralLineDiagnoser(input_path, timestamped_output_dir)
+    logger.info(f"Current run output path : {timestamped_output_dir}")
+
+    diagnoser = SpectralLineDiagnoser(
+        input_path, timestamped_output_dir, cli_args.channel
+    )
     diagnoser.diagnose()

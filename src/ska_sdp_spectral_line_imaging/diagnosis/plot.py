@@ -1,5 +1,9 @@
+import warnings
+
 import numpy as np
 from matplotlib import pyplot as plt
+
+warnings.filterwarnings("ignore")
 
 
 def create_plot(*data, title, xlabel, ylabel, label, path):
@@ -14,12 +18,8 @@ def create_plot(*data, title, xlabel, ylabel, label, path):
     plt.close()
 
 
-def amp_vs_channel_plot(visibilities, title, path, all_stokes=False):
+def amp_vs_channel_plot(visibilities, title, path, label=None):
     vis_avg = visibilities.mean(dim=["time", "baseline_id"])
-    label = ["I", "Q", "U", "V"]
-    if not all_stokes:
-        vis_avg = vis_avg.T[0]
-        label = ["I"]
 
     create_plot(
         np.abs(vis_avg),
@@ -27,19 +27,5 @@ def amp_vs_channel_plot(visibilities, title, path, all_stokes=False):
         xlabel="channel",
         ylabel="amp",
         label=label,
-        path=path,
-    )
-
-
-def amp_vs_uv_distance_plot(uv_distance, visibilities, channel, title, path):
-    vis = visibilities.mean(dim="time").T[0][channel]
-
-    create_plot(
-        np.abs(uv_distance),
-        np.abs(vis),
-        title=title,
-        xlabel="channel",
-        ylabel="amp",
-        label="I",
         path=path,
     )

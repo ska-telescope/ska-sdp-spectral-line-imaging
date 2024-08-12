@@ -1,12 +1,13 @@
 import logging
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 from ska_sdp_piper.piper.utils import read_dataset, read_yml
 from ska_sdp_spectral_line_imaging.diagnosis.plot import (
     amp_vs_channel_plot,
-    amp_vs_uv_distance_plot,
+    create_plot,
 )
 from ska_sdp_spectral_line_imaging.stages.select_vis import select_field
 
@@ -36,12 +37,13 @@ class SpectralLineDiagnoser:
           Model used in continuum subtraction stage in pipeline.
     """
 
-    def __init__(self, input_path, output_path):
+    def __init__(self, input_path, output_path, channel):
         """
         Initialise the Diagnoser object
         """
         self.input_path = input_path
         self.output_dir = output_path
+        self.channel = channel
 
         cli_yaml_path = next(input_path.glob("*.cli.yml"))
         self.pipeline_args = read_yml(cli_yaml_path)
@@ -61,80 +63,127 @@ class SpectralLineDiagnoser:
         """
 
         logger.info("Creating plots...")
+
         self.__plot_uv_distance()
 
+        input_pol = self.input_ps.polarization.values
+        residual_pol = self.pipeline_config["parameters"]["read_model"]["pols"]
+
         self.__plot_visibility(
-            self.input_ps.VISIBILITY,
+            xr.where(self.input_ps.FLAG, None, self.input_ps.VISIBILITY),
             "Input Visibilities",
             "input-vis",
+            input_pol,
         )
-        if self.model is not None:
-            self.__plot_model()
+
         if self.residual is not None:
+
+            flagged_residual_vis = xr.where(
+                self.input_ps.FLAG, None, self.residual.VISIBILITY
+            )
             self.__plot_visibility(
-                self.residual.VISIBILITY,
+                flagged_residual_vis,
                 "Residual Visibilities",
                 "residual-vis",
+                residual_pol,
             )
+
+            self.__export_residual_csv(flagged_residual_vis)
 
         logger.info("=========== DIAGNOSE COMPLETED ===========")
 
-    def __plot_model(self):
-        logger.info("Creating model plots")
-
-        amp_vs_channel_plot(
-            self.model,
-            title="Single Stoke I Amp Vs Channel on Model Visibilities",
-            path=self.output_dir
-            / "single-stoke-i-amp-vs-channel-model-vis.png",
+    def __export_residual_csv(self, residual_vis):
+        averaged_vis = (
+            residual_vis.sel(polarization=self.input_ps.polarization[0])
+            .mean(dim=["time", "baseline_id"])
+            .values
         )
-        amp_vs_channel_plot(
-            self.model,
-            title="All stokes Amp Vs Channel on Model Visibilities",
-            path=self.output_dir / "all-stokes-amp-vs-channel-model-vis.png",
-            all_stokes=True,
-        )
+        pd.DataFrame(
+            {
+                "channel": self.residual.frequency.values,
+                "visibility": averaged_vis,
+                "absolute visibility": np.abs(averaged_vis),
+            }
+        ).to_csv(self.output_dir / "residual.csv", index=False)
 
     def __plot_visibility(
         self,
-        visibility,
+        visibilities,
         plot_title_postfix,
         file_postfix,
+        label,
     ):
         logger.info(f"Creating {plot_title_postfix}")
+        poloarizations = self.input_ps.polarization
 
         amp_vs_channel_plot(
-            visibility,
-            title=f"Single Stoke I Amp Vs Channel on {plot_title_postfix}",
+            visibilities.sel(polarization=poloarizations[0]),
+            title=f"Amp Vs Channel on {plot_title_postfix}",
             path=self.output_dir
-            / f"single-stoke-i-amp-vs-channel-{file_postfix}.png",
+            / f"single-pol-i-amp-vs-channel-{file_postfix}.png",
+            label=label[0:1],
         )
 
         amp_vs_channel_plot(
-            visibility,
-            title=f"All stokes Amp Vs Channel on {plot_title_postfix}",
+            visibilities,
+            title=f"Amp Vs Channel on {plot_title_postfix}",
             path=self.output_dir
-            / f"all-stokes-amp-vs-channel-{file_postfix}.png",
-            all_stokes=True,
+            / f"all-pol-amp-vs-channel-{file_postfix}.png",
+            label=label,
         )
 
-    def __plot_uv_distance(self, channel=1):
+    def __plot_uv_distance(self):
         uv_distance = self.__get_uv_dist()
-        amp_vs_uv_distance_plot(
-            uv_distance,
-            self.input_ps.VISIBILITY,
-            channel=channel,  # TODO: should pass channel from outside?
+        polarizations = self.input_ps.polarization
+
+        input_vis = (
+            xr.where(self.input_ps.FLAG, None, self.input_ps.VISIBILITY)
+            .sel(polarization=polarizations[0])
+            .isel(frequency=self.channel)
+        )
+
+        create_plot(
+            np.abs(uv_distance),
+            np.abs(input_vis),
+            xlabel="uv distance",
+            ylabel="amp",
             title="Amp vs UV Distance before Continnum Subtraction",
             path=self.output_dir / "amp-vs-uv-distance-before-cont-sub.png",
+            label=None,
         )
 
         if self.residual is not None:
-            amp_vs_uv_distance_plot(
-                uv_distance,
-                self.residual.VISIBILITY,
-                channel=channel,  # TODO: should pass channel from outside?
+            residual_vis = (
+                xr.where(self.input_ps.FLAG, None, self.residual.VISIBILITY)
+                .sel(polarization=polarizations[0])
+                .isel(frequency=self.channel)
+            )
+
+            create_plot(
+                np.abs(uv_distance),
+                np.abs(residual_vis),
+                xlabel="uv distance",
+                ylabel="amp",
                 title="Amp vs UV Distance after Continnum Subtraction",
                 path=self.output_dir / "amp-vs-uv-distance-after-cont-sub.png",
+                label=None,
+            )
+
+        if self.model is not None:
+            model_vis = (
+                xr.where(self.input_ps.FLAG, None, self.model)
+                .sel(polarization=polarizations[0])
+                .isel(frequency=self.channel)
+            )
+
+            create_plot(
+                np.abs(uv_distance),
+                np.abs(model_vis),
+                xlabel="uv distance",
+                ylabel="amp",
+                title="Amp vs UV Distance model",
+                path=self.output_dir / "amp-vs-uv-distance-model.png",
+                label=None,
             )
 
     def __read_input_data(self):
@@ -178,5 +227,5 @@ class SpectralLineDiagnoser:
         vec_cal_uv_distance = np.vectorize(
             lambda uvw: (uvw[0] ** 2 + uvw[1] ** 2) ** 0.5, signature="(n)->()"
         )
-        uv_distance = vec_cal_uv_distance(self.input_ps.UVW.mean(dim="time"))
+        uv_distance = vec_cal_uv_distance(self.input_ps.UVW)
         return uv_distance

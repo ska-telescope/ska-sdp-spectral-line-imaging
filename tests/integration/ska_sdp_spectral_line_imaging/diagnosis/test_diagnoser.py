@@ -26,20 +26,22 @@ def test_should_create_plots(prepare_test_sandbox):
     timestamped_output_dir = Path("diagnosis-out/timestamped/")
     os.makedirs(timestamped_output_dir)
 
-    diagnoser = SpectralLineDiagnoser(Path(temp_path), timestamped_output_dir)
+    diagnoser = SpectralLineDiagnoser(
+        Path(temp_path), timestamped_output_dir, channel=1
+    )
     diagnoser.diagnose()
 
-    expected_plots = [
-        "all-stokes-amp-vs-channel-input-vis.png",
-        "all-stokes-amp-vs-channel-model-vis.png",
-        "all-stokes-amp-vs-channel-residual-vis.png",
+    expected_artifacts = [
+        "all-pol-amp-vs-channel-input-vis.png",
+        "all-pol-amp-vs-channel-residual-vis.png",
         "amp-vs-uv-distance-after-cont-sub.png",
         "amp-vs-uv-distance-before-cont-sub.png",
-        "single-stoke-i-amp-vs-channel-input-vis.png",
-        "single-stoke-i-amp-vs-channel-model-vis.png",
-        "single-stoke-i-amp-vs-channel-residual-vis.png",
+        "amp-vs-uv-distance-model.png",
+        "single-pol-i-amp-vs-channel-input-vis.png",
+        "single-pol-i-amp-vs-channel-residual-vis.png",
+        "residual.csv",
     ]
-    created_plots = os.listdir(timestamped_output_dir)
-    created_plots.sort()
-    expected_plots.sort()
-    assert expected_plots == created_plots
+    created_artifacts = os.listdir(timestamped_output_dir)
+    created_artifacts.sort()
+    expected_artifacts.sort()
+    assert expected_artifacts == created_artifacts

@@ -9,6 +9,13 @@ DIAGNOSTIC_CLI_ARGS = [
         help="Path of the pipeline run output.",
     ),
     CLIArgument(
+        "--channel",
+        dest="channel",
+        type=int,
+        required=True,
+        help="A line free channel to plot uv distnaces.",
+    ),
+    CLIArgument(
         "--output",
         dest="output",
         type=str,
