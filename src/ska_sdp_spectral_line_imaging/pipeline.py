@@ -18,10 +18,15 @@
 #
 # pylint: disable=no-member,import-error
 import logging
+import shutil
 from pathlib import Path
 
+from dask_jobqueue import SLURMCluster
+
+from ska_sdp_piper.piper.command import CLIArgument
+from ska_sdp_piper.piper.constants import DEFAULT_CLI_ARGS
 from ska_sdp_piper.piper.pipeline import Pipeline
-from ska_sdp_piper.piper.utils import create_output_dir
+from ska_sdp_piper.piper.utils import create_output_dir, read_yml, timestamp
 
 from .diagnosis import SpectralLineDiagnoser
 from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
@@ -77,3 +82,52 @@ def pipeline_diagnostic(cli_args):
         input_path, timestamped_output_dir, cli_args.channel
     )
     diagnoser.diagnose()
+
+
+@spectral_line_imaging_pipeline.sub_command(
+    "run-on-cluster",
+    DEFAULT_CLI_ARGS
+    + [
+        CLIArgument(
+            "--cluster-config",
+            dest="cluster_config",
+            type=str,
+            required=True,
+            help="Path to cluster config file",
+        )
+    ],
+    help="Create a SLURM job",
+)
+def run_on_cluster(cli_args):
+    slip = spectral_line_imaging_pipeline
+    cluster_config = read_yml(cli_args.cluster_config)
+
+    cluster = SLURMCluster(**cluster_config)
+
+    cli_args.dask_scheduler = cluster
+
+    stages = [] if cli_args.stages is None else cli_args.stages[0]
+
+    output_path = (
+        "./output" if cli_args.output_path is None else cli_args.output_path
+    )
+    output_dir = create_output_dir(output_path, slip.name)
+
+    cli_output_file = f"{output_dir}/{slip.name}" f"_{timestamp()}.cli.yml"
+
+    cluster_config_file = (
+        f"{output_dir}/{slip.name}_{timestamp()}" ".cluster-config.yml"
+    )
+
+    slip._cli_command_parser.write_yml(cli_output_file)
+    shutil.copyfile(cli_args.cluster_config, cluster_config_file)
+
+    slip.run(
+        cli_args.input,
+        stages=stages,
+        dask_scheduler=cluster,
+        config_path=cli_args.config_path,
+        verbose=(cli_args.verbose != 0),
+        output_dir=output_dir,
+        cli_args=slip._cli_command_parser.cli_args_dict,
+    )
