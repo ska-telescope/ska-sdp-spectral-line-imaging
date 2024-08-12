@@ -104,8 +104,6 @@ def run_on_cluster(cli_args):
 
     cluster = SLURMCluster(**cluster_config)
 
-    cli_args.dask_scheduler = cluster
-
     stages = [] if cli_args.stages is None else cli_args.stages[0]
 
     output_path = (
@@ -113,10 +111,10 @@ def run_on_cluster(cli_args):
     )
     output_dir = create_output_dir(output_path, slip.name)
 
-    cli_output_file = f"{output_dir}/{slip.name}" f"_{timestamp()}.cli.yml"
+    cli_output_file = f"{output_dir}/{slip.name}_{timestamp()}.cli.yml"
 
     cluster_config_file = (
-        f"{output_dir}/{slip.name}_{timestamp()}" ".cluster-config.yml"
+        f"{output_dir}/{slip.name}_{timestamp()}.cluster-config.yml"
     )
 
     slip._cli_command_parser.write_yml(cli_output_file)
