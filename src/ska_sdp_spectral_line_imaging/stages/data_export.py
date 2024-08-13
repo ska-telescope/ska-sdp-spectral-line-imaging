@@ -59,6 +59,7 @@ def export_model(upstream_output, psout_name, _output_dir_):
     """
     ps = upstream_output["ps"]
     output_path = os.path.abspath(os.path.join(_output_dir_, psout_name))
+    ps.VISIBILITY_MODEL.attrs.clear()
     ps.VISIBILITY_MODEL.to_zarr(store=output_path)
     return upstream_output
 
