@@ -34,7 +34,7 @@ def setup(app):
 project = "SKA SDP Spectral Line Imaging Pipeline"
 copyright = "2024, DHRUVA Team"
 author = "DHRUVA Team"
-release = "0.0.1"
+release = "0.1.0"
 
 
 # -- General configuration ------------------------------------------------

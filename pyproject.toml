@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ska-sdp-spectral-line-imaging"
-version = "0.0.1"
+version = "0.1.0"
 description = "SKA SDP Spectral Line Imaging Pipeline"
 authors = ["DHRUVA <DHRUVA-team@SKA>"]
 license = "BSD-3-Clause"
