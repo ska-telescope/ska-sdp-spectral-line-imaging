@@ -4,7 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from ska_sdp_spectral_line_imaging.diagnosis import SpectralLineDiagnoser
+from ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser import (
+    SpectralLineDiagnoser,
+)
 from tests.integration.ska_sdp_spectral_line_imaging.test_pipeline import (
     RESOURCE_DIR,
     untar,

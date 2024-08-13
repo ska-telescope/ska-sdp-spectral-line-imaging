@@ -74,7 +74,8 @@ autodoc_mock_imports = [
     "ska_sdp_datamodels",
     "ska_ser_logging",
     "astropy",
-    "matplotlib"
+    "matplotlib",
+    "pandas"
 ]
 
 

@@ -23,8 +23,8 @@ from pathlib import Path
 from ska_sdp_piper.piper.pipeline import Pipeline
 from ska_sdp_piper.piper.utils import create_output_dir
 
-from .diagnosis import SpectralLineDiagnoser
 from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
+from .diagnosis.spectral_line_diagnoser import SpectralLineDiagnoser
 from .stages.data_export import export_image, export_model, export_residual
 from .stages.imaging import imaging_stage
 from .stages.model import cont_sub, read_model, vis_stokes_conversion

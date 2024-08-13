@@ -5,11 +5,9 @@ import pandas as pd
 import xarray as xr
 
 from ska_sdp_piper.piper.utils import read_dataset, read_yml
-from ska_sdp_spectral_line_imaging.diagnosis.plot import (
-    amp_vs_channel_plot,
-    create_plot,
-)
-from ska_sdp_spectral_line_imaging.stages.select_vis import select_field
+
+from ..stages.select_vis import select_field
+from .plot import amp_vs_channel_plot, create_plot
 
 logger = logging.getLogger()
 
