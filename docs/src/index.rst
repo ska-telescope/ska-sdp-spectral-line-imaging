@@ -4,6 +4,12 @@ This repository consists of the spectral line imaging pipeline.
 These are all the packages, functions and scripts that form part of the project.
 
 .. toctree::
+    :maxdepth: 1
+    :caption: Releases
+
+    CHANGELOG
+
+.. toctree::
    :maxdepth: 2
    :caption: Contents
 
@@ -11,4 +17,3 @@ These are all the packages, functions and scripts that form part of the project.
    piper
    launching_dask
    ska_sdp_spectral_line_imaging/modules
-   CHANGELOG

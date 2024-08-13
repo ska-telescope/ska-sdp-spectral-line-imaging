@@ -1,5 +1,5 @@
-# CHANGELOG
+# Changelog
 
 ## v0.0.1
 
-Create initial repository with dependency
+Initial release of SKA SDP Spectral Line Imaging Pipeline
