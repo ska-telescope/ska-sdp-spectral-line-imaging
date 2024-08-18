@@ -1,62 +1,6 @@
-# Installation
+# Developer Guide
 
-## Pipeline Setup (non-dev)
-
-Currently, only way to install the pipeline is using [poetry](https://python-poetry.org/). First, clone the repo with:
-
-```bash
-git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-spectral-line-imaging.git
-```
-
-### Install the framework
-
-`poetry` is used for dependency management and installation. Following command will install spectral line imaging pipeline.
-
-```bash
-poetry install --only main
-```
-
-Above command will also install  **piper**. To know more about the usage please refer to this [page](./piper.rst).
-
-### Install the config and run the pipeline
-
-Install the default config YAML of the pipeline to a specific directory using the `install-config` subcommand.
-
-```bash
-spectral-line-imaging-pipeline install-config --config-install-path path/to/dir
-```
-
-Run the spectral line pipeline using the `run` subcommand.
-
-```bash
-spectral-line-imaging-pipeline run --input /path/to/processing_set \
-    --config /path/to/config \
-    --output /path/to/output \
-    --dask-scheduler /url/of/the/dask/scheduler \
-    --stages STAGES
-```
-
-Run `spectral-line-imaging-pipeline --help` for more information.
-
-### Docker based setup
-
-The pipeline can also be deployed as a container.
-
-#### How to build
-<u>Option-1</u>
-Using the make file: `make oci-build-all`
-
-<u>Option-2</u>
-Locally build the image: `docker build -t <image-name> .`
-
-#### How to use
-1. Pull image
-1. Run image with volume mounts to enable read write to storage.
-    - `docker run [-v local:container] <image-name> [run | install-config] ...`
-
-## Developer Setup
-
-### Cloning the repository
+## Cloning the repository
 
 Please make sure to clone the submodules with:
 
@@ -70,7 +14,7 @@ Also make sure to update submodules after every pull with:
 git submodule update --init
 ```
 
-### Setting up conda and installing pipeline
+## Setting up conda and installing pipeline
 
 It is recommended to use a virtual environment for the developer setup. The `conda` based approach, sets up an environment with packages defined in `environment.yaml`. This makes sure that the python and poetry
 versions used with this repo does not conflict with any previous poetry installed on your machine.
@@ -85,7 +29,7 @@ conda activate spec_line
 scripts/install-pipeline.sh
 ```
 
-### Git hooks
+## Git hooks
 
 To enable `git-hooks` for the current repository please link the `.githooks` folder to the `core.hooksPath` variable of the `git` configuration.
 
@@ -104,7 +48,7 @@ A `prepare-commit-msg` hook runs after `pre-commit` hook, which helps to prepare
 
 > Note: Due to interactiveness of these githooks, it is recommended to run all git commands using a terminal. GUI based git applications might throw errors.
 
-### GPG signing the commits
+## GPG signing the commits
 
 First, set the git username and email for the your local repository.
 
@@ -121,7 +65,7 @@ Now, enable signing for commits by setting the `commit.gpgsign` config variable 
 git config commit.gpgsign true
 ```
 
-#### Signing with SSH key
+### Signing with SSH key
 
 To use the ssh-key to sign the commits, set `gpg.format` to ssh, and update `user.signingkey` to the path of the ssh public key.
 
@@ -139,7 +83,7 @@ echo "$EMAIL $(cat $PUB_KEY)" >> ~/.config/git/allowed-signers
 git config --global gpg.ssh.allowedSignersFile ~/.config/git/allowed-signers
 ```
 
-#### Signing with GPG key
+### Signing with GPG key
 
 To use gpg keys to sign the commits
 
@@ -148,7 +92,7 @@ git config gpg.format openpgp
 git config user.signingkey "GPG KEY" #set GPG key value
 ```
 
-### Useful commands for developers
+## Useful commands for developers
 
 This repo contains [SKA ci-cd makefile](https://gitlab.com/ska-telescope/sdi/ska-cicd-makefile) repository as a submodule, which provides us with some standard commands out of the box.
 
@@ -171,6 +115,9 @@ make -C docs/ create-doc
 
 # Building html documentation
 make docs-build html
+
+# Building oci images
+make oci-build-all
 ```
 
 ## Making a release
