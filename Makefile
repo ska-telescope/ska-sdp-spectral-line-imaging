@@ -4,3 +4,5 @@
 -include .make/python.mk
 
 -include .make/oci.mk
+
+MAKE_GIT_HOOKS_DIR := .githooks/

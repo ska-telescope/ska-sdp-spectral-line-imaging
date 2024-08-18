@@ -31,10 +31,10 @@ scripts/install-pipeline.sh
 
 ## Git hooks
 
-To enable `git-hooks` for the current repository please link the `.githooks` folder to the `core.hooksPath` variable of the `git` configuration.
+To enable `git-hooks` for the current repository, run
 
 ```bash
-git config --local core.hooksPath .githooks/
+make dev-git-hooks
 ```
 
 The `pre-commit` hook is defined for the main branch and is present in the `.githooks` folder. The current `pre-commit` hook runs the following
@@ -45,6 +45,8 @@ The `pre-commit` hook is defined for the main branch and is present in the `.git
 1. Build documentation
 
 A `prepare-commit-msg` hook runs after `pre-commit` hook, which helps to prepare a commit message as per agreed format.
+
+A `pre-push` hook checks the gitlab-ci pipeline status, and warns user if the status is not "success".
 
 > Note: Due to interactiveness of these githooks, it is recommended to run all git commands using a terminal. GUI based git applications might throw errors.
 
