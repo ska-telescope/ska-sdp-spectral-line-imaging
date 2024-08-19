@@ -82,7 +82,9 @@ class DaskScheduler(DefaultScheduler):
         The client created for scheduling and executing the dask tasks
     """
 
-    def __init__(self, dask_scheduler, output_dir, with_report=0, **kwargs):
+    def __init__(
+        self, dask_scheduler, output_dir, with_report=False, **kwargs
+    ):
         """
         Instantiate a distributed dask scheduler
         Parameters
@@ -101,7 +103,7 @@ class DaskScheduler(DefaultScheduler):
         self.client.forward_logging()
 
         self.report_file = f"{output_dir}/dask_report.html"
-        self.with_report = with_report != 0
+        self.with_report = with_report
 
     def schedule(self, stages, verbose=False):
         """

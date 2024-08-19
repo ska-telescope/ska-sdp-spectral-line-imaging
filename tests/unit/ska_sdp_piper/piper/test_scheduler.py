@@ -173,7 +173,7 @@ def test_should_execute_scheduled_stages(compute_mock):
 def test_should_dask_execute_scheduled_stages_with_report(
     compute_mock, client_mock, performance_report_mock
 ):
-    scheduler = DaskScheduler("url", "output_dir", with_report=1)
+    scheduler = DaskScheduler("url", "output_dir", with_report=True)
     scheduler.delayed_outputs = ["OUT_1", "OUT_2", "OUT_3"]
     scheduler.execute()
 
@@ -189,7 +189,7 @@ def test_should_dask_execute_scheduled_stages_with_report(
 def test_should_dask_execute_scheduled_stages_without_report(
     compute_mock, client_mock, performance_report_mock
 ):
-    scheduler = DaskScheduler("url", "output_dir", with_report=0)
+    scheduler = DaskScheduler("url", "output_dir")
     scheduler.delayed_outputs = ["OUT_1", "OUT_2", "OUT_3"]
     scheduler.execute()
 

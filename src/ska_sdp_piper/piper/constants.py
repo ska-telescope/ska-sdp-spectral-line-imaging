@@ -1,3 +1,5 @@
+import argparse
+
 from .command.cli_command_parser import CLIArgument
 
 CONFIG_CLI_ARGS = [
@@ -52,12 +54,12 @@ DEFAULT_CLI_ARGS = [
     CLIArgument(
         "--with-report",
         dest="with_report",
-        action="count",
-        default=0,
+        action=argparse.BooleanOptionalAction,
+        default=False,
         help=(
-            "For distributed dask process optionaly capture performance "
-            "report. If specified, the diagnostic report woulr be captured "
-            "in report.html file saved into the run output folder."
+            "Optionaly capture performance report for dask distributed tasks."
+            " If the flag is true, the diagnostic report would be saved "
+            "as dask_report.html file in the run output folder."
         ),
     ),
     CLIArgument(
