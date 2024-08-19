@@ -158,7 +158,6 @@ class Pipeline(Command, metaclass=NamedInstance):
         self.run(
             cli_args.input,
             stages=stages,
-            dask_scheduler=cli_args.dask_scheduler,
             config_path=cli_args.config_path,
             verbose=(cli_args.verbose != 0),
             output_dir=output_dir,
@@ -182,7 +181,6 @@ class Pipeline(Command, metaclass=NamedInstance):
         infile_path,
         output_dir,
         stages=None,
-        dask_scheduler=None,
         config_path=None,
         verbose=False,
         cli_args=None,
@@ -198,8 +196,6 @@ class Pipeline(Command, metaclass=NamedInstance):
              Path to output directory
           stages: list[str]
              Names of the stages to be executed
-          dask_scheduler: str
-             Url of the dask scheduler
           config_path: str
              Configuration yaml file path
           verbose: bool
@@ -208,6 +204,7 @@ class Pipeline(Command, metaclass=NamedInstance):
              CLI arguments
         """
         stages = [] if stages is None else stages
+        cli_args = {} if cli_args is None else cli_args
 
         LogUtil.configure(self.name, output_dir=output_dir, verbose=verbose)
 
@@ -215,13 +212,12 @@ class Pipeline(Command, metaclass=NamedInstance):
         self.logger.info(f"Executing {self.name} pipeline with metadata:")
         self.logger.info(f"Infile Path: {infile_path}")
         self.logger.info(f"Stages: {stages}")
-        self.logger.info(f"Dask scheduler: {dask_scheduler}")
         self.logger.info(f"Configuration Path: {config_path}")
         self.logger.info(f"Current run output path : {output_dir}")
 
         vis = read_dataset(infile_path)
 
-        scheduler = SchedulerFactory.get_scheduler(dask_scheduler)
+        scheduler = SchedulerFactory.get_scheduler(output_dir, **cli_args)
         if config_path:
             self.config_manager.update_config(config_path)
 

@@ -50,6 +50,17 @@ DEFAULT_CLI_ARGS = [
         ),
     ),
     CLIArgument(
+        "--with-report",
+        dest="with_report",
+        action="count",
+        default=0,
+        help=(
+            "For distributed dask process optionaly capture performance "
+            "report. If specified, the diagnostic report woulr be captured "
+            "in report.html file saved into the run output folder."
+        ),
+    ),
+    CLIArgument(
         "--verbose",
         "-v",
         dest="verbose",

@@ -187,7 +187,6 @@ def test_should_run_the_pipeline_from_cli_command(
     pipeline_run_mock.assert_called_once_with(
         "infile_path",
         stages=["a", "b"],
-        dask_scheduler="10.131",
         config_path="config_path",
         verbose=False,
         output_dir="./output/timestamp",
@@ -220,7 +219,6 @@ def test_should_run_the_pipeline_from_cli_command_with_default_output(
     pipeline_run_mock.assert_called_once_with(
         args.input,
         stages=[],
-        dask_scheduler=args.dask_scheduler,
         config_path=args.config_path,
         verbose=True,
         output_dir="./output/timestamp",
@@ -260,8 +258,7 @@ def test_should_run_the_pipeline(
         "infile_path",
         "output_dir",
         [],
-        dask_scheduler="10.191",
-        cli_args={"input": "path"},
+        cli_args={"input": "path", "dask_scheduler": "10.191"},
     )
 
     config_manager_mock.assert_called_once_with(
@@ -270,7 +267,9 @@ def test_should_run_the_pipeline(
         global_parameters={"a": 10},
     )
     read_mock.assert_called_once_with("infile_path")
-    scheduler_factory.get_scheduler.assert_called_once_with("10.191")
+    scheduler_factory.get_scheduler.assert_called_once_with(
+        "output_dir", input="path", dask_scheduler="10.191"
+    )
     default_scheduler.schedule.assert_called_once_with(
         mock_stages,
         verbose=False,
@@ -283,7 +282,7 @@ def test_should_run_the_pipeline(
         config_manager_mock.parameters,
         _input_data_="dataset",
         _output_dir_="output_dir",
-        _cli_args_={"input": "path"},
+        _cli_args_={"input": "path", "dask_scheduler": "10.191"},
         _global_parameters_={"a": 10},
     )
 
@@ -340,10 +339,12 @@ def test_should_instantiate_dask_client(scheduler_factory):
     pipeline = Pipeline("test_pipeline", stages=[stage1])
     dask_scheduler_address = "some_ip"
     pipeline.run(
-        "infile_path", "output_dir", dask_scheduler=dask_scheduler_address
+        "infile_path",
+        "output_dir",
+        cli_args={"dask_scheduler": dask_scheduler_address},
     )
     scheduler_factory.get_scheduler.assert_called_once_with(
-        dask_scheduler_address
+        "output_dir", dask_scheduler=dask_scheduler_address
     )
 
 
@@ -359,9 +360,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
     pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
 
     pipeline.run(
-        "infile_path",
-        "/path/to/output",
-        config_path="/path/to/config",
+        "infile_path", "/path/to/output", config_path="/path/to/config"
     )
 
     config_manager_mock.update_config.assert_called_once_with(
