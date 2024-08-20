@@ -93,8 +93,8 @@ class DaskScheduler(DefaultScheduler):
             URL of the dask scheduler
           output_dir: str
             Path to output directory
-          with_report: int
-            Execute and generate report if with_report == 1
+          with_report: bool
+            Execute and generate report if with_report == False
           **kwargs: dict
             Additional keyword arguments
         """
