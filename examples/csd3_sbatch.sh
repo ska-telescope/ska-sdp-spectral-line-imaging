@@ -14,16 +14,14 @@ numnodes=$SLURM_JOB_NUM_NODES
 numtasks=$SLURM_NTASKS
 mpi_tasks_per_node=$(echo "$SLURM_TASKS_PER_NODE" | sed -e  's/^\([0-9][0-9]*\).*$/\1/')
 
-. /etc/profile.d/modules.sh                # Leave this line (enables the module command)
-module purge                               # Removes all modules still loaded
-module load rhel8/default-icl              # REQUIRED - loads the basic environment
-module load openmpi-4.0.5-gcc-8.4.1-l7ihwk3
+SETUP=". /etc/profile.d/modules.sh ;  \
+    module purge;                     \
+    module load rhel8/default-icl;    \
+    module load openmpi-4.0.5-gcc-8.4.1-l7ihwk3; \
+    module load miniconda3/4.5.1; \
+    source activate spec_line"
 
-## Load the environment module and conda environment
-
-module load miniconda3/4.5.1 
-
-source activate spec_line
+eval $SETUP
 
 ## Custom Env vars
 
@@ -54,15 +52,8 @@ export OMP_NUM_THREADS=1
 #! Number of MPI tasks to be started by the application per node and in total (do not change):
 np=$[${numnodes}*${mpi_tasks_per_node}]
 
-#! The following variables define a sensible pinning strategy for Intel MPI tasks -
-#! this should be suitable for both pure MPI and hybrid MPI/OpenMP jobs:
 export I_MPI_PIN_DOMAIN=omp:compact # Domains are $OMP_NUM_THREADS cores in size
 export I_MPI_PIN_ORDER=scatter # Adjacent domains have minimal sharing of caches/sockets
-#! Notes:
-#! 1. These variables influence Intel MPI only.
-#! 2. Domains are non-overlapping sets of cores which map 1-1 to MPI tasks.
-#! 3. I_MPI_PIN_PROCESSOR_LIST is ignored if I_MPI_PIN_DOMAIN is set.
-#! 4. If MPI tasks perform better when sharing caches/sockets, try I_MPI_PIN_ORDER=compact.
 
 NODES=($(scontrol show hostnames))
 HEAD_NODE="$(hostname)"
@@ -81,9 +72,9 @@ echo "Started dask scheduler on $DASK_SCHEDULER_ADDR"
 
 for node in "${NODES[@]}"; do
     logfile=$DASK_LOGS_DIR/worker_$node.log
-    ssh $node dask worker $DASK_SCHEDULER_ADDR --name $node \
+    ssh $node "$SETUP ; dask worker $DASK_SCHEDULER_ADDR --name $node \
         --nworkers $DASK_WORKERS_PER_NODE --resources subprocess_slots=1 \
-        >$logfile 2>&1 &
+        >$logfile" 2>&1 &
     echo "Started dask worker on $node"
 done
 
