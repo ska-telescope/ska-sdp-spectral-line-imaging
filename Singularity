@@ -6,7 +6,7 @@ Stage: build
 mkdir -p /build
 
 %files
-../ /build
+./ /build
 
 %post
 cd /build && \
@@ -19,14 +19,11 @@ cp  /build/requirements.txt /install
 
 cd /install
 pip install --no-cache-dir --no-compile -r requirements.txt ska_sdp_spectral_line_imaging*.whl
-
-cd /
-
 rm -rf /build
-rm -rf /install
 
 mkdir -p /app
 cd /app
+rm -rf /install
 
 %runscript
 cd /app
