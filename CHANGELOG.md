@@ -12,3 +12,10 @@ Initial release of SKA SDP Spectral Line Imaging Pipeline
 - CSD3 example script
 - Move linting dependencies to dev section in pyproject
 - Streamline dev environment setup
+
+## v0.3.0
+
+- Add Singularity Image
+- Update Documentation
+- Update default pipeline configuration
+

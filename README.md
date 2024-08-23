@@ -39,7 +39,7 @@ The pipeline can also be deployed inside a oci container.
 1. Run following command to pull the oci image.
 
     ```bash
-    docker pull harbor.skao.int/production/ska-sdp-spectral-line-imaging:0.2.0
+    docker pull harbor.skao.int/production/ska-sdp-spectral-line-imaging:0.3.0
     ```
 
     The entrypoint of above image is set to the executable `spectral-line-imaging-pipeline`.
