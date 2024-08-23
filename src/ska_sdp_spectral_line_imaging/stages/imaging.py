@@ -12,9 +12,11 @@ from ..stubs.imaging import cube_imaging
 @ConfigurableStage(
     "imaging",
     configuration=Configuration(
-        epsilon=ConfigParam(float, 1e-4),
         cell_size=ConfigParam(
-            float, 15.0, description="Cell size in arcsecond"
+            float, 60.0, description="Cell size in arcsecond"
+        ),
+        epsilon=ConfigParam(
+            float, 1e-4, description="Expected floating point precision"
         ),
         nx=ConfigParam(int, 256, description="Image size x"),
         ny=ConfigParam(int, 256, description="Image size y"),

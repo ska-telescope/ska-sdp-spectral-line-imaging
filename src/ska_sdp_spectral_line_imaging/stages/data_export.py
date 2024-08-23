@@ -7,7 +7,7 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 @ConfigurableStage(
     "export_residual",
     Configuration(
-        psout_name=ConfigParam(str, "residual.zarr"),
+        psout_name=ConfigParam(str, "vis_residual.zarr"),
     ),
 )
 def export_residual(upstream_output, psout_name, _output_dir_):
@@ -37,7 +37,7 @@ def export_residual(upstream_output, psout_name, _output_dir_):
 @ConfigurableStage(
     "export_model",
     Configuration(
-        psout_name=ConfigParam(str, "model.zarr"),
+        psout_name=ConfigParam(str, "vis_model.zarr"),
     ),
 )
 def export_model(upstream_output, psout_name, _output_dir_):
@@ -67,7 +67,7 @@ def export_model(upstream_output, psout_name, _output_dir_):
 @ConfigurableStage(
     "export_image",
     Configuration(
-        image_name=ConfigParam(str, "output_image.zarr"),
+        image_name=ConfigParam(str, "spectral_cube.zarr"),
     ),
 )
 def export_image(upstream_output, image_name, _output_dir_):

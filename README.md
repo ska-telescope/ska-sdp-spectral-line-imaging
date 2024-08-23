@@ -62,8 +62,12 @@ spectral-line-imaging-pipeline install-config --config-install-path path/to/dir
 
 Run the spectral line pipeline using the `run` subcommand.
 
+To run on the accompanying [SKA LOW](#ska-low-data) simulated data, run:
+
 ```bash
-spectral-line-imaging-pipeline run --input /path/to/processing_set
+spectral-line-imaging-pipeline run \
+--input ska_low_simulated_data.ps \
+--config ska_low_config.yml
 ```
 
 For all the options, run `spectral-line-imaging-pipeline run --help`.

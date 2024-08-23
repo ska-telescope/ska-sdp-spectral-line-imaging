@@ -11,10 +11,10 @@ from ..stubs.predict import predict
 @ConfigurableStage(
     "predict_stage",
     configuration=Configuration(
-        epsilon=ConfigParam(float, 1e-4),
         cell_size=ConfigParam(
-            float, 15.0, description="Cell size in arcsecond"
+            float, 60.0, description="Cell size in arcsecond"
         ),
+        epsilon=ConfigParam(float, 1e-4),
     ),
 )
 def predict_stage(upstream_output, epsilon, cell_size):
