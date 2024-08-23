@@ -78,8 +78,7 @@ singularity-build:
   image: $SINGULARITY_BUILDER_IMAGE
 
   script:
-    - cd ./singularity
-    - singularity build ${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.sif Singularity
+    - singularity build ${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.sif singularity/Singularity
 
 #publish the singularity image containing the pipeline binary dependencies to the CAR
 singularity-build-publish-car:
@@ -93,6 +92,5 @@ singularity-build-publish-car:
   image: $SINGULARITY_BUILDER_IMAGE
 
   script:
-    - cd ./singularity
-    - singularity build ${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.sif Singularity
+    - singularity build ${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.sif singularity/Singularity
     - curl -u ${CAR_RAW_USERNAME}:${CAR_RAW_PASSWORD} --upload-file ./${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.sif ${CAR_RAW_REPOSITORY_URL}/${CI_PROJECT_NAME}/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.sif
