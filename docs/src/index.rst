@@ -8,13 +8,13 @@ SKA SDP Spectral Line Imaging Pipeline
     CHANGELOG
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents
+    :maxdepth: 2
+    :caption: Contents
 
-   DEVELOPMENT
-   piper
-   launching_dask
-   ska_sdp_spectral_line_imaging/modules
+    Getting Started <README>
+    DEVELOPMENT
+    piper
+    launching_dask
+    ska_sdp_spectral_line_imaging/modules
 
-.. include:: README.md
-   :parser: myst_parser.sphinx_
+

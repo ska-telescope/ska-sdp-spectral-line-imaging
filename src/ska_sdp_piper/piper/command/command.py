@@ -7,9 +7,10 @@ from .cli_command_parser import CLICommandParser
 class Command:
     """
     Base class for creating CLI commands
+
     Attributes
     ----------
-        _cli_command_parser: CLICommandParser
+        _cli_command_parser: cli_command_parser.CLICommandParser
             CLI command parser
     """
 
@@ -23,14 +24,16 @@ class Command:
     def sub_command(self, name, cli_args, help=None):
         """
         Decorator for adding sub commands
+
         Parameters
         ----------
             name: str
                 Name of the sub command
-            cli_args: list[CLIArgument]
+            cli_args: list[cli_command_parser.CLIArgument]
                 List of CLI arguments for the sub command
             help: str
                 Help text
+
         Returns
         -------
             function
@@ -39,10 +42,12 @@ class Command:
         def wrapper(func):
             """
             Wrapper function
+
             Parameters
             ----------
                 func: function
                     Callback function
+
             Returns
             -------
                 function

@@ -19,12 +19,13 @@ class CLIArgument:
     def __init__(self, *args, **kwargs):
         """
         Instantiates CLIArgument
+
         Parameters
         ----------
-          *args:
-            Arguments
-          **kwargs:
-            Key value arguments
+            *args:
+                Arguments
+            **kwargs:
+                Key value arguments
         """
         self.args = args
         self.kwargs = kwargs
@@ -51,6 +52,7 @@ class CLICommandParser:
     def parse_args(self):
         """
         Parse CLI args.
+
         Returns
         -------
             argparser.Namespace
@@ -68,6 +70,9 @@ class CLICommandParser:
     ):
         """
         Creates sub parser.
+
+        Parameters
+        ----------
             subparser_name: str
                 Name of the sub parser.
             sub_command: func

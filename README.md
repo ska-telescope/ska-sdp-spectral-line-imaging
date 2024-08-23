@@ -1,7 +1,5 @@
 # SKA SDP Spectral Line Imaging Pipeline
 
-## Description
-
 A spectral line imaging pipeline developed by Team DHRUVA for SKAO.
 
 The repository is [hosted on gitlab](https://gitlab.com/ska-telescope/sdp/science-pipeline-workflows/ska-sdp-spectral-line-imaging).
@@ -15,7 +13,7 @@ This package contains 2 sub-packages:
 
 If you wish to contribute to this repository, please refer [Developer Guide](./DEVELOPMENT.md)
 
-## Getting Started
+## Using the pipeline
 
 ### Installation with pip
 
@@ -24,6 +22,8 @@ The latest release is available in SKA's pip reposoitory. You can install this p
 ```bash
 pip install --extra-index-url https://artefact.skao.int/repository/pypi-internal/simple ska-sdp-spectral-line-imaging
 ```
+
+> 📝 For xradio to work on macOS, it is required to pre-install `python-casacore` using `pip install python-casacore`.
 
 Once installed, the spectral line imaging pipeline is available as a python package, and as `spectral-line-imaging-pipeline` cli command.
 
@@ -39,7 +39,7 @@ The pipeline can also be deployed inside a oci container.
 1. Run following command to pull the oci image.
 
     ```bash
-    docker pull harbor.skao.int/production/ska-sdp-spectral-line-imaging:0.1.0
+    docker pull harbor.skao.int/production/ska-sdp-spectral-line-imaging:0.2.0
     ```
 
     The entrypoint of above image is set to the executable `spectral-line-imaging-pipeline`.
@@ -50,7 +50,7 @@ The pipeline can also be deployed inside a oci container.
     docker run [-v local:container] <image-name> [run | install-config] ...
     ```
 
-### Install the config and run the pipeline
+### Install the config
 
 Install the default config YAML of the pipeline to a specific directory using the `install-config` subcommand.
 
@@ -58,12 +58,12 @@ Install the default config YAML of the pipeline to a specific directory using th
 spectral-line-imaging-pipeline install-config --config-install-path path/to/dir
 ```
 
+### Run the pipeline
+
 Run the spectral line pipeline using the `run` subcommand.
 
 ```bash
-spectral-line-imaging-pipeline run --input /path/to/processing_set \
-    --config /path/to/config \
-    --output /path/to/output \
-    --dask-scheduler /url/of/the/dask/scheduler \
-    --stages STAGES
+spectral-line-imaging-pipeline run --input /path/to/processing_set
 ```
+
+For all the options, run `spectral-line-imaging-pipeline run --help`.

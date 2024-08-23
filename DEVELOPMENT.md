@@ -148,14 +148,18 @@ Following steps are simplified, and specific for this repository:
 
     If it doesn't happen automtically, please make mannual changes.
 
+    The `make show-version` command should now show the next version. Use this version for all the later changes.
+
 1. Apart from above files, we need to update `__version__` variable in following modules:
 
     - `src/ska_sdp_piper/__init__.py`
     - `src/ska_sdp_spectral_line_imaging/__init__.py`
 
-1. Add a new `H2 (##)` heading in [CHANGELOG.md](./CHANGELOG.md), and add release notes under that heading.
+1. Add a new `H2 (##)` heading in [CHANGELOG.md](./CHANGELOG.md), and add release notes under that heading. The heading should be the new version number.
 
-1. The `make show-version` command should now show the next version. Using this version, create a new issue on the [Release Management](https://jira.skatelescope.org/projects/REL/summary) Jira Project with a summary of your release, and set it to "IN PROGRESS".
+1. Update the `docker pull` command example under the "Containerized usage" under "Getting Started" section in [README](./README.md). The docker tag needs to be updated to new version.
+
+1. Using the new version, create a new issue on the [Release Management](https://jira.skatelescope.org/projects/REL/summary) Jira Project with a summary of your release, and set it to "IN PROGRESS".
 
 1. Stage all the changes, create a new commit with:
 
