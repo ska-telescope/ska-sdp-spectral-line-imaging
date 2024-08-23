@@ -64,7 +64,22 @@ docker-build-singularity-builder:
         docker push $SINGULARITY_BUILDER_IMAGE
       fi
 
-# Build and publish the singularity image containing the pipeline binary dependencies to the CAR
+# Build Singularity container
+singularity-build:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^./'
+  needs:
+    - versioning
+    - docker-build-singularity-builder
+
+  image: $SINGULARITY_BUILDER_IMAGE
+
+  script:
+    - cd ./singularity
+    - singularity build ${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.sif Singularity
+
+#publish the singularity image containing the pipeline binary dependencies to the CAR
 singularity-build-publish-car:
   stage: publish
   rules:
