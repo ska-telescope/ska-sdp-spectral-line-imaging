@@ -1,0 +1,75 @@
+import astropy.units as au
+import numpy as np
+import xarray as xr
+
+from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
+from ska_sdp_piper.piper.stage import ConfigurableStage
+
+from ..stubs.predict import predict
+
+
+@ConfigurableStage(
+    "predict_stage",
+    configuration=Configuration(
+        cell_size=ConfigParam(
+            float, 60.0, description="Cell size in arcsecond"
+        ),
+        epsilon=ConfigParam(float, 1e-4),
+    ),
+)
+def predict_stage(upstream_output, epsilon, cell_size):
+    """
+    Perform model prediction
+
+    Parameters
+    ----------
+        upstream_output: dict
+            Output from the upstream stage
+        epsilon: float
+            Epsilon
+        cell_size: float
+            Cell size in arcsecond
+
+    Returns
+    -------
+        dict
+    """
+
+    ps = upstream_output["select_vis"]
+    model_image = upstream_output["read_model"]
+
+    template_core_dims = ["frequency", "polarization", "time", "baseline_id"]
+    template_chunk_sizes = {
+        k: v for k, v in ps.chunksizes.items() if k in template_core_dims
+    }
+    output_xr = xr.DataArray(
+        np.empty(
+            (
+                ps.sizes["frequency"],
+                ps.sizes["polarization"],
+                ps.sizes["time"],
+                ps.sizes["baseline_id"],
+            ),
+            dtype=np.complex64,
+        ),
+        dims=template_core_dims,
+    ).chunk(template_chunk_sizes)
+
+    cell_size_radian = (cell_size * au.arcsecond).to(au.rad).value
+
+    ps = ps.assign(
+        {
+            "VISIBILITY_MODEL": xr.map_blocks(
+                predict,
+                ps,
+                template=output_xr,
+                kwargs=dict(
+                    model_image=model_image,
+                    epsilon=epsilon,
+                    cell_size=cell_size_radian,
+                ),
+            )
+        }
+    )
+
+    return ps

@@ -7,7 +7,6 @@ from .configurations.config_manager import ConfigManager
 from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
 from .named_instance import NamedInstance
 from .scheduler import SchedulerFactory
-from .stage import Stages
 from .utils import (
     LogUtil,
     create_output_dir,
@@ -36,6 +35,7 @@ class Pipeline(Command, metaclass=NamedInstance):
         stages=None,
         global_config=None,
         cli_args=None,
+        scheduler=None,
         **kwargs,
     ):
         """
@@ -45,12 +45,14 @@ class Pipeline(Command, metaclass=NamedInstance):
         ----------
           name: str
               Name of the pipeline
-          stages: list[stage.ConfigurableStage]
+          stages: typeof(Stages)
               Stages to be executed
           global_config: Configuration
               Pipeline level configurations
           cli_args: list[CLIArgument]
-              Runtime arguments for the pipeline
+              Runtime arguments for the pipeline,
+          scheduler: Class(DefaultScheduler)
+              Custom scheduler class to be used for pipeline execution
           **kwargs:
               Additional kwargs
         """
@@ -63,7 +65,8 @@ class Pipeline(Command, metaclass=NamedInstance):
         LogUtil.configure(name)
         self.logger = logging.getLogger(self.name)
 
-        self._stages = Stages(stages)
+        self._stages = stages
+        self._scheduler = scheduler
 
         self.config_manager = ConfigManager(
             pipeline=self._pipeline_config(),
@@ -217,7 +220,12 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         vis = read_dataset(infile_path)
 
-        scheduler = SchedulerFactory.get_scheduler(output_dir, **cli_args)
+        scheduler = (
+            SchedulerFactory.get_scheduler(output_dir, **cli_args)
+            if self._scheduler is None
+            else self._scheduler(output_dir, **cli_args)
+        )
+
         if config_path:
             self.config_manager.update_config(config_path)
 

@@ -20,36 +20,45 @@
 import logging
 from pathlib import Path
 
+import networkx as nx
+
 from ska_sdp_piper.piper.pipeline import Pipeline
-from ska_sdp_piper.piper.stage import Stages
 from ska_sdp_piper.piper.utils import create_output_dir
 
 from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
 from .diagnosis.spectral_line_diagnoser import SpectralLineDiagnoser
-from .stages.data_export import export_image, export_model, export_residual
-from .stages.imaging import imaging_stage
-from .stages.model import cont_sub, read_model, vis_stokes_conversion
-from .stages.predict import predict_stage
-from .stages.select_vis import select_field
+from .graph_models.graph_scheduler import GraphScheduler
+from .graph_models.graph_stages import GraphStages
+from .graph_stages.data_export import (
+    export_image,
+    export_model,
+    export_residual,
+)
+from .graph_stages.imaging import imaging_stage
+from .graph_stages.model import cont_sub, read_model
+from .graph_stages.predict import predict_stage
+from .graph_stages.select_vis import select_field
 
 logger = logging.getLogger()
 
 
+graph = nx.DiGraph(
+    [
+        (select_field, predict_stage),
+        (predict_stage, export_model),
+        (predict_stage, cont_sub),
+        (read_model, predict_stage),
+        (cont_sub, export_residual),
+        (cont_sub, imaging_stage),
+        (imaging_stage, export_image),
+    ]
+)
+
+
 spectral_line_imaging_pipeline = Pipeline(
     "spectral_line_imaging_pipeline",
-    stages=Stages(
-        [
-            select_field,
-            vis_stokes_conversion,
-            read_model,
-            predict_stage,
-            export_model,
-            cont_sub,
-            imaging_stage,
-            export_residual,
-            export_image,
-        ]
-    ),
+    stages=GraphStages(graph),
+    scheduler=GraphScheduler,
 )
 
 

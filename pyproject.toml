@@ -32,6 +32,7 @@ xarray = "^2024.6.0"
 ducc0 = "^0.34.0"
 ska-sdp-datamodels = "^0.3.0"
 ska-ser-logging = "^0.4.3"
+networkx = "^3.3"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.6.4"
@@ -65,6 +66,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 piper = "ska_sdp_piper.app.cli:app"
 spectral-line-imaging-pipeline = "ska_sdp_spectral_line_imaging.pipeline:spectral_line_imaging_pipeline"
+spectral-line-imaging-pipeline-graph = "ska_sdp_spectral_line_imaging.graph_pipeline:spectral_line_imaging_pipeline"
 
 [tool.coverage.run]
 branch = true
