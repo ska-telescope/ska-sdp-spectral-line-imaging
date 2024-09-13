@@ -14,7 +14,7 @@ WORKDIR /install
 
 COPY --from=BUILD /build/dist/*.whl /build/requirements.txt ./
 RUN pip install --no-cache-dir --no-compile -r requirements.txt ska_sdp_spectral_line_imaging*.whl && \
-  pip uninstall -y pip jupyterlab && \
+  pip install --no-cache-dir jupyterlab==4.2.5 && \
   apt-get remove -y libsqlite3-0 libgssapi-krb5-2 libk5crypto3 libkrb5support0 && \
   apt-get remove -y --allow-remove-essential --autoremove perl-base && \
   rm -rf /var/lib/apt/lists/*
