@@ -27,7 +27,8 @@ numpy = "^1.26.4"
 flake8 = "^7.0.0"
 jsonschema = "^4.22.0"
 typer = "^0.12.3"
-xradio = {version = "^0.0.31", python = "<3.12,>=3.10"}
+graphviper = {version = "0.0.27", python = "<3.12,>=3.10"}
+xradio = {version = "0.0.31", python = "<3.12,>=3.10"}
 xarray = "^2024.6.0"
 ducc0 = "^0.34.0"
 ska-sdp-datamodels = "^0.3.0"
