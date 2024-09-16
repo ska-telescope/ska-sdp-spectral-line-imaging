@@ -33,6 +33,18 @@ include:
   - project: 'ska-telescope/templates-repository'
     file : 'gitlab-ci/includes/release.gitlab-ci.yml'
 #Build the artifact that caches docker image changes
+
+
+python-lint:
+  image: $SKA_K8S_TOOLS_BUILD_DEPLOY
+  before_script:
+    - poetry self update $CI_POETRY_VERSION
+    - apt-get update && apt-get -y install cmake
+    - poetry config virtualenvs.in-project true
+    - poetry config virtualenvs.create $POETRY_CONFIG_VIRTUALENVS_CREATE
+    - time poetry install
+
+
 versioning:
   stage: versioning
   image: $SKA_K8S_TOOLS_DOCKER_BUILDER_IMAGE
