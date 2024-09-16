@@ -1569,13 +1569,13 @@ test = ["coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock", "mypy", "pre-commit",
 
 [[package]]
 name = "graphviper"
-version = "0.0.28"
+version = "0.0.27"
 description = "Visibility and Image Parallel Execution Reduction for Radio Astronomy"
 optional = false
 python-versions = "<3.13,>=3.9"
 files = [
-    {file = "graphviper-0.0.28-py3-none-any.whl", hash = "sha256:53d98752ec214833d43bae8049fd9d12fbb302ca5bb713f9bffd73273a019e55"},
-    {file = "graphviper-0.0.28.tar.gz", hash = "sha256:f29ff8b58a7329f109997c05b798b3ed781ba7709ff6e723d4506ecd753c200c"},
+    {file = "graphviper-0.0.27-py3-none-any.whl", hash = "sha256:0babd22a353f2a3454fb1ed8ae0e3debc765df054b62bd3333ec7f60c10590a8"},
+    {file = "graphviper-0.0.27.tar.gz", hash = "sha256:58b8e8c000d216cc72e660576e14b0127e040621f5ad9d3fb566bdf30ef56ed2"},
 ]
 
 [package.dependencies]
@@ -1600,7 +1600,6 @@ pytest-html = "*"
 python-casacore = {version = ">=3.6.1", markers = "sys_platform != \"darwin\""}
 rich = "*"
 scipy = "*"
-toolviper = "*"
 tqdm = "*"
 xarray = "*"
 xradio = "*"
@@ -4967,40 +4966,6 @@ files = [
 ]
 
 [[package]]
-name = "toolviper"
-version = "0.0.1"
-description = ""
-optional = false
-python-versions = "<3.13,>=3.9"
-files = [
-    {file = "toolviper-0.0.1-py3-none-any.whl", hash = "sha256:dc84702685baa461bceadbd6bd7c8edaf05b97d81224177ac49f23b0621c0d88"},
-    {file = "toolviper-0.0.1.tar.gz", hash = "sha256:bf16b44b0af670fa86a9ea7fcff875ac72813a6f7d7780fce99dd90beec748c1"},
-]
-
-[package.dependencies]
-bokeh = "*"
-cerberus = "*"
-dask = "*"
-dask-jobqueue = "*"
-distributed = "*"
-graphviz = "*"
-ipywidgets = "*"
-jupyterlab = "*"
-numba = ">=0.57.0"
-numpy = "*"
-psutil = "*"
-pyarrow = "*"
-pytest = "*"
-pytest-cov = "*"
-pytest-html = "*"
-rich = "*"
-tqdm = "*"
-zarr = "*"
-
-[package.extras]
-docs = ["ipykernel", "ipympl", "ipython", "jupyter-client", "nbsphinx", "pandoc", "recommonmark", "scanpydoc", "sphinx-autoapi", "sphinx-autosummary-accessors", "sphinx-rtd-theme", "twine"]
-
-[[package]]
 name = "toolz"
 version = "0.12.1"
 description = "List processing tools and functional utilities"
@@ -5538,4 +5503,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "39ebaea8c1cd21c018c7e0ccb5e6ed59f8065d06b2e7872b285255b06bff46c4"
+content-hash = "32c973f0cf9ef4ee78db7be6c22e09b80c415a2db181cd41c4cd0818a0798c42"
