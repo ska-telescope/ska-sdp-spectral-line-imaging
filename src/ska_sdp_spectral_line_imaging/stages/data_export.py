@@ -1,4 +1,7 @@
 import os
+import traceback
+
+from astropy.io import fits
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
@@ -67,7 +70,7 @@ def export_model(upstream_output, psout_name, _output_dir_):
 @ConfigurableStage(
     "export_image",
     Configuration(
-        image_name=ConfigParam(str, "spectral_cube.zarr"),
+        image_name=ConfigParam(str, "spectral_cube"),
     ),
 )
 def export_image(upstream_output, image_name, _output_dir_):
@@ -87,8 +90,18 @@ def export_image(upstream_output, image_name, _output_dir_):
     -------
         upstream_output
     """
+
     cube = upstream_output["image_cube"]
     output_path = os.path.join(_output_dir_, image_name)
 
-    cube.to_zarr(store=output_path)
+    try:
+        new_hdu = fits.PrimaryHDU(
+            data=cube.pixels, header=cube.image_acc.wcs.to_header()
+        )
+        new_hdu.writeto(f"{output_path}.fits")
+
+    except Exception:
+        traceback.print_exc()
+        cube.to_zarr(store=f"{output_path}.zarr")
+
     return upstream_output

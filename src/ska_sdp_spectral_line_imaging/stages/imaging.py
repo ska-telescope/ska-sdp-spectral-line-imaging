@@ -6,7 +6,7 @@ import xarray as xr
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
-from ..stubs.imaging import cube_imaging
+from ..stubs.imaging import create_image, cube_imaging
 
 
 @ConfigurableStage(
@@ -22,7 +22,7 @@ from ..stubs.imaging import cube_imaging
         ny=ConfigParam(int, 256, description="Image size y"),
     ),
 )
-def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
+def imaging_stage(upstream_output, epsilon, cell_size, nx, ny, _input_data_):
     """
     Creates a dirty image using ducc0.gridder
 
@@ -76,4 +76,6 @@ def imaging_stage(upstream_output, epsilon, cell_size, nx, ny):
         ),
     )
 
-    return {"ps": ps, "image_cube": image_cube}
+    image = create_image(_input_data_.get(0), cell_size, nx, ny, image_cube)
+
+    return {"ps": ps, "image_cube": image}

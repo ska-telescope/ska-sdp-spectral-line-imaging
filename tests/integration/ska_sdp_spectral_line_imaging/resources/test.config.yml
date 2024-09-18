@@ -1,7 +1,7 @@
 global_parameters: {}
 parameters:
   export_image:
-    image_name: test_cube.zarr
+    image_name: test_cube
   export_model:
     psout_name: model.zarr
   export_residual:

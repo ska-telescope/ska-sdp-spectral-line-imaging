@@ -2,6 +2,74 @@
 import ducc0.wgridder as wgridder
 import numpy as np
 import xarray as xr
+from astropy import units as au
+from astropy.coordinates import SkyCoord
+from astropy.wcs import WCS
+from ska_sdp_datamodels.image.image_model import Image
+from ska_sdp_datamodels.science_data_model.polarisation_model import (
+    PolarisationFrame,
+)
+
+polarization_lookup = {
+    "_".join(value): key
+    for key, value in PolarisationFrame.polarisation_frames.items()
+}
+
+
+def get_wcs(ps, cell_size, nx, ny):
+    """
+    Creates WCS from processing set
+
+    Parameters
+    ----------
+        ps: xarray.Dataset
+            Observation
+        cell_size: float
+            Cell size in radian
+        nx: int
+            Image size X
+        ny: int
+            Image size Y
+
+    Returns
+    -------
+        WCS object
+    """
+
+    assert (
+        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units[0] == "rad"
+    ), "Phase field center value is not defined in radian."
+    assert (
+        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units[1] == "rad"
+    ), "Phase field center value is not defined in radian."
+
+    cell_size_degree = (cell_size * au.rad).to(au.deg).value
+    freq_channel_width = ps.frequency.channel_width["data"]
+    ref_freq = ps.frequency.reference_frequency["data"]
+
+    fp_frame = (
+        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
+    )
+    fp_center = ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.values
+
+    coord = SkyCoord(
+        ra=fp_center[0] * au.rad, dec=fp_center[1] * au.rad, frame=fp_frame
+    )
+
+    new_wcs = WCS(naxis=4)
+
+    new_wcs.wcs.crpix = [nx // 2, ny // 2, 1, 1]
+    new_wcs.wcs.cunit = ["deg", "deg", ps.frequency.units[0], ""]
+    new_wcs.wcs.cdelt = np.array(
+        [-cell_size_degree, cell_size_degree, freq_channel_width, 1]
+    )
+    new_wcs.wcs.crval = [coord.ra.deg, coord.dec.deg, ref_freq, 1]
+    new_wcs.wcs.ctype = ["RA---SIN", "DEC--SIN", "FREQ", "STOKES"]
+    new_wcs.wcs.radesys = coord.frame.name.upper()
+    new_wcs.wcs.equinox = coord.frame.equinox.jyear
+    new_wcs.wcs.specsys = ps.frequency.frame
+
+    return new_wcs
 
 
 def image_ducc(
@@ -84,10 +152,10 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
 
     Parameters
     ----------
-        ps: ProcessingSet
-            Processing set
+        ps: xarray.Dataset
+            Observation
         cell_size: float
-            Cell size
+            Cell size in radian
         nx: int
             Image size X
         ny: int
@@ -128,6 +196,39 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
     )
 
     return xr.DataArray(
-        image_vec.data,
-        dims=["frequency", "polarization", "ra", "dec"],
+        image_vec.data, dims=["frequency", "polarization", "ra", "dec"]
+    )
+
+
+def create_image(ps, cell_size, nx, ny, cube_data):
+    """
+    Creates an Image object from a xarray dataset
+
+    Parameters
+    ----------
+        ps: xarray.Dataset
+            Observation
+        cell_size: float
+            Cell size in radian
+        nx: int
+            Image size X
+        ny: int
+            Image size Y
+        cube_data: xarray.DataArray
+            Cube data array
+
+    Returns
+    -------
+        ska_sdp_datamodels.image.image_model.Image
+    """
+    polarization_frame = PolarisationFrame(
+        polarization_lookup["_".join(ps.polarization.data)]
+    )
+
+    wcs = get_wcs(ps, cell_size, nx, ny)
+
+    return Image.constructor(
+        data=cube_data.data,
+        polarisation_frame=polarization_frame,
+        wcs=wcs,
     )
