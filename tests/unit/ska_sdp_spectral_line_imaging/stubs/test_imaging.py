@@ -1,7 +1,7 @@
 from mock import Mock, mock
 
 from ska_sdp_spectral_line_imaging.stubs.imaging import (
-    create_image,
+    chunked_imaging,
     cube_imaging,
     image_ducc,
 )
@@ -28,7 +28,7 @@ def test_should_apply_image_ducc_on_data(xr_mock):
     ny = 256
     epsilon = 0
 
-    cube_image = cube_imaging(ps, cell_size, nx, ny, epsilon)
+    cube_image = chunked_imaging(ps, cell_size, nx, ny, epsilon)
 
     xr_mock.apply_ufunc.assert_called_once_with(
         image_ducc,
@@ -64,6 +64,7 @@ def test_should_apply_image_ducc_on_data(xr_mock):
     assert cube_image == "cube_image"
 
 
+@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.xr")
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.PolarisationFrame",
     return_value="pol_frame",
@@ -72,28 +73,34 @@ def test_should_apply_image_ducc_on_data(xr_mock):
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.get_wcs", return_value="WCS"
 )
-def test_should_create_image_from_image_cube(
-    mock_get_wcs, mock_image, mock_pol_frame
+def test_should_perform_cube_imaging(
+    mock_get_wcs, mock_image, mock_pol_frame, mock_xr
 ):
     image_vec = Mock(name="image_vec")
     image_vec.data = Mock(name="data")
     mock_image.constructor.return_value = "cube_image"
 
     ps = Mock(name="ps")
-    ps.WEIGHT = Mock(name="weights")
-    ps.UVW = Mock(name="uvw")
-    ps.FLAG = Mock(name="flag")
-    ps.frequency = Mock(name="frequency")
-    ps.VISIBILITY = Mock(name="VISIBILITY")
     ps.polarization.data = ["XX", "YY"]
     ps.time.size = 10
+    ps.chunksizes = {"a": 1}
+    ps.sizes = {"frequency": 1, "polarization": 2}
     ps.baseline_id.size = 10
 
-    cell_size = 16
+    mock_xr.map_blocks.return_value = image_vec
+
+    cell_size = 0
     nx = 256
     ny = 256
 
-    cube_image = create_image(ps, cell_size, nx, ny, image_vec)
+    cube_image = cube_imaging(ps, cell_size, nx, ny, 1e-4)
+
+    mock_xr.map_blocks.assert_called_once_with(
+        chunked_imaging,
+        ps,
+        template=mock_xr.DataArray().chunk(),
+        kwargs={"nx": nx, "ny": ny, "epsilon": 1e-4, "cell_size": 0.0},
+    )
 
     mock_pol_frame.assert_called_once_with("linearnp")
     mock_get_wcs.assert_called_once_with(ps, cell_size, nx, ny)

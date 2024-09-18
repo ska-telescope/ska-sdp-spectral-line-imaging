@@ -37,20 +37,18 @@ def get_wcs(ps, cell_size, nx, ny):
     """
 
     assert (
-        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units[0] == "rad"
+        ps.field_and_source_xds.FIELD_PHASE_CENTER.units[0] == "rad"
     ), "Phase field center value is not defined in radian."
     assert (
-        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units[1] == "rad"
+        ps.field_and_source_xds.FIELD_PHASE_CENTER.units[1] == "rad"
     ), "Phase field center value is not defined in radian."
 
     cell_size_degree = (cell_size * au.rad).to(au.deg).value
     freq_channel_width = ps.frequency.channel_width["data"]
     ref_freq = ps.frequency.reference_frequency["data"]
 
-    fp_frame = (
-        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
-    )
-    fp_center = ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.values
+    fp_frame = ps.field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
+    fp_center = ps.field_and_source_xds.FIELD_PHASE_CENTER.values
 
     coord = SkyCoord(
         ra=fp_center[0] * au.rad, dec=fp_center[1] * au.rad, frame=fp_frame
@@ -146,9 +144,9 @@ def image_ducc(
     return xr.DataArray(dirty, dims=["ra", "dec"])
 
 
-def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
+def chunked_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
     """
-    Perform spectral cube imaging
+    Perform imaging on individual chunks
 
     Parameters
     ----------
@@ -200,7 +198,7 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
     )
 
 
-def create_image(ps, cell_size, nx, ny, cube_data):
+def cube_imaging(ps, cell_size, nx, ny, epsilon):
     """
     Creates an Image object from a xarray dataset
 
@@ -209,18 +207,49 @@ def create_image(ps, cell_size, nx, ny, cube_data):
         ps: xarray.Dataset
             Observation
         cell_size: float
-            Cell size in radian
+            Cell size in arcsecond
         nx: int
             Image size X
         ny: int
             Image size Y
-        cube_data: xarray.DataArray
-            Cube data array
+        epsilon: float
+            Epsilon
 
     Returns
     -------
         ska_sdp_datamodels.image.image_model.Image
     """
+
+    template_core_dims = ["frequency", "polarization", "ra", "dec"]
+    template_chunk_sizes = {
+        k: v for k, v in ps.chunksizes.items() if k in template_core_dims
+    }
+    output_xr = xr.DataArray(
+        np.empty(
+            (
+                ps.sizes["frequency"],
+                ps.sizes["polarization"],
+                nx,
+                ny,
+            )
+        ),
+        dims=template_core_dims,
+    ).chunk(template_chunk_sizes)
+
+    cell_size_radian = (cell_size * au.arcsecond).to(au.rad).value
+
+    cube_data = xr.map_blocks(
+        chunked_imaging,
+        ps,
+        template=output_xr,
+        kwargs=dict(
+            nx=nx,
+            ny=ny,
+            epsilon=epsilon,
+            cell_size=cell_size_radian,
+        ),
+    )
+
     polarization_frame = PolarisationFrame(
         polarization_lookup["_".join(ps.polarization.data)]
     )

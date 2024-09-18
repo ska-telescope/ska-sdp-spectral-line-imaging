@@ -31,7 +31,11 @@ def select_field(upstream_output, obs_mode, _input_data_):
     psname = list(ps.keys())[0].split(".ps")[0]
 
     sel = f"{psname}.ps_{obs_mode}"
+    selected_ps = ps[sel].unify_chunks()
+    selected_ps.attrs[
+        "field_and_source_xds"
+    ] = selected_ps.VISIBILITY.field_and_source_xds
 
     # TODO: There is an issue in either xradio/xarray/dask that causes chunk
     # sizes to be different for coordinate variables
-    return {"ps": ps[sel].unify_chunks()}
+    return {"ps": selected_ps}

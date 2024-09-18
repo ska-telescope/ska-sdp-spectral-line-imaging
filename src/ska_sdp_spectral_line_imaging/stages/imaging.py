@@ -1,12 +1,8 @@
 # pylint: disable=no-member,import-error
-import astropy.units as au
-import numpy as np
-import xarray as xr
-
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
-from ..stubs.imaging import create_image, cube_imaging
+from ..stubs.imaging import cube_imaging
 
 
 @ConfigurableStage(
@@ -46,36 +42,6 @@ def imaging_stage(upstream_output, epsilon, cell_size, nx, ny, _input_data_):
 
     ps = upstream_output["ps"]
 
-    template_core_dims = ["frequency", "polarization", "ra", "dec"]
-    template_chunk_sizes = {
-        k: v for k, v in ps.chunksizes.items() if k in template_core_dims
-    }
-    output_xr = xr.DataArray(
-        np.empty(
-            (
-                ps.sizes["frequency"],
-                ps.sizes["polarization"],
-                nx,
-                ny,
-            )
-        ),
-        dims=template_core_dims,
-    ).chunk(template_chunk_sizes)
-
-    cell_size_radian = (cell_size * au.arcsecond).to(au.rad).value
-
-    image_cube = xr.map_blocks(
-        cube_imaging,
-        ps,
-        template=output_xr,
-        kwargs=dict(
-            nx=nx,
-            ny=ny,
-            epsilon=epsilon,
-            cell_size=cell_size_radian,
-        ),
-    )
-
-    image = create_image(_input_data_.get(0), cell_size, nx, ny, image_cube)
+    image = cube_imaging(ps, cell_size, nx, ny, epsilon)
 
     return {"ps": ps, "image_cube": image}
