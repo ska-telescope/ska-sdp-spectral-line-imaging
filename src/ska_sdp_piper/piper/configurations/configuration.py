@@ -77,8 +77,8 @@ class Configuration:
 
         Parameters
         ----------
-           stage_definition: func
-               The function defining the stage
+           stage: stages.Stage
+               A stage of the pipeline
 
         Raises
         ------

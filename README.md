@@ -71,3 +71,36 @@ spectral-line-imaging-pipeline run \
 ```
 
 For all the options, run `spectral-line-imaging-pipeline run --help`.
+
+## Some pre-requisites of the pipeline
+
+### SKA LOW Data
+
+The data `ska_low_simulated_data.ps` and the config file `ska_low_config.yml` are present in SKA's google cloud bucket.
+Please contact members from team DHRUVA to know how to access it.
+
+### Running pipeline on custom MSv2 dataset
+
+In order to run the pipeline on a custom MSv2 dataset, you have to convert it to a xradio processing set.
+
+1. Follow the instructions on [xradio github](https://github.com/casangi/xradio/tree/main?tab=readme-ov-file#installing) to install xradio package.
+
+1. Have a look at the [example jupyter notebooks](https://github.com/casangi/xradio/blob/main/doc/meerkat_conversion.ipynb) present in the xradio github to know how to convert the data from MSv2 to a xradio processing set.
+
+### Regarding the model visibilities
+
+If your MSv2 data already contains `MODEL_DATA` column , you don’t need to run the **read_model** and **predict_stage** stages, which can be turned off using the config file. Continuum subtraction stage will operate on `VISIBILITY` and existing `VISIBILITY_MODEL` variables.
+
+If `MODEL_DATA` column is not present, you can predict the model visibilities by inputting model FITS images to the pipeline.
+The **predict_stage** will generate `VISIBILITY_MODEL` variable by running `ducc0.wgridder.dirty2ms` operation on the FITS images.
+These FITS images are read as part of the **read_model** stage.
+
+Some important points regarding the parameters of the **read_model** stage present in the YAML file:
+
+1. The `pols` param in **read_model** stage must contain a list of all the polarizations for which an image is available.
+
+1. For each polarization, a FITS image with name `<image_name>-<pol>-image.fits` should be present.
+
+    1. The `<image_name>` is another parameter of the **read_model** stage, which is the prefix of your image. For example, if the image is present at path `/home/user/ska_low_256-XX-image.fits`, then parameter should be `image_name : /home/user/ska_low_256`.
+
+    1. The `<pol>` should match with the polarization names present in the pols param. In above case, the parameter.

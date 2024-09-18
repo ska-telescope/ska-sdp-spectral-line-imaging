@@ -17,7 +17,7 @@ class Stage:
             Name of the stage
         stage_definition: function
             Function being decorated
-        params: list(str)
+        params: list[str]
             Argument list of stage definition
         __config: configurations.Configuration
             Configuration for the stage
@@ -75,6 +75,7 @@ class Stage:
         """
         Execute stage definition with upstream output
         and prepared paramenters
+
         Parameters
         ----------
             upstream_output: Any
@@ -105,18 +106,20 @@ class Stage:
 class Stages:
     """
     Pipeline stages
+
     Attributes
     ----------
-        __stages: list(Stage)
+        __stages: list[Stage]
             List of pipeline stages
     """
 
     def __init__(self, stages=None):
         """
         Instantiate Stages object
+
         Parameters
         ----------
-            stages: list(Stage)
+            stages: list[Stage]
                 List of pipeline stages
         """
 
@@ -125,6 +128,7 @@ class Stages:
     def __iter__(self):
         """
         Iterator for stages
+
         Returns
         -------
             Iterable(stage)
@@ -138,7 +142,7 @@ class Stages:
 
         Parameters
         ----------
-            stage_names: list(str)
+            stage_names: list[str]
                 List Stage names
 
         Raises
@@ -166,9 +170,10 @@ class Stages:
     def update_pipeline_parameters(self, stage_names, stage_configs, **kwargs):
         """
         Update pipeline parameters for the stages
+
         Parameters
         ----------
-            stage_name: list(str)
+            stage_name: list[str]
                 List of stages for which pipeline parametere need to be updated
             stage_configs: dict
                 Function returning the stage configuration
@@ -185,12 +190,13 @@ class Stages:
     def get_stages(self, stage_names):
         """
         Returns the executable stages for the pipeline
+
         Parameters
         ----------
-            stage_names: list(str)
+            stage_names: list[str]
                 Stage names of stages to be returned
         Returns
         -------
-            list(Stage)
+            list[Stage]
         """
         return [stage for stage in self.__stages if stage.name in stage_names]

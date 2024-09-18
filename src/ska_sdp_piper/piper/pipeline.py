@@ -167,6 +167,7 @@ class Pipeline(Command, metaclass=NamedInstance):
     def _install_config(self, cli_args):
         """
         Install the config
+
         Parameters
         ----------
             cli_args: argparse.Namespace

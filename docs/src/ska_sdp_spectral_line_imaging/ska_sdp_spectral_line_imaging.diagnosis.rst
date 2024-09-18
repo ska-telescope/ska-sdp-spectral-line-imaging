@@ -13,5 +13,5 @@ Submodules
    :maxdepth: 1
 
    ska_sdp_spectral_line_imaging.diagnosis.cli_arguments
-   ska_sdp_spectral_line_imaging.diagnosis.plot
    ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser
+   ska_sdp_spectral_line_imaging.diagnosis.utils

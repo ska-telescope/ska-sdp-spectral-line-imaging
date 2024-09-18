@@ -1,6 +1,7 @@
 class NamedInstance(type):
     """
     Metaclass to manage named instances
+
     Attributes
     ----------
          _instances: dict
@@ -12,6 +13,7 @@ class NamedInstance(type):
     def __call__(cls, name, _existing_instance_=False, *args, **kwargs):
         """
         Creates mapping between cls, name and instance of cls
+
         Parameters
         ----------
             cls: class
@@ -25,6 +27,7 @@ class NamedInstance(type):
                 Additional args
             **kwargs
                 Additional named args
+
         Returns
         -------
             Instance of cls

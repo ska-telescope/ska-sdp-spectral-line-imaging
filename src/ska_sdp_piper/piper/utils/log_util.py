@@ -10,6 +10,7 @@ class LogUtil:
     def configure(cls, name, output_dir=None, verbose=False):
         """
         Configure the log using standardised config
+
         Parameters
         ----------
             name: str

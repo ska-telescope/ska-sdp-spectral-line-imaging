@@ -13,6 +13,7 @@ class SchedulerFactory:
     def get_scheduler(output_dir, dask_scheduler=None, **kwargs):
         """
         Returns the approriate scheduler based on condition
+
         Parameters
         ----------
           dask_scheduler: str
@@ -21,6 +22,7 @@ class SchedulerFactory:
             Path to output directory
           **kwargs: dict
             Additional keyword arguments
+
         Returns
         -------
            :py:class:`DefaultScheduler`
@@ -35,6 +37,7 @@ class SchedulerFactory:
 class DefaultScheduler:
     """
     Schedules and executes dask wrapped functions on the local machine
+
     Attributes
     ----------
       delayed_outputs: [dask.delayed]
@@ -47,9 +50,10 @@ class DefaultScheduler:
     def schedule(self, stages, verbose=False):
         """
         Schedules the stages as dask delayed objects
+
         Parameters
         ----------
-          stages: list[Stage]
+          stages: list[stages.Stage]
             List of stages to schedule
           verbose: bool
             Log debug statements
@@ -82,6 +86,7 @@ class DefaultScheduler:
 class DaskScheduler(DefaultScheduler):
     """
     A distributed dask based scheduler
+
     Attributes
     ----------
       client: dask.distributed.Client
@@ -93,6 +98,7 @@ class DaskScheduler(DefaultScheduler):
     ):
         """
         Instantiate a distributed dask scheduler
+
         Parameters
         ----------
           dask_scheduler: str
@@ -114,9 +120,10 @@ class DaskScheduler(DefaultScheduler):
     def schedule(self, stages, verbose=False):
         """
         Schedules the stages as dask delayed objects
+
         Parameters
         ----------
-          stages: list[Stage]
+          stages: list[stages.Stage]
             List of stages to schedule
           verbose: bool
             Log debug statements
