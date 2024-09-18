@@ -64,6 +64,12 @@ class DefaultScheduler:
 
             self.delayed_outputs.append(output)
 
+    def append(self, task):
+        self.delayed_outputs.append(task)
+
+    def extend(self, tasks):
+        self.delayed_outputs.extend(tasks)
+
     def execute(self):
         """
         Executes the scheduled stages.

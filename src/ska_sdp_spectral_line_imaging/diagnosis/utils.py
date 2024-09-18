@@ -1,12 +1,15 @@
-import warnings
-
+import dask
+import matplotlib as mpl
 import numpy as np
-from matplotlib import pyplot as plt
+import pandas as pd
 
-warnings.filterwarnings("ignore")
+mpl.use("Agg")
+from matplotlib import pyplot as plt  # noqa: E402
 
 
+@dask.delayed
 def create_plot(*data, title, xlabel, ylabel, label, path):
+    plt.figure()
     plt.plot(*data, ".", label=label)
     plt.title(title)
     plt.xlabel(xlabel)
@@ -18,10 +21,10 @@ def create_plot(*data, title, xlabel, ylabel, label, path):
     plt.close()
 
 
-def amp_vs_channel_plot(visibilities, title, path, label=None):
+def amp_vs_channel_plot(visibilities, title, path, label=""):
     vis_avg = visibilities.mean(dim=["time", "baseline_id"])
 
-    create_plot(
+    return create_plot(
         np.abs(vis_avg),
         title=title,
         xlabel="channel",
@@ -29,3 +32,14 @@ def amp_vs_channel_plot(visibilities, title, path, label=None):
         label=label,
         path=path,
     )
+
+
+@dask.delayed
+def store_spectral_csv(frequency, vis, path):
+    pd.DataFrame(
+        {
+            "channel": frequency,
+            "visibility": vis,
+            "absolute visibility": np.abs(vis),
+        }
+    ).to_csv(path)

@@ -176,11 +176,11 @@ def test_data():
 
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".xr.open_zarr"
+    ".get_uv_dist"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".np.vectorize"
+    ".xr.open_zarr"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser" ".np.abs"
@@ -211,13 +211,11 @@ def test_should_not_plot_residual_and_model_if_not_exported(
     create_plot_mock,
     amp_vs_channel_plot_mock,
     abs_mock,
-    vectorize_mock,
     zarr_mock,
+    uv_dist_mock,
     test_data,
 ):
-
-    vectorize_mock.return_value = Mock(name="vectorized_fn")
-    vectorize_mock.return_value.return_value = "uv-distance"
+    uv_dist_mock.return_value = "uv-distance"
 
     input_path = Mock(name="input_path")
     input_path.glob.return_value = ["cli.yml", "conf.yml"].__iter__()
@@ -255,15 +253,15 @@ def test_should_not_plot_residual_and_model_if_not_exported(
 
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".pd.DataFrame"
+    ".store_spectral_csv"
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
+    ".get_uv_dist"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
     ".xr.open_zarr"
-)
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".np.vectorize"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser" ".np.abs"
@@ -294,14 +292,12 @@ def test_should_export_residual_csv(
     create_plot_mock,
     amp_vs_channel_plot_mock,
     abs_mock,
-    vectorize_mock,
     xarray_open_mock,
-    dataframe_mock,
+    uv_dist_mock,
+    store_spectral_csv_mock,
     test_data,
 ):
-
-    vectorize_mock.return_value = Mock(name="vectorized_fn")
-    vectorize_mock.return_value.return_value = "uv-distance"
+    uv_dist_mock.return_value = "uv-distance"
 
     input_path = Mock(name="input_path")
     input_path.glob.return_value = ["cli.yml", "conf.yml"].__iter__()
@@ -337,10 +333,6 @@ def test_should_export_residual_csv(
     diagnoser = SpectralLineDiagnoser(input_path, output_path, channel)
     diagnoser.diagnose()
 
-    dataframe_mock.assert_called_once_with(
-        {
-            "channel": residual.frequency.values,
-            "visibility": [1, 2, 3, 4],
-            "absolute visibility": [1, 2, 3, 4],
-        }
+    store_spectral_csv_mock.assert_called_once_with(
+        residual.frequency.values, [1, 2, 3, 4], "output/residual.csv"
     )

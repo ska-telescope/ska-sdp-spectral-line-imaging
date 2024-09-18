@@ -22,4 +22,14 @@ DIAGNOSTIC_CLI_ARGS = [
         required=False,
         help="Path to place the diagnosis output.",
     ),
+    CLIArgument(
+        "--dask-scheduler",
+        type=str,
+        default=None,
+        help=(
+            "Optional dask scheduler address to which to submit jobs. "
+            "If specified, any eligible pipeline step will be distributed on "
+            "the associated Dask cluster."
+        ),
+    ),
 ]

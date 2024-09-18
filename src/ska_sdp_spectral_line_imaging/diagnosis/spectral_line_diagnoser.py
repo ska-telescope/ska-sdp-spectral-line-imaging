@@ -1,13 +1,13 @@
 import logging
 
 import numpy as np
-import pandas as pd
 import xarray as xr
 
+from ska_sdp_piper.piper.scheduler import SchedulerFactory
 from ska_sdp_piper.piper.utils import read_dataset, read_yml
 
 from ..stages.select_vis import select_field
-from .plot import amp_vs_channel_plot, create_plot
+from .utils import amp_vs_channel_plot, create_plot, store_spectral_csv
 
 logger = logging.getLogger()
 
@@ -35,7 +35,7 @@ class SpectralLineDiagnoser:
           Model used in continuum subtraction stage in pipeline.
     """
 
-    def __init__(self, input_path, output_path, channel):
+    def __init__(self, input_path, output_path, channel, dask_scheduler=None):
         """
         Initialise the Diagnoser object
         """
@@ -53,6 +53,10 @@ class SpectralLineDiagnoser:
         self.residual = None
         self.model = None
 
+        self.scheduler = SchedulerFactory.get_scheduler(
+            self.output_dir, dask_scheduler
+        )
+
         self.__read_input_data()
 
     def diagnose(self):
@@ -62,31 +66,51 @@ class SpectralLineDiagnoser:
 
         logger.info("Creating plots...")
 
-        self.__plot_uv_distance()
+        flagged_vis = xr.where(
+            self.input_ps.FLAG, None, self.input_ps.VISIBILITY
+        )
+        flagged_residual = (
+            xr.where(self.input_ps.FLAG, None, self.residual.VISIBILITY)
+            if self.residual is not None
+            else None
+        )
+        flagged_model = (
+            xr.where(self.input_ps.FLAG, None, self.model)
+            if self.model is not None
+            else None
+        )
+
+        delayed_tasks = self.__plot_uv_distance(
+            flagged_vis, flagged_residual, flagged_model
+        )
+
+        self.scheduler.extend(delayed_tasks)
 
         input_pol = self.input_ps.polarization.values
         residual_pol = self.pipeline_config["parameters"]["read_model"]["pols"]
 
-        self.__plot_visibility(
-            xr.where(self.input_ps.FLAG, None, self.input_ps.VISIBILITY),
-            "Input Visibilities",
-            "input-vis",
-            input_pol,
+        self.scheduler.extend(
+            self.__plot_visibility(
+                flagged_vis,
+                "Input Visibilities",
+                "input-vis",
+                input_pol,
+            )
         )
 
-        if self.residual is not None:
-
-            flagged_residual_vis = xr.where(
-                self.input_ps.FLAG, None, self.residual.VISIBILITY
-            )
-            self.__plot_visibility(
-                flagged_residual_vis,
-                "Residual Visibilities",
-                "residual-vis",
-                residual_pol,
+        if flagged_residual is not None:
+            self.scheduler.extend(
+                self.__plot_visibility(
+                    flagged_residual,
+                    "Residual Visibilities",
+                    "residual-vis",
+                    residual_pol,
+                )
             )
 
-            self.__export_residual_csv(flagged_residual_vis)
+            self.scheduler.append(self.__export_residual_csv(flagged_residual))
+
+        self.scheduler.execute()
 
         logger.info("=========== DIAGNOSE COMPLETED ===========")
 
@@ -96,13 +120,11 @@ class SpectralLineDiagnoser:
             .mean(dim=["time", "baseline_id"])
             .values
         )
-        pd.DataFrame(
-            {
-                "channel": self.residual.frequency.values,
-                "visibility": averaged_vis,
-                "absolute visibility": np.abs(averaged_vis),
-            }
-        ).to_csv(self.output_dir / "residual.csv", index=False)
+        return store_spectral_csv(
+            self.residual.frequency.values,
+            averaged_vis,
+            self.output_dir / "residual.csv",
+        )
 
     def __plot_visibility(
         self,
@@ -111,78 +133,92 @@ class SpectralLineDiagnoser:
         file_postfix,
         label,
     ):
+        delayed_tasks = []
+
         logger.info(f"Creating {plot_title_postfix}")
         poloarizations = self.input_ps.polarization
 
-        amp_vs_channel_plot(
-            visibilities.sel(polarization=poloarizations[0]),
-            title=f"Amp Vs Channel on {plot_title_postfix}",
-            path=self.output_dir
-            / f"single-pol-i-amp-vs-channel-{file_postfix}.png",
-            label=label[0:1],
+        delayed_tasks.append(
+            amp_vs_channel_plot(
+                visibilities.sel(polarization=poloarizations[0]),
+                title=f"Amp Vs Channel on {plot_title_postfix}",
+                path=self.output_dir
+                / f"single-pol-i-amp-vs-channel-{file_postfix}.png",
+                label=label[0:1],
+            )
         )
 
-        amp_vs_channel_plot(
-            visibilities,
-            title=f"Amp Vs Channel on {plot_title_postfix}",
-            path=self.output_dir
-            / f"all-pol-amp-vs-channel-{file_postfix}.png",
-            label=label,
+        delayed_tasks.append(
+            amp_vs_channel_plot(
+                visibilities,
+                title=f"Amp Vs Channel on {plot_title_postfix}",
+                path=self.output_dir
+                / f"all-pol-amp-vs-channel-{file_postfix}.png",
+                label=label,
+            )
         )
 
-    def __plot_uv_distance(self):
-        uv_distance = self.__get_uv_dist()
+        return delayed_tasks
+
+    def __plot_uv_distance(self, flagged_vis, flagged_residual, flagged_model):
+        delayed_tasks = []
+
+        uv_distance = get_uv_dist(self.input_ps.UVW)
         polarizations = self.input_ps.polarization
 
-        input_vis = (
-            xr.where(self.input_ps.FLAG, None, self.input_ps.VISIBILITY)
-            .sel(polarization=polarizations[0])
-            .isel(frequency=self.channel)
+        input_vis = flagged_vis.sel(polarization=polarizations[0]).isel(
+            frequency=self.channel
         )
 
-        create_plot(
-            np.abs(uv_distance),
-            np.abs(input_vis),
-            xlabel="uv distance",
-            ylabel="amp",
-            title="Amp vs UV Distance before Continnum Subtraction",
-            path=self.output_dir / "amp-vs-uv-distance-before-cont-sub.png",
-            label=None,
+        delayed_tasks.append(
+            create_plot(
+                np.abs(uv_distance),
+                np.abs(input_vis),
+                xlabel="uv distance",
+                ylabel="amp",
+                title="Amp vs UV Distance before Continnum Subtraction",
+                path=self.output_dir
+                / "amp-vs-uv-distance-before-cont-sub.png",
+                label=None,
+            )
         )
 
-        if self.residual is not None:
-            residual_vis = (
-                xr.where(self.input_ps.FLAG, None, self.residual.VISIBILITY)
-                .sel(polarization=polarizations[0])
-                .isel(frequency=self.channel)
+        if flagged_residual is not None:
+            residual_vis = flagged_residual.sel(
+                polarization=polarizations[0]
+            ).isel(frequency=self.channel)
+
+            delayed_tasks.append(
+                create_plot(
+                    np.abs(uv_distance),
+                    np.abs(residual_vis),
+                    xlabel="uv distance",
+                    ylabel="amp",
+                    title="Amp vs UV Distance after Continnum Subtraction",
+                    path=self.output_dir
+                    / "amp-vs-uv-distance-after-cont-sub.png",
+                    label=None,
+                )
             )
 
-            create_plot(
-                np.abs(uv_distance),
-                np.abs(residual_vis),
-                xlabel="uv distance",
-                ylabel="amp",
-                title="Amp vs UV Distance after Continnum Subtraction",
-                path=self.output_dir / "amp-vs-uv-distance-after-cont-sub.png",
-                label=None,
+        if flagged_model is not None:
+            model_vis = flagged_model.sel(polarization=polarizations[0]).isel(
+                frequency=self.channel
             )
 
-        if self.model is not None:
-            model_vis = (
-                xr.where(self.input_ps.FLAG, None, self.model)
-                .sel(polarization=polarizations[0])
-                .isel(frequency=self.channel)
+            delayed_tasks.append(
+                create_plot(
+                    np.abs(uv_distance),
+                    np.abs(model_vis),
+                    xlabel="uv distance",
+                    ylabel="amp",
+                    title="Amp vs UV Distance model",
+                    path=self.output_dir / "amp-vs-uv-distance-model.png",
+                    label=None,
+                )
             )
 
-            create_plot(
-                np.abs(uv_distance),
-                np.abs(model_vis),
-                xlabel="uv distance",
-                ylabel="amp",
-                title="Amp vs UV Distance model",
-                path=self.output_dir / "amp-vs-uv-distance-model.png",
-                label=None,
-            )
+        return delayed_tasks
 
     def __read_input_data(self):
         """
@@ -221,9 +257,7 @@ class SpectralLineDiagnoser:
         else:
             logger.info("Export residual stage not run.")
 
-    def __get_uv_dist(self):
-        vec_cal_uv_distance = np.vectorize(
-            lambda uvw: (uvw[0] ** 2 + uvw[1] ** 2) ** 0.5, signature="(n)->()"
-        )
-        uv_distance = vec_cal_uv_distance(self.input_ps.UVW)
-        return uv_distance
+
+def get_uv_dist(uvw):
+    uvw_t = uvw.transpose("uvw_label", "time", "baseline_id")
+    return (uvw_t[0] ** 2 + uvw_t[1] ** 2) ** 0.5
