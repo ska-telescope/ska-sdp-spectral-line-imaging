@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt  # noqa: E402
 
 @dask.delayed
 def create_plot(*data, title, xlabel, ylabel, label, path):
-    plt.figure()
+    fig = plt.figure()
     plt.plot(*data, ".", label=label)
     plt.title(title)
     plt.xlabel(xlabel)
@@ -17,8 +17,7 @@ def create_plot(*data, title, xlabel, ylabel, label, path):
     plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
     plt.rcParams["figure.figsize"] = [7.00, 3.50]
     plt.rcParams["figure.autolayout"] = True
-    plt.savefig(path, bbox_inches="tight")
-    plt.close()
+    fig.savefig(path, bbox_inches="tight")
 
 
 def amp_vs_channel_plot(visibilities, title, path, label=""):
