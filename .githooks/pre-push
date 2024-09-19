@@ -44,7 +44,7 @@ if [[ $pipeline_id != "null" ]]; then
         PROCEED_TO_PUSH=0
     fi
 else
-    echo "No pipeline found for branch ${branch}.\nThis might be due to this is a new branch."
+    echo -e "No pipeline found for branch ${branch}.\nThis might be due to this is a new branch.\n"
     PROCEED_TO_PUSH=0
 fi
 
