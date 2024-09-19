@@ -80,7 +80,7 @@ class DefaultScheduler:
         Since the default scheduler is dask based, the execute calls the
         compute on the scheduled dask graph
         """
-        return dask.compute(*self.delayed_outputs)
+        return dask.compute(*self.delayed_outputs, optimize=True)
 
 
 class DaskScheduler(DefaultScheduler):

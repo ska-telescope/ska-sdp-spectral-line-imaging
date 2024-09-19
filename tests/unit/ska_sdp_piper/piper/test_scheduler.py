@@ -164,7 +164,9 @@ def test_should_execute_scheduled_stages(compute_mock):
     scheduler.delayed_outputs = ["OUT_1", "OUT_2", "OUT_3"]
     scheduler.execute()
 
-    compute_mock.assert_called_once_with("OUT_1", "OUT_2", "OUT_3")
+    compute_mock.assert_called_once_with(
+        "OUT_1", "OUT_2", "OUT_3", optimize=True
+    )
 
 
 @mock.patch("ska_sdp_piper.piper.scheduler.performance_report")
@@ -180,7 +182,9 @@ def test_should_dask_execute_scheduled_stages_with_report(
     performance_report_mock.assert_called_once_with(
         filename="output_dir/dask_report.html"
     )
-    compute_mock.assert_called_once_with("OUT_1", "OUT_2", "OUT_3")
+    compute_mock.assert_called_once_with(
+        "OUT_1", "OUT_2", "OUT_3", optimize=True
+    )
 
 
 @mock.patch("ska_sdp_piper.piper.scheduler.performance_report")
@@ -194,7 +198,9 @@ def test_should_dask_execute_scheduled_stages_without_report(
     scheduler.execute()
 
     assert performance_report_mock.call_count == 0
-    compute_mock.assert_called_once_with("OUT_1", "OUT_2", "OUT_3")
+    compute_mock.assert_called_once_with(
+        "OUT_1", "OUT_2", "OUT_3", optimize=True
+    )
 
 
 @mock.patch("ska_sdp_piper.piper.scheduler.Client")
