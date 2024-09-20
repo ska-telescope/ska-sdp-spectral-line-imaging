@@ -10,7 +10,7 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 @ConfigurableStage(
     "export_residual",
     Configuration(
-        psout_name=ConfigParam(str, "vis_residual.zarr"),
+        psout_name=ConfigParam(str, "vis_residual"),
     ),
 )
 def export_residual(upstream_output, psout_name, _output_dir_):
@@ -32,15 +32,16 @@ def export_residual(upstream_output, psout_name, _output_dir_):
     """
 
     ps = upstream_output["ps"]
-    output_path = os.path.abspath(os.path.join(_output_dir_, psout_name))
-    ps.VISIBILITY.to_zarr(store=output_path)
+    output_path = os.path.join(_output_dir_, psout_name)
+    ps.VISIBILITY.attrs.clear()
+    ps.VISIBILITY.to_zarr(store=f"{output_path}.zarr")
     return upstream_output
 
 
 @ConfigurableStage(
     "export_model",
     Configuration(
-        psout_name=ConfigParam(str, "vis_model.zarr"),
+        psout_name=ConfigParam(str, "vis_model"),
     ),
 )
 def export_model(upstream_output, psout_name, _output_dir_):
@@ -61,9 +62,9 @@ def export_model(upstream_output, psout_name, _output_dir_):
         upstream_output
     """
     ps = upstream_output["ps"]
-    output_path = os.path.abspath(os.path.join(_output_dir_, psout_name))
+    output_path = os.path.join(_output_dir_, psout_name)
     ps.VISIBILITY_MODEL.attrs.clear()
-    ps.VISIBILITY_MODEL.to_zarr(store=output_path)
+    ps.VISIBILITY_MODEL.to_zarr(store=f"{output_path}.zarr")
     return upstream_output
 
 

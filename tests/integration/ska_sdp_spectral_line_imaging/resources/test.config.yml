@@ -3,9 +3,9 @@ parameters:
   export_image:
     image_name: test_cube
   export_model:
-    psout_name: model.zarr
+    psout_name: model
   export_residual:
-    psout_name: residual.zarr
+    psout_name: residual
   imaging:
     cell_size: 60.0
     nx: 16

@@ -75,7 +75,10 @@ def test_should_initialise_diagnoser(
     )
 
     xarray_open_mock.assert_has_calls(
-        [mock.call("input/ps_out_model"), mock.call("input/ps_out_residual")]
+        [
+            mock.call("input/ps_out_model.zarr"),
+            mock.call("input/ps_out_residual.zarr"),
+        ]
     )
 
 

@@ -243,7 +243,7 @@ class SpectralLineDiagnoser:
 
         if pipeline_run_config.get("export_model"):
             logger.info("Reading model data")
-            ps_out = pipeline_parameter["export_model"]["psout_name"]
+            ps_out = pipeline_parameter["export_model"]["psout_name"] + ".zarr"
             self.model = xr.open_zarr(self.input_path / ps_out)[
                 "VISIBILITY_MODEL"
             ]
@@ -252,7 +252,9 @@ class SpectralLineDiagnoser:
 
         if pipeline_run_config.get("export_residual"):
             logger.info("Reading residual data")
-            ps_out = pipeline_parameter["export_residual"]["psout_name"]
+            ps_out = (
+                pipeline_parameter["export_residual"]["psout_name"] + ".zarr"
+            )
             self.residual = xr.open_zarr(self.input_path / ps_out)
         else:
             logger.info("Export residual stage not run.")
