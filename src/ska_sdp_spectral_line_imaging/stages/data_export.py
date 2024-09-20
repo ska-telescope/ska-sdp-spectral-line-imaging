@@ -1,5 +1,5 @@
+import logging
 import os
-import traceback
 
 from astropy.io import fits
 
@@ -93,6 +93,7 @@ def export_image(upstream_output, image_name, _output_dir_):
 
     cube = upstream_output["image_cube"]
     output_path = os.path.join(_output_dir_, image_name)
+    logger = logging.getLogger()
 
     try:
         new_hdu = fits.PrimaryHDU(
@@ -100,8 +101,12 @@ def export_image(upstream_output, image_name, _output_dir_):
         )
         new_hdu.writeto(f"{output_path}.fits")
 
-    except Exception:
-        traceback.print_exc()
+    except Exception as ex:
+        logger.exception(ex)
+        logger.info(
+            "Exporting to FITS failed. "
+            f"Writing image in zarr format to path {output_path}.zarr"
+        )
         cube.to_zarr(store=f"{output_path}.zarr")
 
     return upstream_output
