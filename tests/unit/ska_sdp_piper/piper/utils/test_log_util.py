@@ -1,6 +1,6 @@
 import logging
 
-from mock import Mock, mock
+from mock import mock
 
 from ska_sdp_piper.piper.utils import LogUtil
 
@@ -56,24 +56,3 @@ def test_should_configure_verbose(timestamp_mock, configure_mock):
 
     LogUtil.configure(pipeline_name, verbose=True)
     configure_mock.assert_called_once_with(level=logging.DEBUG, overrides=None)
-
-
-@mock.patch("ska_sdp_piper.piper.utils.log_util.logging.getLogger")
-def test_should_setup_logs_for_execution(get_logger_mock):
-    logger_mock = Mock(name="logger")
-    get_logger_mock.return_value = logger_mock
-
-    LogUtil.setup_log(False)
-    logger_mock.setLevel.assert_has_calls([mock.call(logging.INFO)])
-
-
-@mock.patch("ska_sdp_piper.piper.utils.log_util.logging.getLogger")
-def test_should_setup_logs_for_execution_with_verbose(get_logger_mock):
-    logger_mock = Mock(name="logger")
-    get_logger_mock.return_value = logger_mock
-
-    LogUtil.setup_log(True)
-
-    logger_mock.setLevel.assert_has_calls(
-        [mock.call(logging.INFO), mock.call(logging.DEBUG)]
-    )

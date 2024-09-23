@@ -60,21 +60,3 @@ class LogUtil:
                 "handlers": ["console", "file"],
             },
         }
-
-    @classmethod
-    def setup_log(cls, verbose):
-        """
-        Execute stage with entry and exit log
-
-        Parameters
-        ---------
-            verbose: bool
-                Set verbosity level
-
-
-        """
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-
-        if verbose:
-            logger.setLevel(logging.DEBUG)

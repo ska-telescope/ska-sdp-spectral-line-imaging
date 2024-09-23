@@ -7,10 +7,6 @@ from ska_sdp_piper.piper.exceptions import (
     StageNotFoundException,
 )
 
-from ..utils.log_util import LogUtil
-
-logger = logging.getLogger()
-
 
 class Stage:
     """
@@ -89,7 +85,11 @@ class Stage:
                 Set verbosity level
         """
 
-        LogUtil.setup_log(verbose)
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+
+        if verbose:
+            logger.setLevel(logging.DEBUG)
 
         if self.__pipeline_parameters is None:
             raise PipelineMetadataMissingException(

@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from mock import Mock, mock
 
@@ -79,11 +81,13 @@ def test_should_return_stages_with_name_iterator(mock_stages):
     assert mock_stages == expected_stages
 
 
-@mock.patch("ska_sdp_piper.piper.stage.stages.LogUtil.setup_log")
+@mock.patch("ska_sdp_piper.piper.stage.stages.logging.getLogger")
 @mock.patch("ska_sdp_piper.piper.stage.stages.inspect.getfullargspec")
 def test_should_update_pipeline_params_for_stage_and_return_the_stage_args(
-    argspec_mock, setup_log_mock
+    argspec_mock, get_logger_mock
 ):
+    logger_mock = Mock(name="logger")
+    get_logger_mock.return_value = logger_mock
     test = mock.Mock(name="test")
 
     args_mock = mock.Mock(name="args_mock")
@@ -105,13 +109,15 @@ def test_should_update_pipeline_params_for_stage_and_return_the_stage_args(
     test.assert_called_once_with(
         "UPSTREAM_OUTPUT", config_param=30, additional_param_1=40
     )
+    logger_mock.setLevel.assert_has_calls([mock.call(logging.INFO)])
 
-    setup_log_mock.assert_called_once_with(False)
 
-
-@mock.patch("ska_sdp_piper.piper.stage.stages.LogUtil.setup_log")
+@mock.patch("ska_sdp_piper.piper.stage.stages.logging.getLogger")
 @mock.patch("ska_sdp_piper.piper.stage.stages.inspect.getfullargspec")
-def test_should_execute_stage_with_verbosity(argspec_mock, setup_log_mock):
+def test_should_execute_stage_with_verbosity(argspec_mock, get_logger_mock):
+    logger_mock = Mock(name="logger")
+    get_logger_mock.return_value = logger_mock
+
     test = mock.Mock(name="test")
 
     args_mock = mock.Mock(name="args_mock")
@@ -130,7 +136,9 @@ def test_should_execute_stage_with_verbosity(argspec_mock, setup_log_mock):
 
     stage("UPSTREAM_OUTPUT", verbose=True)
 
-    setup_log_mock.assert_called_once_with(True)
+    logger_mock.setLevel.assert_has_calls(
+        [mock.call(logging.INFO), mock.call(logging.DEBUG)]
+    )
 
 
 def test_should_raise_exception_if_pipeline_parameters_is_not_initialised():
