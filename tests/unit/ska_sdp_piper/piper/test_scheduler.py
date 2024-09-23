@@ -5,7 +5,6 @@ from ska_sdp_piper.piper.scheduler import (
     DefaultScheduler,
     SchedulerFactory,
 )
-from ska_sdp_piper.piper.utils import LogUtil
 
 
 def test_should_get_default_scheduler():
@@ -47,22 +46,20 @@ def test_should_schedule_stages_with_configuration_params(
 
     delayed_mock.assert_has_calls(
         [
-            mock.call(LogUtil.with_log),
-            mock.call(LogUtil.with_log),
-            mock.call(LogUtil.with_log),
+            mock.call(stage1),
+            mock.call(stage2),
+            mock.call(stage3),
         ]
     )
 
     delayed_mock_call_1.assert_called_once_with(
-        False,
-        stage1,
         None,
-    )
-    delayed_mock_call_2.assert_called_once_with(False, stage2, "DELAYED_1")
-    delayed_mock_call_3.assert_called_once_with(
         False,
-        stage3,
+    )
+    delayed_mock_call_2.assert_called_once_with("DELAYED_1", False)
+    delayed_mock_call_3.assert_called_once_with(
         "DELAYED_2",
+        False,
     )
 
     assert default_scheduler.delayed_outputs == [
@@ -107,13 +104,9 @@ def test_should_dask_schedule_stages_with_report(delayed_mock, client_mock):
         ]
     )
 
-    delayed_mock_call_1.assert_called_once_with(
-        None,
-    )
-    delayed_mock_call_2.assert_called_once_with("DELAYED_1")
-    delayed_mock_call_3.assert_called_once_with(
-        "DELAYED_2",
-    )
+    delayed_mock_call_1.assert_called_once_with(None, False)
+    delayed_mock_call_2.assert_called_once_with("DELAYED_1", False)
+    delayed_mock_call_3.assert_called_once_with("DELAYED_2", False)
 
     assert default_scheduler.delayed_outputs == [
         "DELAYED_1",
@@ -151,9 +144,9 @@ def test_should_dask_schedule_stages_with_configuration_params(
 
     delayed_mock.assert_has_calls(
         [
-            mock.call(LogUtil.with_log),
-            mock.call(LogUtil.with_log),
-            mock.call(LogUtil.with_log),
+            mock.call(stage1),
+            mock.call(stage2),
+            mock.call(stage3),
         ]
     )
 

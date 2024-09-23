@@ -58,29 +58,21 @@ def test_should_configure_verbose(timestamp_mock, configure_mock):
     configure_mock.assert_called_once_with(level=logging.DEBUG, overrides=None)
 
 
-def test_should_execute_stage_with_logs():
-    stage1 = Mock(name="stage1", return_value="stage1 output")
-    pipeline_data = {"data": "PIEPLINE_DATA"}
+@mock.patch("ska_sdp_piper.piper.utils.log_util.logging.getLogger")
+def test_should_setup_logs_for_execution(get_logger_mock):
+    logger_mock = Mock(name="logger")
+    get_logger_mock.return_value = logger_mock
 
-    output = LogUtil.with_log(False, stage1, pipeline_data, kw1=1, kw2=2)
-
-    assert output == "stage1 output"
-
-    stage1.assert_called_once_with(
-        pipeline_data,
-        kw1=1,
-        kw2=2,
-    )
+    LogUtil.setup_log(False)
+    logger_mock.setLevel.assert_has_calls([mock.call(logging.INFO)])
 
 
 @mock.patch("ska_sdp_piper.piper.utils.log_util.logging.getLogger")
-def test_should_execute_stage_with_logs_as_verbose(get_logger_mock):
+def test_should_setup_logs_for_execution_with_verbose(get_logger_mock):
     logger_mock = Mock(name="logger")
     get_logger_mock.return_value = logger_mock
-    stage1 = Mock(name="stage1", return_value="stage1 output")
-    pipeline_data = {"data": "PIEPLINE_DATA"}
 
-    LogUtil.with_log(True, stage1, pipeline_data, kw1=1, kw2=2)
+    LogUtil.setup_log(True)
 
     logger_mock.setLevel.assert_has_calls(
         [mock.call(logging.INFO), mock.call(logging.DEBUG)]

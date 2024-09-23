@@ -1,8 +1,6 @@
 import dask
 from dask.distributed import Client, performance_report
 
-from .utils import LogUtil
-
 
 class SchedulerFactory:
     """
@@ -31,7 +29,7 @@ class SchedulerFactory:
         if dask_scheduler:
             return DaskScheduler(dask_scheduler, output_dir, **kwargs)
 
-        return DefaultScheduler()
+        return DefaultScheduler(**kwargs)
 
 
 class DefaultScheduler:
@@ -44,7 +42,7 @@ class DefaultScheduler:
         Dask delayed outputs from the scheduled tasks
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.delayed_outputs = []
 
     def schedule(self, stages, verbose=False):
@@ -60,11 +58,7 @@ class DefaultScheduler:
         """
         output = None
         for stage in stages:
-            output = dask.delayed(LogUtil.with_log)(
-                verbose,
-                stage,
-                output,
-            )
+            output = dask.delayed(stage)(output, verbose)
 
             self.delayed_outputs.append(output)
 
@@ -116,26 +110,6 @@ class DaskScheduler(DefaultScheduler):
 
         self.report_file = f"{output_dir}/dask_report.html"
         self.with_report = with_report
-
-    def schedule(self, stages, verbose=False):
-        """
-        Schedules the stages as dask delayed objects
-
-        Parameters
-        ----------
-          stages: list[stages.Stage]
-            List of stages to schedule
-          verbose: bool
-            Log debug statements
-        """
-        output = None
-        if self.with_report:
-            for stage in stages:
-                output = dask.delayed(stage)(output)
-                self.delayed_outputs.append(output)
-
-        else:
-            super().schedule(stages, verbose)
 
     def execute(self):
         if self.with_report:
