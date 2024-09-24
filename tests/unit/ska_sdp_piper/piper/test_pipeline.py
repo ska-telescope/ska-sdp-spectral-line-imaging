@@ -48,21 +48,30 @@ def cli_command_parser():
 @pytest.fixture(scope="function")
 def default_scheduler():
     with mock.patch(
-        "ska_sdp_piper.piper.scheduler.DefaultScheduler"
+        "ska_sdp_piper.piper.pipeline.DefaultScheduler"
     ) as default_scheduler_mock:
-
-        default_scheduler_mock.execute.return_value = "output"
-
+        default_scheduler_mock.return_value = default_scheduler_mock
         yield default_scheduler_mock
 
 
-@pytest.fixture(scope="function", autouse=True)
-def scheduler_factory(default_scheduler):
+@pytest.fixture(scope="function")
+def default_executor():
     with mock.patch(
-        "ska_sdp_piper.piper.pipeline.SchedulerFactory"
-    ) as scheduler_factory_mock:
-        scheduler_factory_mock.get_scheduler.return_value = default_scheduler
-        yield scheduler_factory_mock
+        "ska_sdp_piper.piper.executors.default_executor.DefaultExecutor"
+    ) as default_executor_mock:
+
+        default_executor_mock.execute.return_value = "output"
+
+        yield default_executor_mock
+
+
+@pytest.fixture(scope="function", autouse=True)
+def executor_factory(default_executor):
+    with mock.patch(
+        "ska_sdp_piper.piper.pipeline.ExecutorFactory"
+    ) as executor_factory_mock:
+        executor_factory_mock.get_executor.return_value = default_executor
+        yield executor_factory_mock
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -234,8 +243,9 @@ def test_should_run_the_pipeline(
     read_mock,
     write_mock,
     create_output_mock,
-    scheduler_factory,
+    executor_factory,
     default_scheduler,
+    default_executor,
     mock_stages,
     stages,
 ):
@@ -267,13 +277,15 @@ def test_should_run_the_pipeline(
         global_parameters={"a": 10},
     )
     read_mock.assert_called_once_with("infile_path")
-    scheduler_factory.get_scheduler.assert_called_once_with(
+    executor_factory.get_executor.assert_called_once_with(
         "output_dir", input="path", dask_scheduler="10.191"
     )
     default_scheduler.schedule.assert_called_once_with(
         mock_stages,
         verbose=False,
     )
+
+    default_executor.execute.assert_called_once_with(default_scheduler.tasks)
 
     write_mock.assert_called_once_with("output", "output_dir")
 
@@ -331,7 +343,7 @@ def test_should_run_the_pipeline_with_selected_stages(
     )
 
 
-def test_should_instantiate_dask_client(scheduler_factory):
+def test_should_instantiate_dask_client(executor_factory):
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.config = {}
@@ -343,7 +355,7 @@ def test_should_instantiate_dask_client(scheduler_factory):
         "output_dir",
         cli_args={"dask_scheduler": dask_scheduler_address},
     )
-    scheduler_factory.get_scheduler.assert_called_once_with(
+    executor_factory.get_executor.assert_called_once_with(
         "output_dir", dask_scheduler=dask_scheduler_address
     )
 
@@ -467,11 +479,11 @@ def test_should_write_config_to_output_yaml_file(
 
 @mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_write_config_to_output_yaml_on_failure(
-    config_manager_mock, default_scheduler, timestamp_mock
+    config_manager_mock, default_scheduler, default_executor, timestamp_mock
 ):
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1"]
-    default_scheduler.execute.side_effect = Exception("Some Error")
+    default_executor.execute.side_effect = Exception("Some Error")
 
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"

@@ -3,7 +3,8 @@ import logging
 import numpy as np
 import xarray as xr
 
-from ska_sdp_piper.piper.scheduler import SchedulerFactory
+from ska_sdp_piper.piper.executors import ExecutorFactory
+from ska_sdp_piper.piper.scheduler import DefaultScheduler
 from ska_sdp_piper.piper.utils import read_dataset, read_yml
 
 from ..stages.select_vis import select_field
@@ -53,7 +54,9 @@ class SpectralLineDiagnoser:
         self.residual = None
         self.model = None
 
-        self.scheduler = SchedulerFactory.get_scheduler(
+        self.scheduler = DefaultScheduler()
+
+        self.executor = ExecutorFactory.get_executor(
             self.output_dir, dask_scheduler
         )
 
@@ -110,7 +113,7 @@ class SpectralLineDiagnoser:
 
             self.scheduler.append(self.__export_residual_csv(flagged_residual))
 
-        self.scheduler.execute()
+        self.executor.execute(self.scheduler.tasks)
 
         logger.info("=========== DIAGNOSE COMPLETED ===========")
 

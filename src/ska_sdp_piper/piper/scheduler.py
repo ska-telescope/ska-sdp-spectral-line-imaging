@@ -1,35 +1,4 @@
 import dask
-from dask.distributed import Client, performance_report
-
-
-class SchedulerFactory:
-    """
-    Select an appropriate scheduler based on conditions
-    """
-
-    @staticmethod
-    def get_scheduler(output_dir, dask_scheduler=None, **kwargs):
-        """
-        Returns the approriate scheduler based on condition
-
-        Parameters
-        ----------
-          dask_scheduler: str
-            URL of the dask scheduler
-          output_dir: str
-            Path to output directory
-          **kwargs: dict
-            Additional keyword arguments
-
-        Returns
-        -------
-           :py:class:`DefaultScheduler`
-           :py:class:`DaskScheduler`
-        """
-        if dask_scheduler:
-            return DaskScheduler(dask_scheduler, output_dir, **kwargs)
-
-        return DefaultScheduler(**kwargs)
 
 
 class DefaultScheduler:
@@ -38,12 +7,12 @@ class DefaultScheduler:
 
     Attributes
     ----------
-      delayed_outputs: [dask.delayed]
+      tasks: [dask.delayed]
         Dask delayed outputs from the scheduled tasks
     """
 
-    def __init__(self, **kwargs):
-        self.delayed_outputs = []
+    def __init__(self):
+        self.tasks = []
 
     def schedule(self, stages, verbose=False):
         """
@@ -60,60 +29,28 @@ class DefaultScheduler:
         for stage in stages:
             output = dask.delayed(stage)(output, verbose)
 
-            self.delayed_outputs.append(output)
+            self.tasks.append(output)
 
     def append(self, task):
-        self.delayed_outputs.append(task)
-
-    def extend(self, tasks):
-        self.delayed_outputs.extend(tasks)
-
-    def execute(self):
         """
-        Executes the scheduled stages.
-        Since the default scheduler is dask based, the execute calls the
-        compute on the scheduled dask graph
-        """
-        return dask.compute(*self.delayed_outputs, optimize=True)
-
-
-class DaskScheduler(DefaultScheduler):
-    """
-    A distributed dask based scheduler
-
-    Attributes
-    ----------
-      client: dask.distributed.Client
-        The client created for scheduling and executing the dask tasks
-    """
-
-    def __init__(
-        self, dask_scheduler, output_dir, with_report=False, **kwargs
-    ):
-        """
-        Instantiate a distributed dask scheduler
+        Appends a dask task to the task list
 
         Parameters
         ----------
-          dask_scheduler: str
-            URL of the dask scheduler
-          output_dir: str
-            Path to output directory
-          with_report: bool
-            Execute and generate report if with_report == False
-          **kwargs: dict
-            Additional keyword arguments
+          task: dask.delayed
+            Dask delayed object
         """
-        super().__init__()
-        self.client = Client(dask_scheduler)
-        self.client.forward_logging()
 
-        self.report_file = f"{output_dir}/dask_report.html"
-        self.with_report = with_report
+        self.tasks.append(task)
 
-    def execute(self):
-        if self.with_report:
-            with performance_report(filename=self.report_file):
-                return super().execute()
+    def extend(self, tasks):
+        """
+        Extends the task list with a list of dask tasks
 
-        return super().execute()
+        Parameters
+        ----------
+          task: list[dask.delayed]
+            Dask delayed objects
+        """
+
+        self.tasks.extend(tasks)

@@ -14,6 +14,7 @@ Subpackages
 
    ska_sdp_piper.piper.command
    ska_sdp_piper.piper.configurations
+   ska_sdp_piper.piper.executors
    ska_sdp_piper.piper.stage
    ska_sdp_piper.piper.utils
 
