@@ -39,8 +39,8 @@ def test_should_create_plots(prepare_test_sandbox):
         "amp-vs-uv-distance-after-cont-sub.png",
         "amp-vs-uv-distance-before-cont-sub.png",
         "amp-vs-uv-distance-model.png",
-        "single-pol-i-amp-vs-channel-input-vis.png",
-        "single-pol-i-amp-vs-channel-residual-vis.png",
+        "single-pol-XX-amp-vs-channel-input-vis.png",
+        "single-pol-XX-amp-vs-channel-residual-vis.png",
         "residual.csv",
     ]
     created_artifacts = os.listdir(timestamped_output_dir)

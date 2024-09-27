@@ -145,8 +145,8 @@ class SpectralLineDiagnoser:
                 visibilities.sel(polarization=poloarizations[0]),
                 title=f"Amp Vs Channel on {plot_title_postfix}",
                 path=self.output_dir
-                / f"single-pol-i-amp-vs-channel-{file_postfix}.png",
-                label=label[0:1],
+                / f"single-pol-{label[0]}-amp-vs-channel-{file_postfix}.png",
+                label=label[0],
             )
         )
 
