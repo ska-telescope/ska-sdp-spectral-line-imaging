@@ -90,7 +90,6 @@ class SpectralLineDiagnoser:
         self.scheduler.extend(delayed_tasks)
 
         input_pol = self.input_ps.polarization.values
-        residual_pol = self.pipeline_config["parameters"]["read_model"]["pols"]
 
         self.scheduler.extend(
             self.__plot_visibility(
@@ -102,6 +101,7 @@ class SpectralLineDiagnoser:
         )
 
         if flagged_residual is not None:
+            residual_pol = self.residual.polarization.values
             self.scheduler.extend(
                 self.__plot_visibility(
                     flagged_residual,
@@ -110,7 +110,6 @@ class SpectralLineDiagnoser:
                     residual_pol,
                 )
             )
-
             self.scheduler.append(self.__export_residual_csv(flagged_residual))
 
         self.executor.execute(self.scheduler.tasks)

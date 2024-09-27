@@ -229,10 +229,12 @@ def test_should_not_plot_residual_and_model_if_not_exported(
 
     channel = 1
 
-    input_ps = test_data[0]
+    input_ps, residual = test_data
 
     select_field.stage_definition.return_value = {"ps": input_ps}
     read_dataset_mock.return_value = input_ps
+
+    zarr_mock.return_value = residual
 
     config = {
         "pipeline": {"export_model": False, "export_residual": False},
