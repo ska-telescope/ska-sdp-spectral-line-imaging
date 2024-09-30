@@ -21,7 +21,7 @@ def test_should_export_residual():
     observation.VISIBILITY.attrs.clear.assert_called_once()
 
     observation.VISIBILITY.to_zarr.assert_called_once_with(
-        store="output_dir/residual.zarr"
+        store="output_dir/residual.zarr", compute=False
     )
 
     assert upstream_out == {"ps": observation}
@@ -38,7 +38,7 @@ def test_should_export_model():
     observation.VISIBILITY_MODEL.attrs.clear.assert_called_once()
 
     observation.VISIBILITY_MODEL.to_zarr.assert_called_once_with(
-        store="output_dir/model.zarr"
+        store="output_dir/model.zarr", compute=False
     )
 
     assert upstream_out == {"ps": observation}
@@ -87,7 +87,9 @@ def test_should_export_zarr_in_case_of_HDU_exceptions(mock_fits, caplog):
         "Writing image in zarr format to path output_dir/image_name.zarr"
     )
 
-    cube.to_zarr.assert_called_once_with(store="output_dir/image_name.zarr")
+    cube.to_zarr.assert_called_once_with(
+        store="output_dir/image_name.zarr", compute=False
+    )
 
     assert upstream_out == {"image_cube": cube}
 
@@ -117,6 +119,8 @@ def test_should_export_zarr_in_case_of_io_exceptions(mock_fits, caplog):
         "Writing image in zarr format to path output_dir/image_name.zarr"
     )
 
-    cube.to_zarr.assert_called_once_with(store="output_dir/image_name.zarr")
+    cube.to_zarr.assert_called_once_with(
+        store="output_dir/image_name.zarr", compute=False
+    )
 
     assert upstream_out == {"image_cube": cube}
