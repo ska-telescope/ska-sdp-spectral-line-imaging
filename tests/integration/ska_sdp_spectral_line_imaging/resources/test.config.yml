@@ -21,7 +21,9 @@ parameters:
     - V
   select_vis:
     obs_mode: 0
-  vis_stokes_conversion: {}
+  vis_stokes_conversion:
+    input_polarisation_frame: linear
+    output_polarisation_frame: stokesIQUV
 pipeline:
   continuum_subtraction: true
   export_image: true

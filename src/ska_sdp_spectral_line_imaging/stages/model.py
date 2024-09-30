@@ -55,11 +55,13 @@ def read_model(upstream_output, image_name, pols):
 @ConfigurableStage(
     "vis_stokes_conversion",
     configuration=Configuration(
-        ipf=ConfigParam(str, "linear"),
-        opf=ConfigParam(str, "stokesIQUV"),
+        input_polarisation_frame=ConfigParam(str, "linear"),
+        output_polarisation_frame=ConfigParam(str, "stokesIQUV"),
     ),
 )
-def vis_stokes_conversion(upstream_output, ipf, opf):
+def vis_stokes_conversion(
+    upstream_output, input_polarisation_frame, output_polarisation_frame
+):
     """
     Visibility to stokes conversion
 
@@ -83,8 +85,8 @@ def vis_stokes_conversion(upstream_output, ipf, opf):
         convert_pol_frame,
         ps.VISIBILITY,
         kwargs=dict(
-            ipf=PolarisationFrame(ipf),
-            opf=PolarisationFrame(opf),
+            ipf=PolarisationFrame(input_polarisation_frame),
+            opf=PolarisationFrame(output_polarisation_frame),
             polaxis=3,
         ),
         dask="allowed",
