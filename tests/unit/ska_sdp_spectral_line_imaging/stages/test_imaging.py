@@ -36,7 +36,7 @@ def test_should_estimate_cell_size_when_not_passed(
     estimate_cell_size_mock.return_value = 2345
     ps = Mock(name="ps")
     ps.UVW = "UVW"
-    ps.frequency.reference_frequency = {"data": 123.01}
+    ps.frequency.max.return_value = 123.01
 
     upstream_output = {"ps": ps}
     epsilon = 1e-4
@@ -52,8 +52,6 @@ def test_should_estimate_cell_size_when_not_passed(
     estimate_cell_size_mock.assert_called_once_with(
         "UVW",
         123.01,
-        0,
-        1,
         2.0,
     )
 

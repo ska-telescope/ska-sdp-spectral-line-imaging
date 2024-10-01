@@ -52,12 +52,10 @@ def imaging_stage(upstream_output, epsilon, cell_size, scaling_factor, nx, ny):
 
     if cell_size is None:
         uvw = ps.UVW
-        # Todo: handle units properly. eg. Hz, MHz etc.
+        # todo: handle units properly. eg. Hz, MHz etc.
         #  Assumption, current unit is Hz.
-        ref_frequency = ps.frequency.reference_frequency["data"]
-        cell_size = estimate_cell_size(
-            uvw, ref_frequency, nx, ny, scaling_factor
-        )
+        freq = ps.frequency.max()
+        cell_size = estimate_cell_size(uvw, freq, scaling_factor)
 
     image = cube_imaging(ps, cell_size, nx, ny, epsilon)
 
