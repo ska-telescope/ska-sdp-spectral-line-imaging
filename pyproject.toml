@@ -30,8 +30,9 @@ typer = "^0.12.3"
 xradio = {version = "0.0.31", python = "<3.12,>=3.10"}
 xarray = "^2024.6.0"
 ducc0 = "^0.34.0"
-ska-sdp-datamodels = "^0.3.0"
+ska-sdp-datamodels = "^0.3.3"
 ska-ser-logging = "^0.4.3"
+ska-sdp-func-python = "^0.4.1"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.6.4"

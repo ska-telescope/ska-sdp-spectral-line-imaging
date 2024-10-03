@@ -1,5 +1,7 @@
 # pylint: disable=import-error,no-name-in-module,no-member
+import astropy.units as au
 import ducc0.wgridder
+import numpy as np
 import xarray as xr
 
 
@@ -117,4 +119,36 @@ def predict(ps, model_image, **kwargs):
     return xr.DataArray(
         model_vec.data,
         dims=["frequency", "polarization", "time", "baseline_id"],
+    )
+
+
+def predict_for_channels(ps, model_image, epsilon, cell_size):
+    template_core_dims = ["frequency", "polarization", "time", "baseline_id"]
+    template_chunk_sizes = {
+        k: v for k, v in ps.chunksizes.items() if k in template_core_dims
+    }
+    output_xr = xr.DataArray(
+        np.empty(
+            (
+                ps.sizes["frequency"],
+                ps.sizes["polarization"],
+                ps.sizes["time"],
+                ps.sizes["baseline_id"],
+            ),
+            dtype=np.complex64,
+        ),
+        dims=template_core_dims,
+    ).chunk(template_chunk_sizes)
+
+    cell_size_radian = (cell_size * au.arcsecond).to(au.rad).value
+
+    return xr.map_blocks(
+        predict,
+        ps,
+        template=output_xr,
+        kwargs=dict(
+            model_image=model_image,
+            epsilon=epsilon,
+            cell_size=cell_size_radian,
+        ),
     )

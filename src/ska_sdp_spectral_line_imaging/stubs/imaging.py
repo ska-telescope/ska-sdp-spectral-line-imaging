@@ -9,6 +9,10 @@ from ska_sdp_datamodels.image.image_model import Image
 from ska_sdp_datamodels.science_data_model.polarisation_model import (
     PolarisationFrame,
 )
+from ska_sdp_func_python.image import deconvolve_cube
+
+from .model import subtract_visibility
+from .predict import predict_for_channels
 
 polarization_lookup = {
     "_".join(value): key
@@ -261,3 +265,41 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon):
         polarisation_frame=polarization_frame,
         wcs=wcs,
     )
+
+
+def clean_cube(
+    ps, psf_image, n_iter_major, gridding_params, deconvolution_params
+):
+    epsilon = gridding_params.get("epsilon", 1e-4)
+    cell_size = gridding_params.get("cell_size", None)
+    nx = gridding_params.get("nx", 256)
+    ny = gridding_params.get("ny", 256)
+
+    image = cube_imaging(ps, cell_size, nx, ny, epsilon)
+    residual_ps = ps
+
+    def image_restoration(model, residual):
+        # Restoration of cube image
+        return model
+
+    for _iter in range(n_iter_major):
+        model_image, residual_image = deconvolve_cube(
+            image, psf_image, **deconvolution_params
+        )
+
+        if _iter == n_iter_major - 1:
+            image = image_restoration(model_image, residual_image)
+            break
+
+        model_vis = residual_ps.assign(
+            {
+                "VISIBILITY": predict_for_channels(
+                    residual_ps, model_image, epsilon, cell_size
+                )
+            }
+        )
+
+        residual_ps = subtract_visibility(ps, model_vis)
+        image = cube_imaging(residual_ps, cell_size, nx, ny, epsilon)
+
+    return image

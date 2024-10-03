@@ -73,6 +73,7 @@ autodoc_mock_imports = [
     "ducc0",
     "ska_sdp_datamodels",
     "ska_ser_logging",
+    "ska_sdp_func_python",
     "astropy",
     "matplotlib",
     "pandas"

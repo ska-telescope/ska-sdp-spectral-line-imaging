@@ -3199,6 +3199,37 @@ files = [
 ptyprocess = ">=0.5"
 
 [[package]]
+name = "photutils"
+version = "1.13.0"
+description = "An Astropy package for source detection and photometry"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "photutils-1.13.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:dced29b5c7af803aeafbbaa726d3afffc8955f4f28b86e187b6a6c5a08300caf"},
+    {file = "photutils-1.13.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:51ef897a3188ee2ac9cff26b446ff65015f732816adbd05ef419d38f3122ba93"},
+    {file = "photutils-1.13.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:debf8e2b945822e7a0fd39a3f21e298d014fcf3c251014c1daaf4edfc14079af"},
+    {file = "photutils-1.13.0-cp310-cp310-win_amd64.whl", hash = "sha256:122c15d264ca065b23b906819f1fc89984d459aeda840d49e0d699bac8e5db16"},
+    {file = "photutils-1.13.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:f0168a1c9b8a73663febf95046e30dc136a403881502b39642187ce8a4ad9a47"},
+    {file = "photutils-1.13.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:6381d16b691b6718b7a99e1044300967f606cd47f05abd56a7b2139264016d86"},
+    {file = "photutils-1.13.0-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:24d6510cb557ec8cc432b479132028ba995660178554603d83d56dca70bd8d1f"},
+    {file = "photutils-1.13.0-cp311-cp311-win_amd64.whl", hash = "sha256:609b5e2afe525f5c652d235ce485089109954806f03d03f88b7555e80dff47e5"},
+    {file = "photutils-1.13.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:c1fd66336953e45634926711ade21a764880dff4a011d83ced8dd5b864d48e66"},
+    {file = "photutils-1.13.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:8c8906b6d01a834a78277c7bccd10b5a8cc730fcdbbee5571d7e33e46ec11bd4"},
+    {file = "photutils-1.13.0-cp312-cp312-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b847523d5593a700b70b8287cfc2721bbff54e16dedb5e5ad2421bec59f90749"},
+    {file = "photutils-1.13.0-cp312-cp312-win_amd64.whl", hash = "sha256:cc2c0bfbcccc1f6a7c6ba0b4ecb50999d32d2017624fbd8586f5ffe06cf36dda"},
+    {file = "photutils-1.13.0.tar.gz", hash = "sha256:da3621d0f9e54f22a54ac4cac429a68ddfef45380db7962bfd763625606717d2"},
+]
+
+[package.dependencies]
+astropy = ">=5.1"
+numpy = ">=1.23"
+
+[package.extras]
+all = ["bottleneck", "gwcs (>=0.18)", "matplotlib (>=3.5)", "rasterio", "scikit-image (>=0.20)", "scipy (>=1.8)", "shapely", "tqdm"]
+docs = ["photutils[all]", "sphinx", "sphinx-astropy (>=1.9)", "tomli"]
+test = ["pytest-astropy (>=0.11)"]
+
+[[package]]
 name = "pillow"
 version = "10.4.0"
 description = "Python Imaging Library (Fork)"
@@ -3485,6 +3516,19 @@ files = [
     {file = "pyarrow-17.0.0-cp312-cp312-win_amd64.whl", hash = "sha256:392bc9feabc647338e6c89267635e111d71edad5fcffba204425a7c8d13610d7"},
     {file = "pyarrow-17.0.0-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:af5ff82a04b2171415f1410cff7ebb79861afc5dae50be73ce06d6e870615204"},
     {file = "pyarrow-17.0.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:edca18eaca89cd6382dfbcff3dd2d87633433043650c07375d095cd3517561d8"},
+    {file = "pyarrow-17.0.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7c7916bff914ac5d4a8fe25b7a25e432ff921e72f6f2b7547d1e325c1ad9d155"},
+    {file = "pyarrow-17.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f553ca691b9e94b202ff741bdd40f6ccb70cdd5fbf65c187af132f1317de6145"},
+    {file = "pyarrow-17.0.0-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:0cdb0e627c86c373205a2f94a510ac4376fdc523f8bb36beab2e7f204416163c"},
+    {file = "pyarrow-17.0.0-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:d7d192305d9d8bc9082d10f361fc70a73590a4c65cf31c3e6926cd72b76bc35c"},
+    {file = "pyarrow-17.0.0-cp38-cp38-win_amd64.whl", hash = "sha256:02dae06ce212d8b3244dd3e7d12d9c4d3046945a5933d28026598e9dbbda1fca"},
+    {file = "pyarrow-17.0.0-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:13d7a460b412f31e4c0efa1148e1d29bdf18ad1411eb6757d38f8fbdcc8645fb"},
+    {file = "pyarrow-17.0.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:9b564a51fbccfab5a04a80453e5ac6c9954a9c5ef2890d1bcf63741909c3f8df"},
+    {file = "pyarrow-17.0.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:32503827abbc5aadedfa235f5ece8c4f8f8b0a3cf01066bc8d29de7539532687"},
+    {file = "pyarrow-17.0.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a155acc7f154b9ffcc85497509bcd0d43efb80d6f733b0dc3bb14e281f131c8b"},
+    {file = "pyarrow-17.0.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:dec8d129254d0188a49f8a1fc99e0560dc1b85f60af729f47de4046015f9b0a5"},
+    {file = "pyarrow-17.0.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:a48ddf5c3c6a6c505904545c25a4ae13646ae1f8ba703c4df4a1bfe4f4006bda"},
+    {file = "pyarrow-17.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:42bf93249a083aca230ba7e2786c5f673507fa97bbd9725a1e2754715151a204"},
+    {file = "pyarrow-17.0.0.tar.gz", hash = "sha256:4beca9521ed2c0921c1023e68d097d0299b62c362639ea315572a58f3f50fd28"},
 ]
 
 [package.dependencies]
@@ -4403,13 +4447,13 @@ files = [
 
 [[package]]
 name = "ska-sdp-datamodels"
-version = "0.3.0"
+version = "0.3.3"
 description = "SKA SDP Python-based Data Models"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "ska_sdp_datamodels-0.3.0-py3-none-any.whl", hash = "sha256:fe462c310135c911448bca27b39b1a31875d416b0eb2e054a922d23e8ac13037"},
-    {file = "ska_sdp_datamodels-0.3.0.tar.gz", hash = "sha256:f7d3a51237e6684cd20e68a1acc410a165e34fa8dc63238650600009e734b2ef"},
+    {file = "ska_sdp_datamodels-0.3.3-py3-none-any.whl", hash = "sha256:c1ef04c67eaf103c5026cd04e6348fbfce0cc02b5014401082504bf590246b30"},
+    {file = "ska_sdp_datamodels-0.3.3.tar.gz", hash = "sha256:1e20599b95b79dfdf071b9d53b42b3a34e2f0b7e4b09d8160e5e6715916a161b"},
 ]
 
 [package.dependencies]
@@ -4420,11 +4464,45 @@ msgpack = ">=1.0,<2.0"
 msgpack-numpy = ">=0.4,<0.5"
 numpy = ">=1.26,<2.0"
 pandas = ">=2.2,<3.0"
-ska-telmodel = ">=1.17,<2.0"
-xarray = ">=2024.6,<2025.0"
+ska-telmodel = ">=1.19,<2.0"
+xarray = ">=2024.7,<2025.0"
 
 [package.extras]
 python-casacore = ["python-casacore (>=3.5,<4.0)"]
+
+[package.source]
+type = "legacy"
+url = "https://artefact.skao.int/repository/pypi-internal/simple"
+reference = "skao"
+
+[[package]]
+name = "ska-sdp-func-python"
+version = "0.4.1"
+description = "SKA SDP Python-Based Processing Functions"
+optional = false
+python-versions = ">=3.10,<4.0"
+files = [
+    {file = "ska_sdp_func_python-0.4.1-py3-none-any.whl", hash = "sha256:ea9423b901060489676de403cbe8c15a16c326e453a59f4368fab6c0f1c81c99"},
+    {file = "ska_sdp_func_python-0.4.1.tar.gz", hash = "sha256:220bc8edc9d09619239f5ef444c80b3a4528bdc8f18d7cb9967534710f5e1028"},
+]
+
+[package.dependencies]
+astroplan = ">=0.10,<0.11"
+astropy = ">=6.1,<7.0"
+ducc0 = ">=0.34,<0.35"
+numpy = ">=1.26,<2.0"
+photutils = ">=1.12,<2.0"
+scipy = ">=1.14,<2.0"
+ska-sdp-datamodels = ">=0.3.1,<0.4.0"
+xarray = ">=2024.7,<2025.0"
+
+[package.extras]
+dp3 = ["dp3 (==6.0.0)"]
+fft-support = ["pyfftw (>=0.13,<0.14)"]
+gpu = ["cupy (>=12.2,<13.0)"]
+h5py = ["h5py (>=3.11,<4.0)"]
+radler = ["radler (>=0.0.1,<0.0.2)"]
+ska-sdp-func = ["ska-sdp-func @ git+https://gitlab.com/ska-telescope/sdp/ska-sdp-func.git@main"]
 
 [package.source]
 type = "legacy"
@@ -5383,4 +5461,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "eabe6b63e3ca722cc0742b95da2367060804c8cb1fee5779797bb3173d37a459"
+content-hash = "54b46014c0f776bd44e8cd098092078c3df78120c28580aa7b1551f6cb85d807"

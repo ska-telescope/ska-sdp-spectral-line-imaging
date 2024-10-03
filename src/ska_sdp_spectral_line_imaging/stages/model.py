@@ -12,6 +12,8 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
+from ..stubs.model import subtract_visibility
+
 
 @ConfigurableStage(
     "read_model",
@@ -111,7 +113,6 @@ def cont_sub(upstream_output):
     """
 
     ps = upstream_output["ps"]
+    model = ps.assign({"VISIBILITY": ps.VISIBILITY_MODEL})
 
-    return {
-        "ps": ps.assign({"VISIBILITY": ps.VISIBILITY - ps.VISIBILITY_MODEL})
-    }
+    return {"ps": subtract_visibility(ps, model)}

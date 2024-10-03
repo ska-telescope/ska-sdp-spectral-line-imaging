@@ -13,4 +13,5 @@ Submodules
    :maxdepth: 1
 
    ska_sdp_spectral_line_imaging.stubs.imaging
+   ska_sdp_spectral_line_imaging.stubs.model
    ska_sdp_spectral_line_imaging.stubs.predict
