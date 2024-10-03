@@ -62,15 +62,16 @@ def imaging_stage(
 
     if cell_size is None:
         umax, vmax, _ = np.abs(ps.UVW).max(dim=["time", "baseline_id"])
-        # todo: handle units properly. eg. Hz, MHz etc.
+        # TODO: handle units properly. eg. Hz, MHz etc.
         #  Assumption, current unit is Hz.
         maximum_frequency = ps.frequency.max()
+        minimum_wavelength = 3.0e8 / maximum_frequency
 
         u_cell_size = estimate_cell_size(
-            umax, maximum_frequency, scaling_factor
+            umax, minimum_wavelength, scaling_factor
         )
         v_cell_size = estimate_cell_size(
-            vmax, maximum_frequency, scaling_factor
+            vmax, minimum_wavelength, scaling_factor
         )
 
         cell_size = np.minimum(u_cell_size, v_cell_size)

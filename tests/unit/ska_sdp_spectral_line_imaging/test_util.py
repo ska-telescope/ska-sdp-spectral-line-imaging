@@ -9,15 +9,15 @@ from ska_sdp_spectral_line_imaging.util import (
 def test_should_estimate_cell_size_in_arcsec():
     # inputs
     uvw = 15031.69261419
-    frequency = 6.34074219e08  # Hz
+    wavelength = 0.47313073298  # m
     factor = 3.0
-    expected_cell_size = 1.08204957
+    expected_cell_size = 1.08
 
     # action
-    actual_cell_size = estimate_cell_size(uvw, frequency, factor)
+    actual_cell_size = estimate_cell_size(uvw, wavelength, factor)
 
     # verify
-    np.testing.assert_allclose(actual_cell_size, expected_cell_size)
+    np.testing.assert_array_equal(actual_cell_size, expected_cell_size)
 
 
 def test_should_estimate_image_size():
@@ -33,4 +33,4 @@ def test_should_estimate_image_size():
     )
 
     # verify
-    np.testing.assert_allclose(actual_image_size, expected_image_size)
+    np.testing.assert_array_equal(actual_image_size, expected_image_size)

@@ -37,7 +37,7 @@ def test_should_estimate_cell_size_when_not_passed(
     ps = Mock(name="ps")
     ps.UVW = Mock(name="uvw")
     ps.UVW.max.return_value = ("umax", "vmax", "wmax")
-    ps.frequency.max.return_value = 123.01
+    ps.frequency.max.return_value = 200
 
     numpy_mock.abs.return_value = ps.UVW
     numpy_mock.minimum.return_value = "min_cell_size"
@@ -59,12 +59,12 @@ def test_should_estimate_cell_size_when_not_passed(
         [
             mock.call(
                 "umax",
-                123.01,
+                1.5e6,
                 2.0,
             ),
             mock.call(
                 "vmax",
-                123.01,
+                1.5e6,
                 2.0,
             ),
         ]

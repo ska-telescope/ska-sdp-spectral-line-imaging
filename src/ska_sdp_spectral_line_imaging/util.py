@@ -1,8 +1,7 @@
 import numpy as np
 
 
-# TODO: Should this function take max_freq or min_wavelength?
-def estimate_cell_size(umax: float, frequency: float, factor=3.0) -> float:
+def estimate_cell_size(umax: float, wavelength: float, factor=3.0) -> float:
     """
     A generalized function which estimates cell size for given "umax" value.
     Here, "umax" can either be maximum value of U, V or W data.
@@ -11,26 +10,27 @@ def estimate_cell_size(umax: float, frequency: float, factor=3.0) -> float:
     ----------
         umax: float
             Maximum value from uvw data from the observation.
-        frequency: float
-            Frequency in Hz.
-            For better estimation, it has to be the maximum frequency observed.
+        wavelength: float
+            Wavelength in meters.
+            For better estimation, it has to be
+            the minimum wavelength observed.
         factor: float
             Scaling factor.
 
     Returns
     -------
         float
-            cell size in arcsecond.
+            Cell size in arcsecond.
+            **The output is rounded** to the 2 decimal places.
     """
-    wave_length = 3.0e8 / frequency
-
-    umax /= wave_length
+    umax /= wavelength
 
     cell_size_rad = 1.0 / (2.0 * factor * umax)
 
     cell_size_arcsec = np.rad2deg(cell_size_rad) * 3600
 
-    return cell_size_arcsec
+    # Rounded to 2 decimals
+    return cell_size_arcsec.round(2)
 
 
 def estimate_image_size(
@@ -51,8 +51,8 @@ def estimate_image_size(
     Returns
     -------
         int
-            Size of the image
-            Note: The output is rounded to the nearest multiple of 100
+            Size of the image.
+            **The output is rounded** to the nearest multiple of 100
             greater than the calculated image size.
     """
     cell_size_rad = np.deg2rad(cell_size / 3600)
