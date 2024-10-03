@@ -51,7 +51,15 @@ def estimate_image_size(
     Returns
     -------
         int
-            Dimension of the image
+            Size of the image
+            Note: The output is rounded to the nearest multiple of 100
+            greater than the calculated image size.
     """
+    cell_size_rad = np.deg2rad(cell_size / 3600)
 
-    return NotImplemented
+    image_size = (1.5 * maximum_wavelength) / (
+        cell_size_rad * antenna_diameter
+    )
+
+    # Rounding to the nearest multiple of 100
+    return np.ceil(image_size / 100) * 100
