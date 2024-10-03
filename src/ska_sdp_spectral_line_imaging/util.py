@@ -1,6 +1,7 @@
 import numpy as np
 
 
+# TODO: Should this function take max_freq or min_wavelength?
 def estimate_cell_size(umax: float, frequency: float, factor=3.0) -> float:
     """
     A generalized function which estimates cell size for given "umax" value.
@@ -30,3 +31,27 @@ def estimate_cell_size(umax: float, frequency: float, factor=3.0) -> float:
     cell_size_arcsec = np.rad2deg(cell_size_rad) * 3600
 
     return cell_size_arcsec
+
+
+def estimate_image_size(
+    maximum_wavelength: float, antenna_diameter: float, cell_size: float
+) -> int:
+    """
+    Estimates dimension of the image which will be used in the imaging stage.
+
+    Parameters
+    ----------
+        maximum_wavelength: float
+            Maximum wavelength of the observation in meter.
+        antenna_diameter: float
+            Diameter of the antenna in meter.
+        cell_size: float
+            Cell size in arcsecond.
+
+    Returns
+    -------
+        int
+            Dimension of the image
+    """
+
+    return NotImplemented

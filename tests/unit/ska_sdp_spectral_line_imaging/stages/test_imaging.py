@@ -16,15 +16,14 @@ def test_should_do_imaging(cube_imaging_mock):
     upstream_output = {"ps": ps}
     epsilon = 1e-4
     cell_size = 123
-    nx = 0
-    ny = 1
+    image_size = 1
     scaling_factor = 2.0
 
     result = imaging_stage.stage_definition(
-        upstream_output, epsilon, cell_size, scaling_factor, nx, ny
+        upstream_output, epsilon, cell_size, scaling_factor, image_size
     )
 
-    cube_imaging_mock.assert_called_once_with(ps, 123, 0, 1, 1e-4)
+    cube_imaging_mock.assert_called_once_with(ps, 123, 1, 1, 1e-4)
 
     assert result == {"ps": ps, "image_cube": "cube image"}
 
@@ -47,12 +46,11 @@ def test_should_estimate_cell_size_when_not_passed(
     upstream_output = {"ps": ps}
     epsilon = 1e-4
     cell_size = None
-    nx = 0
-    ny = 1
+    image_size = 1
     scaling_factor = 2.0
 
     imaging_stage.stage_definition(
-        upstream_output, epsilon, cell_size, scaling_factor, nx, ny
+        upstream_output, epsilon, cell_size, scaling_factor, image_size
     )
 
     numpy_mock.abs.assert_called_once_with(ps.UVW)
@@ -72,4 +70,31 @@ def test_should_estimate_cell_size_when_not_passed(
         ]
     )
     numpy_mock.minimum.assert_called_once_with("u_cell_size", "v_cell_size")
-    cube_imaging_mock.assert_called_once_with(ps, "min_cell_size", 0, 1, 1e-4)
+    cube_imaging_mock.assert_called_once_with(ps, "min_cell_size", 1, 1, 1e-4)
+
+
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_image_size")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
+def test_should_estimate_image_size_when_not_passed(
+    cube_imaging_mock, estimate_image_size_mock
+):
+    ps = Mock(name="ps")
+    ps.frequency.min.return_value = 100
+    ps.antenna_xds.DISH_DIAMETER.min.return_value = 50
+
+    estimate_image_size_mock.return_value = "estimated_grid_size"
+
+    upstream_output = {"ps": ps}
+    epsilon = 1e-4
+    cell_size = 123
+    image_size = None
+    scaling_factor = 2.0
+
+    imaging_stage.stage_definition(
+        upstream_output, epsilon, cell_size, scaling_factor, image_size
+    )
+
+    estimate_image_size_mock.assert_called_once_with(3.0e6, 50, 123)
+    cube_imaging_mock.assert_called_once_with(
+        ps, 123, "estimated_grid_size", "estimated_grid_size", 1e-4
+    )

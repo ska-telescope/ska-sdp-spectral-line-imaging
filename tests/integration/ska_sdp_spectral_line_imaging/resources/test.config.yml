@@ -8,8 +8,7 @@ parameters:
     psout_name: residual
   imaging:
     cell_size: 60.0
-    nx: 16
-    ny: 16
+    image_size: 16
   predict_stage:
     cell_size: 60.0
   read_model:
