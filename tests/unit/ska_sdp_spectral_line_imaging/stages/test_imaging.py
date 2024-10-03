@@ -1,3 +1,4 @@
+# pylint: disable=no-member
 from mock import mock
 from mock.mock import Mock
 
@@ -30,13 +31,18 @@ def test_should_do_imaging(cube_imaging_mock):
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_cell_size")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.np")
 def test_should_estimate_cell_size_when_not_passed(
-    cube_imaging_mock, estimate_cell_size_mock
+    numpy_mock, cube_imaging_mock, estimate_cell_size_mock
 ):
-    estimate_cell_size_mock.return_value = 2345
     ps = Mock(name="ps")
-    ps.UVW = "UVW"
+    ps.UVW = Mock(name="uvw")
+    ps.UVW.max.return_value = ("umax", "vmax", "wmax")
     ps.frequency.max.return_value = 123.01
+
+    numpy_mock.abs.return_value = ps.UVW
+    numpy_mock.minimum.return_value = "min_cell_size"
+    estimate_cell_size_mock.side_effect = ["u_cell_size", "v_cell_size"]
 
     upstream_output = {"ps": ps}
     epsilon = 1e-4
@@ -49,10 +55,21 @@ def test_should_estimate_cell_size_when_not_passed(
         upstream_output, epsilon, cell_size, scaling_factor, nx, ny
     )
 
-    estimate_cell_size_mock.assert_called_once_with(
-        "UVW",
-        123.01,
-        2.0,
+    numpy_mock.abs.assert_called_once_with(ps.UVW)
+    ps.UVW.max.assert_called_once_with(dim=["time", "baseline_id"])
+    estimate_cell_size_mock.assert_has_calls(
+        [
+            mock.call(
+                "umax",
+                123.01,
+                2.0,
+            ),
+            mock.call(
+                "vmax",
+                123.01,
+                2.0,
+            ),
+        ]
     )
-
-    cube_imaging_mock.assert_called_once_with(ps, 2345, 0, 1, 1e-4)
+    numpy_mock.minimum.assert_called_once_with("u_cell_size", "v_cell_size")
+    cube_imaging_mock.assert_called_once_with(ps, "min_cell_size", 0, 1, 1e-4)

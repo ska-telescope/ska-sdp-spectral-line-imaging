@@ -1,33 +1,32 @@
 import numpy as np
 
 
-def estimate_cell_size(uvw, frequency, factor=3.0):
+def estimate_cell_size(umax: float, frequency: float, factor=3.0) -> float:
     """
-    Estimates cell size.
+    A generalized function which estimates cell size for given "umax" value.
+    Here, "umax" can either be maximum value of U, V or W data.
 
     Parameters
     ----------
-        uvw: xarray.DataArray
-            uvw data from the observation.
+        umax: float
+            Maximum value from uvw data from the observation.
         frequency: float
-            Reference frequency of the observation in Hz.
+            Frequency in Hz.
+            For better estimation, it has to be the maximum frequency observed.
         factor: float
             Scaling factor.
 
     Returns
     -------
-        numpy.ndarray
-        U and V cell sizes in arcsecond.
-
+        float
+            cell size in arcsecond.
     """
-    umax, vmax, _ = np.abs(uvw).max(dim=["time", "baseline_id"])
-
     wave_length = 3.0e8 / frequency
 
     umax /= wave_length
-    vmax /= wave_length
 
-    u_cell_size = 1.0 / (2.0 * factor * umax)
-    v_cell_size = 1.0 / (2.0 * factor * vmax)
+    cell_size_rad = 1.0 / (2.0 * factor * umax)
 
-    return np.rad2deg([u_cell_size, v_cell_size]) * 3600
+    cell_size_arcsec = np.rad2deg(cell_size_rad) * 3600
+
+    return cell_size_arcsec

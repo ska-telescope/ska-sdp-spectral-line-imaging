@@ -1,4 +1,6 @@
 # pylint: disable=no-member,import-error
+import numpy as np
+
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
@@ -51,11 +53,15 @@ def imaging_stage(upstream_output, epsilon, cell_size, scaling_factor, nx, ny):
     ps = upstream_output["ps"]
 
     if cell_size is None:
-        uvw = ps.UVW
+        umax, vmax, _ = np.abs(ps.UVW).max(dim=["time", "baseline_id"])
         # todo: handle units properly. eg. Hz, MHz etc.
         #  Assumption, current unit is Hz.
         freq = ps.frequency.max()
-        cell_size = estimate_cell_size(uvw, freq, scaling_factor)
+
+        u_cell_size = estimate_cell_size(umax, freq, scaling_factor)
+        v_cell_size = estimate_cell_size(vmax, freq, scaling_factor)
+
+        cell_size = np.minimum(u_cell_size, v_cell_size)
 
     image = cube_imaging(ps, cell_size, nx, ny, epsilon)
 
