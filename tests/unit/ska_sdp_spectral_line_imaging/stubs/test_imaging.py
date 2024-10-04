@@ -1,7 +1,8 @@
-from mock import Mock, mock
+from mock import Mock, call, mock
 
 from ska_sdp_spectral_line_imaging.stubs.imaging import (
     chunked_imaging,
+    clean_cube,
     cube_imaging,
     image_ducc,
 )
@@ -109,3 +110,55 @@ def test_should_perform_cube_imaging(
     )
 
     assert cube_image == "cube_image"
+
+
+@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.subtract_visibility")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.predict_for_channels",
+    return_value="predicted_visibilities",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve_cube",
+    return_value=["model_image", "residual_image"],
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
+    side_effect=["cube_image1", "cube_image2"],
+)
+def test_should_perform_major_cyle(
+    cube_imaging_mock, deconvolve_mock, predict_mock, subtract_mock
+):
+
+    ps = Mock(name="ps")
+    residual_ps = Mock(name="residual_ps")
+    ps.assign = Mock(name="assign", return_value=residual_ps)
+    subtract_mock.return_value = residual_ps
+
+    gridding_params = {
+        "epsilon": 0.0001,
+        "cell_size": 123,
+        "image_size": 1,
+        "scaling_factor": 2.0,
+        "nx": 1,
+        "ny": 1,
+    }
+    deconvolution_params = {"param1": 1, "param2": 2}
+    psf_image = "psf_image"
+    n_iter_major = 2
+
+    clean_cube(
+        ps, psf_image, n_iter_major, gridding_params, deconvolution_params
+    )
+
+    cube_imaging_mock.assert_has_calls(
+        [call(ps, 123, 1, 1, 0.0001), call(residual_ps, 123, 1, 1, 0.0001)]
+    )
+    deconvolve_mock.assert_has_calls(
+        [
+            call("cube_image1", "psf_image", param1=1, param2=2),
+            call("cube_image2", "psf_image", param1=1, param2=2),
+        ]
+    )
+    predict_mock.assert_called_once_with(ps, "model_image", 0.0001, 123)
+    subtract_mock.assert_called_once_with(ps, residual_ps)
+    ps.assign.assert_called_once_with({"VISIBILITY": "predicted_visibilities"})

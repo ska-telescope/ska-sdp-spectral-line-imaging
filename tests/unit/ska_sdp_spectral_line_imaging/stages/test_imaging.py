@@ -5,8 +5,12 @@ from mock.mock import Mock
 from ska_sdp_spectral_line_imaging.stages.imaging import imaging_stage
 
 
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.import_image_from_fits",
+    return_value="psf_image",
+)
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
-def test_should_do_imaging(clean_cube_mock):
+def test_should_do_imaging(clean_cube_mock, import_image_mock):
     clean_cube_mock.return_value = "cube image"
 
     ps = Mock(name="ps")
@@ -23,12 +27,16 @@ def test_should_do_imaging(clean_cube_mock):
     upstream_output = {"ps": ps}
 
     result = imaging_stage.stage_definition(
-        upstream_output, gridding_params, {"deconvolve_params": None}, 0, None
+        upstream_output,
+        gridding_params,
+        {"deconvolve_params": None},
+        0,
+        "psf_path",
     )
 
     clean_cube_mock.assert_called_once_with(
         ps,
-        [],
+        "psf_image",
         0,
         {
             "epsilon": 0.0001,
@@ -41,14 +49,20 @@ def test_should_do_imaging(clean_cube_mock):
         {"deconvolve_params": None},
     )
 
+    import_image_mock.assert_called_once_with("psf_path", fixpol=True)
+
     assert result == {"ps": ps, "image_cube": "cube image"}
 
 
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.import_image_from_fits",
+    return_value="psf_image",
+)
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_cell_size")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.np")
 def test_should_estimate_cell_size_when_not_passed(
-    numpy_mock, clean_cube_mock, estimate_cell_size_mock
+    numpy_mock, clean_cube_mock, estimate_cell_size_mock, _
 ):
     ps = Mock(name="ps")
     ps.UVW = Mock(name="uvw")
@@ -68,7 +82,11 @@ def test_should_estimate_cell_size_when_not_passed(
     }
 
     imaging_stage.stage_definition(
-        upstream_output, gridding_params, {"deconvolve_params": None}, 0, None
+        upstream_output,
+        gridding_params,
+        {"deconvolve_params": None},
+        0,
+        None,
     )
 
     numpy_mock.abs.assert_called_once_with(ps.UVW)
@@ -104,10 +122,14 @@ def test_should_estimate_cell_size_when_not_passed(
     )
 
 
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.import_image_from_fits",
+    return_value="psf_image",
+)
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_image_size")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
 def test_should_estimate_image_size_when_not_passed(
-    clean_cube_mock, estimate_image_size_mock
+    clean_cube_mock, estimate_image_size_mock, _
 ):
     ps = Mock(name="ps")
     ps.frequency.min.return_value = 100
@@ -124,13 +146,17 @@ def test_should_estimate_image_size_when_not_passed(
     }
 
     imaging_stage.stage_definition(
-        upstream_output, gridding_params, {"deconvolve_params": None}, 0, None
+        upstream_output,
+        gridding_params,
+        {"deconvolve_params": None},
+        0,
+        "psf_path",
     )
 
     estimate_image_size_mock.assert_called_once_with(3.0e6, 50, 123)
     clean_cube_mock.assert_called_once_with(
         ps,
-        [],
+        "psf_image",
         0,
         {
             "epsilon": 0.0001,
