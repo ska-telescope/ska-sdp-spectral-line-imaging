@@ -12,12 +12,15 @@ def subtract_visibility(
         visibility needs to be subtracted
     :param src_observation: The observtion dataset providing the visibilities
         to be subtracted
-    :return: New processing set with subtracted visibilities
+    :return: New observation with subtracted visibilities
     """
 
-    return target_observation.assign(
-        {
-            "VISIBILITY": target_observation.VISIBILITY
-            - src_observation.VISIBILITY
-        }
+    subtracted_visibility = (
+        target_observation.VISIBILITY - src_observation.VISIBILITY
     )
+
+    subtracted_visibility = subtracted_visibility.assign_attrs(
+        target_observation.VISIBILITY.attrs
+    )
+
+    return target_observation.assign({"VISIBILITY": subtracted_visibility})

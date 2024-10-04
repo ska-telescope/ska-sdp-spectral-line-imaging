@@ -104,11 +104,12 @@ def imaging_stage(
         image_size = estimate_image_size(
             maximum_wavelength, antenna_diameter, cell_size
         )
-    gridding_params["image_size"] = image_size
+        gridding_params["image_size"] = image_size
+
     gridding_params["nx"] = gridding_params["ny"] = image_size
 
-    logger.info(f"Using cell size = {float(cell_size)}")
-    logger.info(f"Using image size = {int(image_size)}")
+    logger.info(f"Using cell size = {float(cell_size)} arcseconds")
+    logger.info(f"Using image size = {int(image_size)} pixels")
 
     if psf_image_path is None:
         psf_image = []

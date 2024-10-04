@@ -1,3 +1,4 @@
+# pylint: disable=no-member
 from mock import Mock, call, mock
 
 from ska_sdp_spectral_line_imaging.stubs.imaging import (
@@ -115,7 +116,6 @@ def test_should_perform_cube_imaging(
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.subtract_visibility")
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.predict_for_channels",
-    return_value="predicted_visibilities",
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve_cube",
@@ -133,6 +133,9 @@ def test_should_perform_major_cyle(
     residual_ps = Mock(name="residual_ps")
     ps.assign = Mock(name="assign", return_value=residual_ps)
     subtract_mock.return_value = residual_ps
+    predicted_visibilities = Mock(name="predicted_visibilities")
+    predict_mock.return_value = predicted_visibilities
+    predicted_visibilities.assign_attrs.return_value = predicted_visibilities
 
     gridding_params = {
         "epsilon": 0.0001,
@@ -161,4 +164,7 @@ def test_should_perform_major_cyle(
     )
     predict_mock.assert_called_once_with(ps, "model_image", 0.0001, 123)
     subtract_mock.assert_called_once_with(ps, residual_ps)
-    ps.assign.assert_called_once_with({"VISIBILITY": "predicted_visibilities"})
+    predicted_visibilities.assign_attrs.assert_called_once_with(
+        ps.VISIBILITY.attrs
+    )
+    ps.assign.assert_called_once_with({"VISIBILITY": predicted_visibilities})

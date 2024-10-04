@@ -44,20 +44,23 @@ def get_wcs(ps, cell_size, nx, ny):
     -------
         WCS object
     """
-
     assert (
-        ps.field_and_source_xds.FIELD_PHASE_CENTER.units[0] == "rad"
+        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units[0] == "rad"
     ), "Phase field center value is not defined in radian."
     assert (
-        ps.field_and_source_xds.FIELD_PHASE_CENTER.units[1] == "rad"
+        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units[1] == "rad"
     ), "Phase field center value is not defined in radian."
 
     cell_size_degree = cell_size / 3600
     freq_channel_width = ps.frequency.channel_width["data"]
     ref_freq = ps.frequency.reference_frequency["data"]
 
-    fp_frame = ps.field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
-    fp_center = ps.field_and_source_xds.FIELD_PHASE_CENTER.to_numpy()
+    fp_frame = (
+        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
+    )
+    fp_center = (
+        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.to_numpy()
+    )
 
     coord = SkyCoord(
         ra=fp_center[0] * au.rad, dec=fp_center[1] * au.rad, frame=fp_frame
@@ -296,13 +299,15 @@ def clean_cube(
             image = image_restoration(model_image, residual_image)
             break
 
-        model_vis = residual_ps.assign(
-            {
-                "VISIBILITY": predict_for_channels(
-                    residual_ps, model_image, epsilon, cell_size
-                )
-            }
+        model_visibility = predict_for_channels(
+            residual_ps, model_image, epsilon, cell_size
         )
+
+        model_visibility = model_visibility.assign_attrs(
+            residual_ps.VISIBILITY.attrs
+        )
+
+        model_vis = residual_ps.assign({"VISIBILITY": model_visibility})
 
         residual_ps = subtract_visibility(ps, model_vis)
         image = cube_imaging(residual_ps, cell_size, nx, ny, epsilon)

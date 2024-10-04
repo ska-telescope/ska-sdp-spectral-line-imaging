@@ -1,5 +1,4 @@
 # pylint: disable=import-error,no-name-in-module,no-member
-import astropy.units as au
 import ducc0.wgridder
 import numpy as np
 import xarray as xr
@@ -33,7 +32,7 @@ def predict_ducc(
         model_image: numpy.array
             Model image
         cell_size: float
-            Cell size in arcsecond
+            Cell size in radians
         epsilon: float
             Epsilon
         nchan: int
@@ -140,15 +139,21 @@ def predict_for_channels(ps, model_image, epsilon, cell_size):
         dims=template_core_dims,
     ).chunk(template_chunk_sizes)
 
-    cell_size_radian = (cell_size * au.arcsecond).to(au.rad).value
+    cell_size_radian = np.deg2rad(cell_size / 3600)
 
-    return xr.map_blocks(
+    predicted_visibility = xr.map_blocks(
         predict,
         ps,
         template=output_xr,
         kwargs=dict(
             model_image=model_image,
             epsilon=epsilon,
-            cell_size=cell_size_radian,
+            cell_size=float(cell_size_radian),
         ),
     )
+
+    predicted_visibility = predicted_visibility.assign_coords(
+        ps.VISIBILITY.coords
+    )
+
+    return predicted_visibility

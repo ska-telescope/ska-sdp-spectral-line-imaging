@@ -71,9 +71,9 @@ def vis_stokes_conversion(
     ----------
         upstream_output: dict
             Output from the upstream stage
-        ipf: str
+        input_polarisation_frame: str
             Input polarization frame
-        opf: str
+        output_polarisation_frame: str
             Output polarization frame
 
     Returns
@@ -94,7 +94,19 @@ def vis_stokes_conversion(
         dask="allowed",
     )
 
-    return {"ps": ps.assign(dict(VISIBILITY=converted_vis))}
+    converted_vis = converted_vis.assign_coords(
+        {
+            "polarization": np.array(
+                PolarisationFrame(output_polarisation_frame).names
+            )
+        }
+    )
+
+    converted_vis = converted_vis.assign_attrs(ps.VISIBILITY.attrs)
+
+    ps = ps.assign({"VISIBILITY": converted_vis})
+
+    return {"ps": ps}
 
 
 @ConfigurableStage("continuum_subtraction")
@@ -113,6 +125,7 @@ def cont_sub(upstream_output):
     """
 
     ps = upstream_output["ps"]
+
     model = ps.assign({"VISIBILITY": ps.VISIBILITY_MODEL})
 
     return {"ps": subtract_visibility(ps, model)}
