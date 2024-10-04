@@ -19,6 +19,11 @@ polarization_lookup = {
     for key, value in PolarisationFrame.polarisation_frames.items()
 }
 
+# TODO: get_wcs is untested temporary function.
+# Once stubbed imager is replaced by a proper imager
+# we expect that the imager will give the image class instance
+# with wcs information already populated.
+
 
 def get_wcs(ps, cell_size, nx, ny):
     """
@@ -29,7 +34,7 @@ def get_wcs(ps, cell_size, nx, ny):
         ps: xarray.Dataset
             Observation
         cell_size: float
-            Cell size in radian
+            Cell size in arcseconds.
         nx: int
             Image size X
         ny: int
@@ -47,12 +52,12 @@ def get_wcs(ps, cell_size, nx, ny):
         ps.field_and_source_xds.FIELD_PHASE_CENTER.units[1] == "rad"
     ), "Phase field center value is not defined in radian."
 
-    cell_size_degree = (cell_size * au.rad).to(au.deg).value
+    cell_size_degree = cell_size / 3600
     freq_channel_width = ps.frequency.channel_width["data"]
     ref_freq = ps.frequency.reference_frequency["data"]
 
     fp_frame = ps.field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
-    fp_center = ps.field_and_source_xds.FIELD_PHASE_CENTER.values
+    fp_center = ps.field_and_source_xds.FIELD_PHASE_CENTER.to_numpy()
 
     coord = SkyCoord(
         ra=fp_center[0] * au.rad, dec=fp_center[1] * au.rad, frame=fp_frame
@@ -233,24 +238,24 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon):
             (
                 ps.sizes["frequency"],
                 ps.sizes["polarization"],
-                nx,
-                ny,
+                int(nx),
+                int(ny),
             )
         ),
         dims=template_core_dims,
     ).chunk(template_chunk_sizes)
 
-    cell_size_radian = (cell_size * au.arcsecond).to(au.rad).value
+    cell_size_radian = np.deg2rad(cell_size / 3600)
 
     cube_data = xr.map_blocks(
         chunked_imaging,
         ps,
         template=output_xr,
         kwargs=dict(
-            nx=nx,
-            ny=ny,
+            nx=int(nx),
+            ny=int(ny),
             epsilon=epsilon,
-            cell_size=cell_size_radian,
+            cell_size=float(cell_size_radian),
         ),
     )
 
