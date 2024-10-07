@@ -1,4 +1,5 @@
 # pylint: disable=no-member
+import pytest
 from mock import Mock, call, mock
 
 from ska_sdp_spectral_line_imaging.stubs.imaging import (
@@ -168,3 +169,26 @@ def test_should_perform_major_cyle(
         ps.VISIBILITY.attrs
     )
     ps.assign.assert_called_once_with({"VISIBILITY": predicted_visibilities})
+
+
+@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging")
+def test_should_throw_non_implemented_error_if_psf_is_none(cube_imaging_mock):
+
+    ps = Mock(name="ps")
+
+    gridding_params = {
+        "epsilon": 0.0001,
+        "cell_size": 123,
+        "image_size": 1,
+        "scaling_factor": 2.0,
+        "nx": 1,
+        "ny": 1,
+    }
+    deconvolution_params = {"param1": 1, "param2": 2}
+    psf_image = None
+    n_iter_major = 2
+
+    with pytest.raises(NotImplementedError):
+        clean_cube(
+            ps, psf_image, n_iter_major, gridding_params, deconvolution_params
+        )

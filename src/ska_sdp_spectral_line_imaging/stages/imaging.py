@@ -112,7 +112,7 @@ def imaging_stage(
     logger.info(f"Using image size = {int(image_size)} pixels")
 
     if psf_image_path is None:
-        psf_image = []
+        psf_image = None
     else:
         psf_image = import_image_from_fits(psf_image_path, fixpol=True)
 

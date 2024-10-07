@@ -278,6 +278,29 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon):
 def clean_cube(
     ps, psf_image, n_iter_major, gridding_params, deconvolution_params
 ):
+    """
+    Perform cube clean on an xarray dataset
+
+    Parameters
+    ----------
+        ps: xarray.Dataset
+            Observation
+        psf_image: ska_sdp_datamodels.image.image_model.Image
+            Point spread function image
+        n_iter_major: int
+            Number of major iterations
+        gridding_params: dict
+            Prameters to perform gridding.
+                epsilon: float
+                cell_size: float
+                nx, ny: int
+        deconvolution_params: dict
+            Deconvolution parameters
+
+    Returns
+    -------
+        ska_sdp_datamodels.image.image_model.Image
+    """
     epsilon = gridding_params.get("epsilon", 1e-4)
     cell_size = gridding_params.get("cell_size", None)
     nx = gridding_params.get("nx", 256)
@@ -291,6 +314,9 @@ def clean_cube(
         return model
 
     for _iter in range(n_iter_major):
+        if psf_image is None:
+            raise NotImplementedError("PSF calculations not implemented")
+
         model_image, residual_image = deconvolve_cube(
             image, psf_image, **deconvolution_params
         )
