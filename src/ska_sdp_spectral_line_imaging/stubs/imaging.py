@@ -69,12 +69,12 @@ def get_wcs(ps, cell_size, nx, ny):
     new_wcs = WCS(naxis=4)
 
     new_wcs.wcs.crpix = [nx // 2, ny // 2, 1, 1]
-    new_wcs.wcs.cunit = ["deg", "deg", ps.frequency.units[0], ""]
+    new_wcs.wcs.cunit = ["deg", "deg", "", ps.frequency.units[0]]
     new_wcs.wcs.cdelt = np.array(
-        [-cell_size_degree, cell_size_degree, freq_channel_width, 1]
+        [-cell_size_degree, cell_size_degree, 1, freq_channel_width]
     )
-    new_wcs.wcs.crval = [coord.ra.deg, coord.dec.deg, ref_freq, 1]
-    new_wcs.wcs.ctype = ["RA---SIN", "DEC--SIN", "FREQ", "STOKES"]
+    new_wcs.wcs.crval = [coord.ra.deg, coord.dec.deg, 1, ref_freq]
+    new_wcs.wcs.ctype = ["RA---SIN", "DEC--SIN", "STOKES", "FREQ"]
     new_wcs.wcs.radesys = coord.frame.name.upper()
     new_wcs.wcs.equinox = coord.frame.equinox.jyear
     new_wcs.wcs.specsys = ps.frequency.frame
