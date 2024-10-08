@@ -87,29 +87,37 @@ def imaging_stage(
         maximum_frequency = ps.frequency.max()
         minimum_wavelength = 3.0e8 / maximum_frequency
 
-        u_cell_size = estimate_cell_size(
-            umax, minimum_wavelength, scaling_factor
-        )
-        v_cell_size = estimate_cell_size(
-            vmax, minimum_wavelength, scaling_factor
+        # Taking maximum of u and v baselines, rounded
+        max_baseline = np.maximum(umax, vmax).round(2)
+        logger.info(
+            "Estimating cell size using baseline of "
+            f"{float(max_baseline)} meters"
         )
 
-        cell_size = np.minimum(u_cell_size, v_cell_size)
+        cell_size = estimate_cell_size(
+            max_baseline, minimum_wavelength, scaling_factor
+        )
         gridding_params["cell_size"] = cell_size
+
+    logger.info(f"Using cell size = {float(cell_size)} arcseconds")
 
     if image_size is None:
         maximum_wavelength = 3.0e8 / ps.frequency.min()
-        antenna_diameter = ps.antenna_xds.DISH_DIAMETER.min()
+        antenna_diameter = ps.antenna_xds.DISH_DIAMETER.min().round(2)
+
+        logger.info(
+            "Estimating image size using antenna diameter of "
+            f"{float(antenna_diameter)} meters"
+        )
 
         image_size = estimate_image_size(
             maximum_wavelength, antenna_diameter, cell_size
         )
         gridding_params["image_size"] = image_size
 
-    gridding_params["nx"] = gridding_params["ny"] = image_size
-
-    logger.info(f"Using cell size = {float(cell_size)} arcseconds")
     logger.info(f"Using image size = {int(image_size)} pixels")
+
+    gridding_params["nx"] = gridding_params["ny"] = image_size
 
     if psf_image_path is None:
         psf_image = None

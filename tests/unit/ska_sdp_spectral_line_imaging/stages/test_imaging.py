@@ -69,11 +69,12 @@ def test_should_estimate_image_and_cell_size(
     clean_cube_mock,
     import_image_mock,
 ):
+    max_baseline = Mock(name="max_baseline")
+    numpy_mock.maximum.return_value = max_baseline
+    max_baseline.round.return_value = 3.45
+    estimate_cell_size_mock.return_value = 0.75
+    estimate_image_size_mock.return_value = 500
     clean_cube_mock.return_value = "cube image"
-    estimate_cell_size_mock.side_effect = ["u_cell_size", "v_cell_size"]
-    estimate_image_size_mock.return_value = 73
-
-    numpy_mock.minimum.return_value = 12.23
 
     ps = Mock(name="ps")
     ps.UVW = Mock(name="UVW")
@@ -81,7 +82,10 @@ def test_should_estimate_image_and_cell_size(
     ps.UVW.max.return_value = ("umax", "vmax", "wmax")
     ps.frequency.min.return_value = 200
     ps.frequency.max.return_value = 400
-    ps.antenna_xds.DISH_DIAMETER.min.return_value = 50
+
+    min_antenna_diameter = Mock(name="min_antenna_diameter")
+    ps.antenna_xds.DISH_DIAMETER.min.return_value = min_antenna_diameter
+    min_antenna_diameter.round.return_value = 50.5
     numpy_mock.abs.return_value = ps.UVW
 
     gridding_params = {
@@ -101,22 +105,20 @@ def test_should_estimate_image_and_cell_size(
         "psf_path",
     )
 
-    estimate_cell_size_mock.assert_has_calls(
-        [
-            mock.call(
-                "umax",
-                0.75e6,
-                2.0,
-            ),
-            mock.call(
-                "vmax",
-                0.75e6,
-                2.0,
-            ),
-        ]
+    numpy_mock.abs.assert_called_once_with(ps.UVW)
+    ps.UVW.max.assert_called_once_with(dim=["time", "baseline_id"])
+    numpy_mock.maximum.assert_called_once_with("umax", "vmax")
+    max_baseline.round.assert_called_once_with(2)
+
+    estimate_cell_size_mock.assert_called_once_with(
+        3.45,
+        0.75e6,
+        2.0,
     )
 
-    estimate_image_size_mock.assert_called_once_with(1.50e6, 50, 12.23)
+    min_antenna_diameter.round.assert_called_once_with(2)
+
+    estimate_image_size_mock.assert_called_once_with(1.50e6, 50.5, 0.75)
 
     clean_cube_mock.assert_called_once_with(
         ps,
@@ -124,20 +126,14 @@ def test_should_estimate_image_and_cell_size(
         0,
         {
             "epsilon": 0.0001,
-            "cell_size": 12.23,
-            "image_size": 73,
+            "cell_size": 0.75,
+            "image_size": 500,
             "scaling_factor": 2.0,
-            "nx": 73,
-            "ny": 73,
+            "nx": 500,
+            "ny": 500,
         },
         {"deconvolve_params": None},
     )
-
-    numpy_mock.minimum.assert_called_once_with("u_cell_size", "v_cell_size")
-
-    numpy_mock.abs.assert_called_once_with(ps.UVW)
-
-    ps.UVW.max.assert_called_once_with(dim=["time", "baseline_id"])
 
     import_image_mock.assert_called_once_with("psf_path", fixpol=True)
 

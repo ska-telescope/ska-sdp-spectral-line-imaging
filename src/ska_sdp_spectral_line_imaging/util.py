@@ -1,15 +1,17 @@
 import numpy as np
 
 
-def estimate_cell_size(umax: float, wavelength: float, factor=3.0) -> float:
+def estimate_cell_size(
+    baseline: float, wavelength: float, factor=3.0
+) -> float:
     """
-    A generalized function which estimates cell size for given "umax" value.
-    Here, "umax" can either be maximum value of U, V or W data.
+    A generalized function which estimates cell size for given baseline value.
+    The baseline can be maximum value of U, V or W data.
 
     Parameters
     ----------
-        umax: float
-            Maximum value from uvw data from the observation.
+        baseline: float
+            Baseline length in meters.
         wavelength: float
             Wavelength in meters.
             For better estimation, it has to be
@@ -23,9 +25,9 @@ def estimate_cell_size(umax: float, wavelength: float, factor=3.0) -> float:
             Cell size in arcsecond.
             **The output is rounded** to the 2 decimal places.
     """
-    umax /= wavelength
+    baseline /= wavelength
 
-    cell_size_rad = 1.0 / (2.0 * factor * umax)
+    cell_size_rad = 1.0 / (2.0 * factor * baseline)
 
     cell_size_arcsec = np.rad2deg(cell_size_rad) * 3600
 
