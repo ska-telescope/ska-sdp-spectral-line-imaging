@@ -58,6 +58,15 @@ Install the default config YAML of the pipeline to a specific directory using th
 spectral-line-imaging-pipeline install-config --config-install-path path/to/dir
 ```
 
+Parameters of the default configuration can be overriden
+
+```bash
+spectral-line-imaging-pipeline install-config --config-install-path path/to/dir \
+                    --set parameters.imaging.gridding_params.cell_size 0.2 \
+                    --set parameters.predict_stage.cell_size 0.2 \
+                    --set parameters.read_model.pols [XX,YY]
+```
+
 ### Run the pipeline
 
 Run the spectral line pipeline using the `run` subcommand.

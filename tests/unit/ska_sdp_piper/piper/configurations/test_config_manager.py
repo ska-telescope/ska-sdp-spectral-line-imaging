@@ -174,3 +174,58 @@ def test_should_write_config_to_path(write_yml_mock, setup):
     config_manager.write_yml(path)
 
     write_yml_mock.assert_called_once_with(path, config)
+
+
+def test_should_update_key_in_config(setup):
+    config_manager = setup
+    config_manager.set("parameters.stage2.stage2_parameter_1", 10)
+    config_manager.set("parameters.stage1.stage1_parameter_1", 20)
+
+    assert config_manager.config == {
+        "pipeline": {"stage1": True, "stage2": False, "stage3": True},
+        "parameters": {
+            "stage1": {"stage1_parameter_1": 20},
+            "stage2": {"stage2_parameter_1": 10},
+            "stage3": {"stage3_parameter_1": 0},
+        },
+        "global_parameters": {
+            "global_param_1": 1,
+            "global_param_2": 1,
+        },
+    }
+
+
+def test_should_update_array_in_config(setup):
+    config_manager = setup
+    config_manager.set("parameters.stage2.stage2_parameter_1", [10, 20, 30])
+
+    assert config_manager.config == {
+        "pipeline": {"stage1": True, "stage2": False, "stage3": True},
+        "parameters": {
+            "stage1": {"stage1_parameter_1": 0},
+            "stage2": {"stage2_parameter_1": [10, 20, 30]},
+            "stage3": {"stage3_parameter_1": 0},
+        },
+        "global_parameters": {
+            "global_param_1": 1,
+            "global_param_2": 1,
+        },
+    }
+
+
+def test_should_not_update_non_existent_path_in_config(setup):
+    config_manager = setup
+    config_manager.set("parameters.stage40.stage2_parameter_1", [10, 20, 30])
+
+    assert config_manager.config == {
+        "pipeline": {"stage1": True, "stage2": False, "stage3": True},
+        "parameters": {
+            "stage1": {"stage1_parameter_1": 0},
+            "stage2": {"stage2_parameter_1": 0},
+            "stage3": {"stage3_parameter_1": 0},
+        },
+        "global_parameters": {
+            "global_param_1": 1,
+            "global_param_2": 1,
+        },
+    }

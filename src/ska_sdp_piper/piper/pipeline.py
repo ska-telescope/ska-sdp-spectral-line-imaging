@@ -1,6 +1,8 @@
 import functools
 import logging
 
+import yaml
+
 from .command import Command
 from .configurations import Configuration
 from .configurations.config_manager import ConfigManager
@@ -165,6 +167,14 @@ class Pipeline(Command, metaclass=NamedInstance):
             cli_args=self._cli_command_parser.cli_args_dict,
         )
 
+    def _update_defaults(self, overide_defaults):
+        params_to_update = yaml.safe_load(
+            "\n".join(f"{a} : {b}" for a, b in overide_defaults)
+        )
+
+        for (path, value) in params_to_update.items():
+            self.config_manager.set(path, value)
+
     def _install_config(self, cli_args):
         """
         Install the config
@@ -174,6 +184,8 @@ class Pipeline(Command, metaclass=NamedInstance):
             cli_args: argparse.Namespace
                 CLI arguments
         """
+        if cli_args.overide_defaults:
+            self._update_defaults(cli_args.overide_defaults)
         self.config_manager.write_yml(
             f"{cli_args.config_install_path}/{self.name}.yml"
         )

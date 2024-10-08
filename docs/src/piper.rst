@@ -467,6 +467,7 @@ Default  sub-command :command:`process-vis-pipeline install-config --help`
       -h, --help            show this help message and exit
       --config-install-path CONFIG_INSTALL_PATH
                             Path to place the default config.
+      --set path value      Overrides for default config
 
 Custom  sub-command :command:`process-vis-pipeline clean --help`
 

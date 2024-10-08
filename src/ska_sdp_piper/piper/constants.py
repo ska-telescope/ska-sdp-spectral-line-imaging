@@ -9,7 +9,15 @@ CONFIG_CLI_ARGS = [
         type=str,
         required=True,
         help="Path to place the default config.",
-    )
+    ),
+    CLIArgument(
+        "--set",
+        dest="overide_defaults",
+        action="append",
+        nargs=2,
+        metavar=("path", "value"),
+        help="Overrides for default config",
+    ),
 ]
 
 DEFAULT_CLI_ARGS = [

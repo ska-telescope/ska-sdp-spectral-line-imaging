@@ -449,8 +449,39 @@ def test_should_install_default_config(config_manager_mock):
     config_manager_mock.return_value = config_manager_mock
     args_mock = Mock(name="arg_mock")
     args_mock.config_install_path = "/path/to/install"
+    args_mock.overide_defaults = None
     pipeline = Pipeline("test_pipeline")
     pipeline._install_config(args_mock)
+
+    config_manager_mock.write_yml.assert_called_once_with(
+        "/path/to/install/test_pipeline.yml"
+    )
+
+
+@mock.patch("ska_sdp_piper.piper.pipeline.yaml")
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
+def test_should_override_install_default_config(
+    config_manager_mock, yaml_mock
+):
+    config_manager_mock.return_value = config_manager_mock
+    args_mock = Mock(name="arg_mock")
+    args_mock.config_install_path = "/path/to/install"
+    args_mock.overide_defaults = [["a.b", "2"], ["x.y.z", "[oea, aoe, xyz]"]]
+    yaml_mock.safe_load.return_value = {
+        "a.b": 2,
+        "x.y.z": ["oea", "aoe", "xyz"],
+    }
+
+    pipeline = Pipeline("test_pipeline")
+    pipeline._install_config(args_mock)
+
+    yaml_mock.safe_load.assert_called_once_with(
+        "a.b : 2\nx.y.z : [oea, aoe, xyz]"
+    )
+
+    config_manager_mock.set.assert_has_calls(
+        [mock.call("a.b", 2), mock.call("x.y.z", ["oea", "aoe", "xyz"])]
+    )
 
     config_manager_mock.write_yml.assert_called_once_with(
         "/path/to/install/test_pipeline.yml"

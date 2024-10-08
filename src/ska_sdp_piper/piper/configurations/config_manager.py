@@ -108,6 +108,26 @@ class ConfigManager:
         """
         write_yml(path, self.config)
 
+    def set(self, path, value):
+        """
+        Updates a given key in the config
+
+        Parameters
+        ----------
+            path: str
+                yaml/json path to the key
+            value: any
+                Value to be update with
+        """
+        path_elements = path.split(".")
+        ref = self.config
+        for elem in path_elements[:-1]:
+            ref = ref.get(elem, {})
+
+        # If path is valid update the key
+        if not ref == {}:
+            ref[path_elements[-1]] = value
+
     @property
     def config(self):
         """
