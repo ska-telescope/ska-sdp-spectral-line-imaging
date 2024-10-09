@@ -309,7 +309,6 @@ def test_should_run_the_pipeline_with_verbose(log_util):
 
     log_util.configure.assert_has_calls(
         [
-            mock.call("test_pipeline"),
             mock.call("test_pipeline", output_dir="output_dir", verbose=True),
         ]
     )

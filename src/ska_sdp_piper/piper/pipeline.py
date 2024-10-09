@@ -63,7 +63,6 @@ class Pipeline(Command, metaclass=NamedInstance):
             Configuration() if global_config is None else global_config
         )
 
-        LogUtil.configure(name)
         self.logger = logging.getLogger(self.name)
 
         self._stages = Stages(stages)
