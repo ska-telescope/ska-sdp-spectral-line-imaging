@@ -1,3 +1,6 @@
+from functools import reduce
+
+from ..exceptions import StageNotFoundException
 from ..utils.io_utils import read_yml, write_yml
 
 
@@ -108,6 +111,40 @@ class ConfigManager:
         """
         write_yml(path, self.config)
 
+    def _set_global(self, value={}, **kwargs):
+        self.global_parameters = {**self.global_parameters, **value}
+
+    def _set_pipeline(self, path, value, **kwargs):
+        if type(value) is not bool:
+            raise ValueError(
+                f"Stage flags need to be boolean, {type(value)} provided"
+            )
+        if path[0] not in self.pipeline:
+            raise StageNotFoundException(path[0])
+        if len(path) != 1:
+            raise ValueError("Illegal stage name parameter provided")
+
+        self.pipeline[path[0]] = value
+
+    def _set_parameters(self, path, value, **kwargs):
+        config_param = reduce(
+            lambda acc, val: acc.get(val), path[:-1], self.parameters
+        )
+        if config_param is None:
+            raise ValueError(
+                f"Path {'.'.join(path)} not found in configuration yaml"
+            )
+
+        ref = config_param[path[-1]]
+        expected_type = type(ref)
+        actual_type = type(value)
+        if expected_type != actual_type:
+            raise ValueError(
+                f"Type of value for {path} is {actual_type} should"
+                f" be {expected_type}"
+            )
+        config_param[path[-1]] = value
+
     def set(self, path, value):
         """
         Updates a given key in the config
@@ -120,13 +157,16 @@ class ConfigManager:
                 Value to be update with
         """
         path_elements = path.split(".")
-        ref = self.config
-        for elem in path_elements[:-1]:
-            ref = ref.get(elem, {})
+        config_setters = {
+            "global_parameters": self._set_global,
+            "parameters": self._set_parameters,
+            "pipeline": self._set_pipeline,
+        }
 
-        # If path is valid update the key
-        if not ref == {}:
-            ref[path_elements[-1]] = value
+        if path_elements[0] not in config_setters:
+            raise ValueError(f"Invalid configuration path {path}")
+
+        config_setters[path_elements[0]](path=path_elements[1:], value=value)
 
     @property
     def config(self):
