@@ -9,14 +9,14 @@ SPHINXPROJ    = skeleton
 SOURCEDIR     = src
 BUILDDIR      = build
 DOCSOURCE     = ../src
-SPHINXSRC     = src/ska_sdp_spectral_line_imaging
+SPHINXSRC     = src/api
 
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 create-doc:
-	sphinx-apidoc -o "$(SPHINXSRC)" "$(DOCSOURCE)" -H API -f -M -e -d 1
+	sphinx-apidoc -o "$(SPHINXSRC)" "$(DOCSOURCE)" -H API -f -M -e -d 1 --tocfile api
 
 
 .PHONY: help Makefile create-doc

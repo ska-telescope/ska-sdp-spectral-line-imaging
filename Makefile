@@ -6,3 +6,6 @@
 -include .make/oci.mk
 
 MAKE_GIT_HOOKS_DIR := .githooks/
+
+docs-pre-build: docs/src docs/Makefile
+	make -C docs/ create-doc

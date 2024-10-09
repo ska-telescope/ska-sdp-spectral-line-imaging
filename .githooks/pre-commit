@@ -40,19 +40,6 @@ if [[ " ${STAGED_FILES} " == *"Dockerfile"*  ]] ; then
     esac
 fi
 
-
-# If a new file is added or existing file is renamed, check if the documentation source files are recreated
-if [[ -n $(git status --porcelain | grep -E "^[AR]") ]]; then
-    echo -e "\nNew files have been added / files have been renamed"
-    echo
-    read -rp 'Have you generated the API documentation using create-doc? [y/n] ' response
-    case "$response" in
-        [Yy]*) ;;
-        [Nn]*) echo -e "\nPlease run 'make -C docs/ create-doc' to generate readthedocs documentation from API docstrings.\nBe sure to review the changes after creating documentation.\n" ; exit 1;;
-        *) echo -e "\nPlease answer yes or no. Exiting.\n"; exit 1 ;;
-    esac
-fi
-
 exec <&-
 
 # Running format, lints, test

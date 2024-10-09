@@ -10,12 +10,15 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
+  apt_packages:
+      - build-essential
   jobs:
     post_create_environment:
       - python -m pip install poetry
     post_install:
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs
-
+    pre_build:
+      - make docs-pre-build
 sphinx:
   configuration: docs/src/conf.py
 
