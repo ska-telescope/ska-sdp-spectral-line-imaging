@@ -1,6 +1,5 @@
 # pylint: disable=no-member
 import numpy as np
-import pytest
 from mock import Mock, call, mock
 
 from ska_sdp_spectral_line_imaging.stubs.imaging import (
@@ -227,10 +226,83 @@ def test_should_perform_major_cyle(
     ps.assign.assert_called_once_with({"VISIBILITY": predicted_visibilities})
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging")
-def test_should_throw_non_implemented_error_if_psf_is_none(cube_imaging_mock):
+@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.subtract_visibility")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.predict_for_channels",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.import_image_from_fits"
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.Image",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve_cube",
+)
+@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.restore_cube")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.xr.DataArray",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.np.ones",
+)
+def test_should_create_psf_if_psf_is_none(
+    np_ones_mock,
+    data_array_mock,
+    cube_imaging_mock,
+    restore_cube_mock,
+    deconvolve_mock,
+    image_mock,
+    import_image_from_fits_mock,
+    predict_mock,
+    subtract_mock,
+):
 
     ps = Mock(name="ps")
+    ps.VISIBILITY.shape = (1, 1, 2, 2)
+    psf_ps = Mock(name="psf_ps")
+    ps.assign = Mock(name="assign", return_value=psf_ps)
+    subtract_mock.return_value = psf_ps
+    predicted_visibilities = Mock(name="predicted_visibilities")
+    predict_mock.return_value = predicted_visibilities
+    predicted_visibilities.assign_attrs.return_value = predicted_visibilities
+
+    dirty_image1 = Mock(name="dirty_image1")
+    dirty_image2 = Mock(name="dirty_image2")
+
+    dirty_image1.pixels.data = np.array([1, 2])
+    dirty_image1.image_acc.polarisation_frame = "polarization_frame"
+    dirty_image1.image_acc.wcs = "wcs"
+
+    model_image = Mock(name="model image")
+    image_mock.constructor.return_value = model_image
+    model_image.pixels.__add__ = lambda x, y: model_image.pixels
+    model_image.assign.return_value = model_image
+    # TODO: Remove this once polarization naming issue is fixed
+    model_image.coords = []
+
+    model_image_iter = Mock(name="model image per iteration")
+    deconvolve_mock.return_value = [model_image_iter, "residual_image"]
+
+    gridding_params = {
+        "epsilon": 1,
+        "cell_size": 123,
+        "image_size": 1,
+        "scaling_factor": 2.0,
+        "nx": 1234,
+        "ny": 4567,
+    }
+    deconvolution_params = {"param1": 1, "param2": 2}
+
+    psf_image_path = "path_to_psf"
+    psf_image = Mock(name="psf_image")
+
+    cube_imaging_mock.side_effect = [psf_image, dirty_image2]
+    data_array_mock.return_value = data_array_mock
+    np_ones_mock.return_value = "numpy_ones"
 
     gridding_params = {
         "epsilon": 0.0001,
@@ -242,16 +314,25 @@ def test_should_throw_non_implemented_error_if_psf_is_none(cube_imaging_mock):
     }
     deconvolution_params = {"param1": 1, "param2": 2}
     psf_image_path = None
-    n_iter_major = 2
+    n_iter_major = 0
 
-    with pytest.raises(NotImplementedError):
-        clean_cube(
-            ps,
-            psf_image_path,
-            "dirty image",
-            n_iter_major,
-            gridding_params,
-            deconvolution_params,
-            "polarization frame",
-            "wcs",
-        )
+    clean_cube(
+        ps,
+        psf_image_path,
+        dirty_image1,
+        n_iter_major,
+        gridding_params,
+        deconvolution_params,
+        "polarization frame",
+        "wcs",
+    )
+
+    data_array_mock.assert_called_once_with(
+        "numpy_ones", attrs=ps.VISIBILITY.attrs, coords=ps.VISIBILITY.coords
+    )
+
+    ps.assign.assert_called_once_with({"VISIBILITY": data_array_mock})
+
+    cube_imaging_mock.assert_called_once_with(
+        psf_ps, 123, 1, 1, 0.0001, "wcs", "polarization frame"
+    )

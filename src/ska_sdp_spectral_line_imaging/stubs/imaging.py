@@ -192,6 +192,55 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon, wcs, polarization_frame):
     )
 
 
+def generate_psf_image(
+    ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
+):
+    """
+    Creates a PSF Image object from a xarray dataset
+
+    Parameters
+    ----------
+        ps: xarray.Dataset
+            Observation
+        cell_size: float
+            Cell size in arcsecond
+        nx: int
+            Image size X
+        ny: int
+            Image size Y
+        epsilon: float
+            Epsilon
+        wcs: WCS
+            WCS Information
+        polarization_frame: PolarizationFrame
+            Polarization information
+
+    Returns
+    -------
+        ska_sdp_datamodels.image.image_model.Image
+    """
+
+    empty_psf_data = np.ones(ps.VISIBILITY.shape)
+
+    psf_ps = ps.assign(
+        {
+            "VISIBILITY": xr.DataArray(
+                empty_psf_data,
+                attrs=ps.VISIBILITY.attrs,
+                coords=ps.VISIBILITY.coords,
+            )
+        }
+    )
+
+    psf_image = cube_imaging(
+        psf_ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
+    )
+
+    # TODO: Fix restore cube to accept clean_beam to remove load
+    psf_image.load()
+    return psf_image
+
+
 def clean_cube(
     ps,
     psf_image_path,
@@ -237,14 +286,16 @@ def clean_cube(
     residual_ps = ps
 
     if psf_image_path is None:
-        raise NotImplementedError("PSF calculations not implemented")
+        psf_image = generate_psf_image(
+            ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
+        )
     else:
         # TODO: This returns image but frequency axis is not aligned
         psf_image = import_image_from_fits(psf_image_path, fixpol=True)
 
-    # TODO: Will be removed once coordinate issue is fixed
-    # The frequency coords have floating point precision issue
-    psf_image = psf_image.assign_coords(dirty_image.coords)
+        # TODO: Will be removed once coordinate issue is fixed
+        # The frequency coords have floating point precision issue
+        psf_image = psf_image.assign_coords(dirty_image.coords)
 
     model_image = Image.constructor(
         data=dask.array.zeros_like(dirty_image.pixels.data),
