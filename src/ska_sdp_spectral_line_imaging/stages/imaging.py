@@ -2,18 +2,23 @@
 import logging
 
 import numpy as np
-from ska_sdp_datamodels.image import import_image_from_fits
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
-from ..stubs.imaging import clean_cube
-from ..util import estimate_cell_size, estimate_image_size
+from ..stubs.imaging import clean_cube, cube_imaging
+from ..util import (
+    estimate_cell_size,
+    estimate_image_size,
+    get_polarization,
+    get_wcs,
+)
 
 
 @ConfigurableStage(
     "imaging",
     configuration=Configuration(
+        # TODO: Gridding parameters should have units documented somewhere
         gridding_params=ConfigParam(
             dict,
             {
@@ -24,6 +29,7 @@ from ..util import estimate_cell_size, estimate_image_size
             },
             description="Gridding parameters",
         ),
+        # TODO: Deconv parameters should have units documented somewhere
         deconvolution_params=ConfigParam(
             dict,
             {
@@ -42,6 +48,9 @@ from ..util import estimate_cell_size, estimate_image_size
             description="Deconvolution parameters",
         ),
         n_iter_major=ConfigParam(int, 0, description="Major cycle iterations"),
+        do_clean=ConfigParam(
+            bool, False, description="Whether to run clean algorithm"
+        ),
         psf_image_path=ConfigParam(str, None, description="Path to PSF image"),
     ),
 )
@@ -49,6 +58,7 @@ def imaging_stage(
     upstream_output,
     gridding_params,
     deconvolution_params,
+    do_clean,
     n_iter_major,
     psf_image_path,
 ):
@@ -65,6 +75,8 @@ def imaging_stage(
             Parameters for gridding the visibility
         deconvolution_params: dict
             Deconvolution parameters
+        do_clean: bool
+            Whether to run clean algorithm or not
         n_iter_major: int
             Major cycle iterations
         psf_image_path: str
@@ -119,17 +131,33 @@ def imaging_stage(
 
     gridding_params["nx"] = gridding_params["ny"] = image_size
 
-    if psf_image_path is None:
-        psf_image = None
-    else:
-        psf_image = import_image_from_fits(psf_image_path, fixpol=True)
+    polarization_frame = get_polarization(ps)
+    wcs = get_wcs(ps, cell_size, gridding_params["nx"], gridding_params["ny"])
 
-    image = clean_cube(
+    dirty_image = cube_imaging(
         ps,
-        psf_image,
-        n_iter_major,
-        gridding_params,
-        deconvolution_params,
+        cell_size,
+        gridding_params["nx"],
+        gridding_params["ny"],
+        gridding_params["epsilon"],
+        wcs,
+        polarization_frame,
     )
 
-    return {"ps": upstream_output["ps"], "image_cube": image}
+    output_image = dirty_image
+
+    if do_clean:
+        # TODO: Not exporting residual image for now
+        restored_image, _ = clean_cube(
+            ps,
+            psf_image_path,
+            dirty_image,
+            n_iter_major,
+            gridding_params,
+            deconvolution_params,
+            polarization_frame,
+            wcs,
+        )
+        output_image = restored_image
+
+    return {"ps": upstream_output["ps"], "image_cube": output_image}

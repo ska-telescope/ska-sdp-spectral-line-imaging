@@ -1,85 +1,16 @@
 # pylint: disable=import-error,no-name-in-module,no-member
+
+import dask
+import dask.array
 import ducc0.wgridder as wgridder
 import numpy as np
 import xarray as xr
-from astropy import units as au
-from astropy.coordinates import SkyCoord
-from astropy.wcs import WCS
-from ska_sdp_datamodels.image.image_model import Image
-from ska_sdp_datamodels.science_data_model.polarisation_model import (
-    PolarisationFrame,
-)
-from ska_sdp_func_python.image import deconvolve_cube
+from ska_sdp_datamodels.image import Image, import_image_from_fits
+from ska_sdp_func_python.image import restore_cube
 
+from .deconvolution import deconvolve_cube
 from .model import subtract_visibility
 from .predict import predict_for_channels
-
-polarization_lookup = {
-    "_".join(value): key
-    for key, value in PolarisationFrame.polarisation_frames.items()
-}
-
-# TODO: get_wcs is untested temporary function.
-# Once stubbed imager is replaced by a proper imager
-# we expect that the imager will give the image class instance
-# with wcs information already populated.
-
-
-def get_wcs(ps, cell_size, nx, ny):
-    """
-    Creates WCS from processing set
-
-    Parameters
-    ----------
-        ps: xarray.Dataset
-            Observation
-        cell_size: float
-            Cell size in arcseconds.
-        nx: int
-            Image size X
-        ny: int
-            Image size Y
-
-    Returns
-    -------
-        WCS object
-    """
-    assert (
-        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units[0] == "rad"
-    ), "Phase field center value is not defined in radian."
-    assert (
-        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units[1] == "rad"
-    ), "Phase field center value is not defined in radian."
-
-    cell_size_degree = cell_size / 3600
-    freq_channel_width = ps.frequency.channel_width["data"]
-    ref_freq = ps.frequency.reference_frequency["data"]
-
-    fp_frame = (
-        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
-    )
-    fp_center = (
-        ps.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.to_numpy()
-    )
-
-    coord = SkyCoord(
-        ra=fp_center[0] * au.rad, dec=fp_center[1] * au.rad, frame=fp_frame
-    )
-
-    new_wcs = WCS(naxis=4)
-
-    new_wcs.wcs.crpix = [nx // 2, ny // 2, 1, 1]
-    new_wcs.wcs.cunit = ["deg", "deg", "", ps.frequency.units[0]]
-    new_wcs.wcs.cdelt = np.array(
-        [-cell_size_degree, cell_size_degree, 1, freq_channel_width]
-    )
-    new_wcs.wcs.crval = [coord.ra.deg, coord.dec.deg, 1, ref_freq]
-    new_wcs.wcs.ctype = ["RA---SIN", "DEC--SIN", "STOKES", "FREQ"]
-    new_wcs.wcs.radesys = coord.frame.name.upper()
-    new_wcs.wcs.equinox = coord.frame.equinox.jyear
-    new_wcs.wcs.specsys = ps.frequency.frame
-
-    return new_wcs
 
 
 def image_ducc(
@@ -153,7 +84,7 @@ def image_ducc(
         #         mask=flag_xx
     )
 
-    return xr.DataArray(dirty, dims=["ra", "dec"])
+    return dirty
 
 
 def chunked_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
@@ -178,7 +109,7 @@ def chunked_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
         xarray.DataArray
     """
 
-    image_vec = xr.apply_ufunc(
+    image_cube = xr.apply_ufunc(
         image_ducc,
         ps.WEIGHT,
         ps.FLAG,
@@ -192,8 +123,15 @@ def chunked_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
             [],
             ["time", "baseline_id"],
         ],
-        output_core_dims=[["ra", "dec"]],
+        output_core_dims=[["y", "x"]],
         vectorize=True,
+        keep_attrs=True,
+        dask="parallelized",
+        # TODO: this shouuld be parameterized
+        output_dtypes=[np.float32],
+        dask_gufunc_kwargs={
+            "output_sizes": {"y": ny, "x": nx},
+        },
         kwargs=dict(
             nchan=1,
             ntime=ps.time.size,
@@ -205,12 +143,15 @@ def chunked_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
         ),
     )
 
-    return xr.DataArray(
-        image_vec.data, dims=["frequency", "polarization", "ra", "dec"]
-    )
+    # not considering flags for now
+    norm_vect = ps.WEIGHT.sum(dim=["time", "baseline_id"])
+
+    image_cube = image_cube / norm_vect
+
+    return image_cube
 
 
-def cube_imaging(ps, cell_size, nx, ny, epsilon):
+def cube_imaging(ps, cell_size, nx, ny, epsilon, wcs, polarization_frame):
     """
     Creates an Image object from a xarray dataset
 
@@ -226,47 +167,24 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon):
             Image size Y
         epsilon: float
             Epsilon
+        wcs: WCS
+            WCS Information
+        polarization_frame: PolarizationFrame
+            Polarization information
 
     Returns
     -------
         ska_sdp_datamodels.image.image_model.Image
     """
-
-    template_core_dims = ["frequency", "polarization", "ra", "dec"]
-    template_chunk_sizes = {
-        k: v for k, v in ps.chunksizes.items() if k in template_core_dims
-    }
-    output_xr = xr.DataArray(
-        np.empty(
-            (
-                ps.sizes["frequency"],
-                ps.sizes["polarization"],
-                int(nx),
-                int(ny),
-            )
-        ),
-        dims=template_core_dims,
-    ).chunk(template_chunk_sizes)
-
     cell_size_radian = np.deg2rad(cell_size / 3600)
 
-    cube_data = xr.map_blocks(
-        chunked_imaging,
+    cube_data = chunked_imaging(
         ps,
-        template=output_xr,
-        kwargs=dict(
-            nx=int(nx),
-            ny=int(ny),
-            epsilon=epsilon,
-            cell_size=float(cell_size_radian),
-        ),
+        nx=int(nx),
+        ny=int(ny),
+        epsilon=epsilon,
+        cell_size=float(cell_size_radian),
     )
-
-    polarization_frame = PolarisationFrame(
-        polarization_lookup["_".join(ps.polarization.data)]
-    )
-
-    wcs = get_wcs(ps, cell_size, nx, ny)
 
     return Image.constructor(
         data=cube_data.data,
@@ -276,7 +194,14 @@ def cube_imaging(ps, cell_size, nx, ny, epsilon):
 
 
 def clean_cube(
-    ps, psf_image, n_iter_major, gridding_params, deconvolution_params
+    ps,
+    psf_image_path,
+    dirty_image,
+    n_iter_major,
+    gridding_params,
+    deconvolution_params,
+    polarization_frame,
+    wcs,
 ):
     """
     Perform cube clean on an xarray dataset
@@ -285,57 +210,96 @@ def clean_cube(
     ----------
         ps: xarray.Dataset
             Observation
-        psf_image: ska_sdp_datamodels.image.image_model.Image
-            Point spread function image
+        psf_image_path: str
+            File path to psf image stored in FITS format
+        dirty_image: ska_sdp_datamodels.image.image_model.Image
+            The dirty image after continuum subtraction
         n_iter_major: int
             Number of major iterations
         gridding_params: dict
             Prameters to perform gridding.
-                epsilon: float
-                cell_size: float
-                nx, ny: int
         deconvolution_params: dict
             Deconvolution parameters
+        polarization_frame: PolarisationFrame
+            Polarisation information
+        wcs: WCS
+            WCS information
 
     Returns
     -------
-        ska_sdp_datamodels.image.image_model.Image
+        restored_image: ska_sdp_datamodels.image.image_model.Image
+        residual_image: ska_sdp_datamodels.image.image_model.Image
     """
-    epsilon = gridding_params.get("epsilon", 1e-4)
-    cell_size = gridding_params.get("cell_size", None)
-    nx = gridding_params.get("nx", 256)
-    ny = gridding_params.get("ny", 256)
-
-    image = cube_imaging(ps, cell_size, nx, ny, epsilon)
+    # TODO: Gridding parameters should have units documented somewhere
+    epsilon = gridding_params.get("epsilon")
+    cell_size = gridding_params.get("cell_size")
+    nx = gridding_params.get("nx")
+    ny = gridding_params.get("ny")
     residual_ps = ps
 
-    def image_restoration(model, residual):
-        # Restoration of cube image
-        return model
+    if psf_image_path is None:
+        raise NotImplementedError("PSF calculations not implemented")
+    else:
+        # TODO: This returns image but frequency axis is not aligned
+        psf_image = import_image_from_fits(psf_image_path, fixpol=True)
 
-    for _iter in range(n_iter_major):
-        if psf_image is None:
-            raise NotImplementedError("PSF calculations not implemented")
+    # TODO: Will be removed once coordinate issue is fixed
+    # The frequency coords have floating point precision issue
+    psf_image = psf_image.assign_coords(dirty_image.coords)
 
-        model_image, residual_image = deconvolve_cube(
-            image, psf_image, **deconvolution_params
+    model_image = Image.constructor(
+        data=dask.array.zeros_like(dirty_image.pixels.data),
+        polarisation_frame=dirty_image.image_acc.polarisation_frame,
+        wcs=dirty_image.image_acc.wcs,
+    )
+
+    for _ in range(n_iter_major):
+
+        model_image_iter, _ = deconvolve_cube(
+            dirty_image, psf_image, **deconvolution_params
         )
 
-        if _iter == n_iter_major - 1:
-            image = image_restoration(model_image, residual_image)
-            break
+        model_image = model_image.assign(
+            {"pixels": model_image.pixels + model_image_iter.pixels}
+        )
+
+        # TODO: Remove once data models are standardized
+        if "polarisation" in model_image.coords:
+            model_image = model_image.rename({"polarisation": "polarization"})
 
         model_visibility = predict_for_channels(
-            residual_ps, model_image, epsilon, cell_size
+            residual_ps,
+            model_image.pixels,
+            epsilon,
+            cell_size,
         )
-
         model_visibility = model_visibility.assign_attrs(
             residual_ps.VISIBILITY.attrs
         )
 
-        model_vis = residual_ps.assign({"VISIBILITY": model_visibility})
+        # TODO: Remove once data models are standardized
+        if "polarization" in model_image.coords:
+            model_image = model_image.rename({"polarization": "polarisation"})
 
-        residual_ps = subtract_visibility(ps, model_vis)
-        image = cube_imaging(residual_ps, cell_size, nx, ny, epsilon)
+        model_ps = residual_ps.assign({"VISIBILITY": model_visibility})
 
-    return image
+        residual_ps = subtract_visibility(ps, model_ps)
+
+        dirty_image = cube_imaging(
+            residual_ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
+        )
+
+    # TODO: This will perform decovolve at least once
+    model_image_last, residual_image = deconvolve_cube(
+        dirty_image, psf_image, **deconvolution_params
+    )
+
+    model_image = model_image.assign(
+        {"pixels": model_image.pixels + model_image_last.pixels}
+    )
+
+    # TODO: Port this function
+    # Currently it causes compute of dask arrays
+    restored_image = restore_cube(model_image, psf_image, residual_image)
+
+    return restored_image, residual_image

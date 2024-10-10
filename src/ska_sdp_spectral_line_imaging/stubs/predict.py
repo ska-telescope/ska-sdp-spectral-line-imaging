@@ -102,10 +102,14 @@ def predict(ps, model_image, **kwargs):
             ["time", "baseline_id"],
             ["time", "baseline_id", "uvw_label"],
             [],
-            ["ra", "dec"],
+            ["y", "x"],
         ],
         output_core_dims=[["time", "baseline_id"]],
         vectorize=True,
+        keep_attrs=True,
+        dask="parallelized",
+        # TODO: this shouuld be parameterized
+        output_dtypes=[np.complex64],
         kwargs=dict(
             nchan=1,
             ntime=ps.time.size,
@@ -115,41 +119,18 @@ def predict(ps, model_image, **kwargs):
         ),
     )
 
-    return xr.DataArray(
-        model_vec.data,
-        dims=["frequency", "polarization", "time", "baseline_id"],
-    )
+    return model_vec
 
 
 def predict_for_channels(ps, model_image, epsilon, cell_size):
-    template_core_dims = ["frequency", "polarization", "time", "baseline_id"]
-    template_chunk_sizes = {
-        k: v for k, v in ps.chunksizes.items() if k in template_core_dims
-    }
-    output_xr = xr.DataArray(
-        np.empty(
-            (
-                ps.sizes["frequency"],
-                ps.sizes["polarization"],
-                ps.sizes["time"],
-                ps.sizes["baseline_id"],
-            ),
-            dtype=np.complex64,
-        ),
-        dims=template_core_dims,
-    ).chunk(template_chunk_sizes)
 
     cell_size_radian = np.deg2rad(cell_size / 3600)
 
-    predicted_visibility = xr.map_blocks(
-        predict,
+    predicted_visibility = predict(
         ps,
-        template=output_xr,
-        kwargs=dict(
-            model_image=model_image,
-            epsilon=epsilon,
-            cell_size=float(cell_size_radian),
-        ),
+        model_image,
+        epsilon=epsilon,
+        cell_size=cell_size_radian,
     )
 
     predicted_visibility = predicted_visibility.assign_coords(

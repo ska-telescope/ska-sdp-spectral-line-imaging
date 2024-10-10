@@ -47,8 +47,10 @@ def read_model(upstream_output, image_name, pols):
         with fits.open(f"{image_name}-{pol}-image.fits") as f:
             images.append(f[0].data.squeeze())
 
+    # Dims are assigned as per ska-data-models Image class
+    # Only the "polarization" is different
     image_stack = xr.DataArray(
-        np.stack(images), dims=["polarization", "ra", "dec"]
+        np.stack(images), dims=["polarization", "y", "x"]
     )
 
     return {"ps": ps, "model_image": image_stack}
@@ -91,6 +93,7 @@ def vis_stokes_conversion(
             opf=PolarisationFrame(output_polarisation_frame),
             polaxis=3,
         ),
+        keep_attrs=True,
         dask="allowed",
     )
 
@@ -105,6 +108,8 @@ def vis_stokes_conversion(
     converted_vis = converted_vis.assign_attrs(ps.VISIBILITY.attrs)
 
     ps = ps.assign({"VISIBILITY": converted_vis})
+
+    # TODO: Check is polarization of entire ps is updated
 
     return {"ps": ps}
 

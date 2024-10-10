@@ -8,7 +8,7 @@ def test_should_run_predict_stage(result_msv4):
     image_sz = 64
     model = xr.DataArray(
         np.zeros(image_sz * image_sz).reshape((image_sz, image_sz)),
-        dims=["ra", "dec"],
+        dims=["y", "x"],
     )
 
     stage_result = predict_stage.stage_definition(
@@ -24,7 +24,7 @@ def test_should_run_dask_distributed(result_msv4):
     image_sz = 64
     model = xr.DataArray(
         np.zeros(image_sz * image_sz).reshape((image_sz, image_sz)),
-        dims=["ra", "dec"],
+        dims=["y", "x"],
     )
 
     stage_result = predict_stage.stage_definition(

@@ -6,59 +6,124 @@ from ska_sdp_spectral_line_imaging.stages.imaging import imaging_stage
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.import_image_from_fits",
-    return_value="psf_image",
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
+    return_value="polarization_frame",
 )
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
+)
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
-def test_should_do_imaging(clean_cube_mock, import_image_mock):
-    clean_cube_mock.return_value = "cube image"
+def test_should_do_imaging_for_dirty_image(
+    clean_cube_mock, cube_imaging_mock, get_wcs_mock, get_pol_mock
+):
+    cube_imaging_mock.return_value = "dirty image"
 
     ps = Mock(name="ps")
     ps.UVW = "UVW"
     ps.frequency.reference_frequency = {"data": 123.01}
-
     gridding_params = {
         "epsilon": 1e-4,
         "cell_size": 123,
-        "image_size": 1,
+        "image_size": 456,
         "scaling_factor": 2.0,
     }
-
     upstream_output = {"ps": ps}
+    do_clean = False
 
     result = imaging_stage.stage_definition(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
+        do_clean,
         0,
         "psf_path",
     )
 
-    clean_cube_mock.assert_called_once_with(
-        ps,
-        "psf_image",
-        0,
-        {
-            "epsilon": 0.0001,
-            "cell_size": 123,
-            "image_size": 1,
-            "scaling_factor": 2.0,
-            "nx": 1,
-            "ny": 1,
-        },
-        {"deconvolve_params": None},
+    get_pol_mock.assert_called_once_with(ps)
+    get_wcs_mock.assert_called_once_with(ps, 123, 456, 456)
+
+    cube_imaging_mock.assert_called_once_with(
+        ps, 123, 456, 456, 1e-4, "wcs", "polarization_frame"
     )
 
-    import_image_mock.assert_called_once_with("psf_path", fixpol=True)
+    clean_cube_mock.assert_not_called()
 
-    assert result == {"ps": ps, "image_cube": "cube image"}
+    assert result == {"ps": ps, "image_cube": "dirty image"}
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.import_image_from_fits",
-    return_value="psf_image",
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
+    return_value="polarization_frame",
 )
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
+)
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
+def test_should_do_imaging_for_clean_image(
+    clean_cube_mock, cube_imaging_mock, get_wcs_mock, get_pol_mock
+):
+    cube_imaging_mock.return_value = "dirty image"
+    clean_cube_mock.return_value = ("restored image", "residual image")
+
+    ps = Mock(name="ps")
+    ps.UVW = "UVW"
+    ps.frequency.reference_frequency = {"data": 123.01}
+    gridding_params = {
+        "epsilon": 1e-4,
+        "cell_size": 123,
+        "image_size": 456,
+        "scaling_factor": 2.0,
+    }
+    upstream_output = {"ps": ps}
+    do_clean = True
+
+    result = imaging_stage.stage_definition(
+        upstream_output,
+        gridding_params,
+        {"deconvolve_params": None},
+        do_clean,
+        15,
+        "psf_path",
+    )
+
+    get_pol_mock.assert_called_once_with(ps)
+    get_wcs_mock.assert_called_once_with(ps, 123, 456, 456)
+
+    cube_imaging_mock.assert_called_once_with(
+        ps, 123, 456, 456, 1e-4, "wcs", "polarization_frame"
+    )
+
+    clean_cube_mock.assert_called_once_with(
+        ps,
+        "psf_path",
+        "dirty image",
+        15,
+        {
+            "epsilon": 1e-4,
+            "cell_size": 123,
+            "image_size": 456,
+            "scaling_factor": 2.0,
+            "nx": 456,
+            "ny": 456,
+        },
+        {"deconvolve_params": None},
+        "polarization_frame",
+        "wcs",
+    )
+
+    assert result == {"ps": ps, "image_cube": "restored image"}
+
+
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
+    return_value="polarization_frame",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
+)
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_cell_size")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_image_size")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.np")
@@ -66,15 +131,16 @@ def test_should_estimate_image_and_cell_size(
     numpy_mock,
     estimate_image_size_mock,
     estimate_cell_size_mock,
-    clean_cube_mock,
-    import_image_mock,
+    cube_imaging_mock,
+    get_wcs_mock,
+    get_pol_mock,
 ):
     max_baseline = Mock(name="max_baseline")
     numpy_mock.maximum.return_value = max_baseline
     max_baseline.round.return_value = 3.45
     estimate_cell_size_mock.return_value = 0.75
     estimate_image_size_mock.return_value = 500
-    clean_cube_mock.return_value = "cube image"
+    cube_imaging_mock.return_value = "dirty image"
 
     ps = Mock(name="ps")
     ps.UVW = Mock(name="UVW")
@@ -101,6 +167,7 @@ def test_should_estimate_image_and_cell_size(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
+        False,
         0,
         "psf_path",
     )
@@ -120,21 +187,11 @@ def test_should_estimate_image_and_cell_size(
 
     estimate_image_size_mock.assert_called_once_with(1.50e6, 50.5, 0.75)
 
-    clean_cube_mock.assert_called_once_with(
-        ps,
-        "psf_image",
-        0,
-        {
-            "epsilon": 0.0001,
-            "cell_size": 0.75,
-            "image_size": 500,
-            "scaling_factor": 2.0,
-            "nx": 500,
-            "ny": 500,
-        },
-        {"deconvolve_params": None},
+    get_pol_mock.assert_called_once_with(ps)
+    get_wcs_mock.assert_called_once_with(ps, 0.75, 500, 500)
+
+    cube_imaging_mock.assert_called_once_with(
+        ps, 0.75, 500, 500, 1e-4, "wcs", "polarization_frame"
     )
 
-    import_image_mock.assert_called_once_with("psf_path", fixpol=True)
-
-    assert result == {"ps": ps, "image_cube": "cube image"}
+    assert result == {"ps": ps, "image_cube": "dirty image"}

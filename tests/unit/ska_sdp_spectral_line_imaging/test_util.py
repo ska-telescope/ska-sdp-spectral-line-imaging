@@ -34,3 +34,12 @@ def test_should_estimate_image_size():
 
     # verify
     np.testing.assert_array_equal(actual_image_size, expected_image_size)
+
+
+# TODO
+# def test_get_wcs():
+#
+
+# TODO
+# def test_pol_frame():
+#     mock_pol_frame.assert_called_once_with("linearnp")

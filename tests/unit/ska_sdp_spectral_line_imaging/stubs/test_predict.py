@@ -85,10 +85,13 @@ def test_should_able_to_apply_prediction_on_all_chan(xarray_mock):
             ["time", "baseline_id"],
             ["time", "baseline_id", "uvw_label"],
             [],
-            ["ra", "dec"],
+            ["y", "x"],
         ],
         output_core_dims=[["time", "baseline_id"]],
         vectorize=True,
+        keep_attrs=True,
+        dask="parallelized",
+        output_dtypes=[np.complex64],
         kwargs=dict(
             nchan=1,
             ntime=10,
@@ -100,29 +103,23 @@ def test_should_able_to_apply_prediction_on_all_chan(xarray_mock):
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.predict")
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.xr.DataArray")
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.xr.map_blocks")
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.np")
-def test_should_be_able_to_distribute_predict(
-    numpy_mock, map_block_mock, dataarray_mock, predict_mock
-):
-    dataarray_mock.return_value = dataarray_mock
-    dataarray_mock.chunk.return_value = "CHUNKED_DATA"
-    numpy_mock.deg2rad.return_value = 4
-    mock_chunks = dict(frequency=32, polarization=1, time=1, baseline_id=1)
+def test_should_be_able_to_distribute_predict(numpy_mock, predict_mock):
+    numpy_mock.deg2rad.return_value = 0.5
     ps = Mock(name="ps")
-    ps.chunksizes = mock_chunks
-    ps.sizes = mock_chunks
     predicted_vis = Mock(name="predicted_visibility")
-    map_block_mock.return_value = predicted_vis
+    predict_mock.return_value = predicted_vis
+    predicted_vis.assign_coords.return_value = "predicted_visibility"
 
-    predict_for_channels(ps, "model_image", epsilon=1e-4, cell_size=7200)
+    output = predict_for_channels(
+        ps, "model_image", epsilon=1e-4, cell_size=7200
+    )
 
     numpy_mock.deg2rad.assert_called_once_with(2)
-    map_block_mock.assert_called_once_with(
-        predict_mock,
-        ps,
-        template="CHUNKED_DATA",
-        kwargs=dict(model_image="model_image", epsilon=1e-4, cell_size=4),
+    predict_mock.assert_called_once_with(
+        ps, "model_image", epsilon=1e-4, cell_size=0.5
     )
+
     predicted_vis.assign_coords.assert_called_once_with(ps.VISIBILITY.coords)
+
+    assert output == "predicted_visibility"
