@@ -6,9 +6,8 @@ import ducc0.wgridder as wgridder
 import numpy as np
 import xarray as xr
 from ska_sdp_datamodels.image import Image, import_image_from_fits
-from ska_sdp_func_python.image import restore_cube
 
-from .deconvolution import deconvolve_cube
+from .deconvolution import deconvolve_cube, restore_cube
 from .model import subtract_visibility
 from .predict import predict_for_channels
 
@@ -289,7 +288,6 @@ def clean_cube(
             residual_ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
         )
 
-    # TODO: This will perform decovolve at least once
     model_image_last, residual_image = deconvolve_cube(
         dirty_image, psf_image, **deconvolution_params
     )
@@ -298,8 +296,7 @@ def clean_cube(
         {"pixels": model_image.pixels + model_image_last.pixels}
     )
 
-    # TODO: Port this function
-    # Currently it causes compute of dask arrays
+    # TODO : Pass clean_beam if available
     restored_image = restore_cube(model_image, psf_image, residual_image)
 
     return restored_image, residual_image
