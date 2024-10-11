@@ -10,7 +10,6 @@ from ska_sdp_func_python.image.deconvolution import common_arguments
 from ska_sdp_func_python.image.operations import convert_clean_beam_to_pixels
 
 
-# TODO : Write tests
 def deconvolve_cube(
     dirty: Image, psf: Image, sensitivity: Image = None, prefix="", **kwargs
 ) -> Tuple[Image, Image]:
@@ -153,7 +152,6 @@ def deconvolve_cube(
     return comp_image, residual_image
 
 
-# TODO : Write tests
 def restore_cube(
     model: Image, clean_beam: dict, residual: Image = None
 ) -> Image:

@@ -274,6 +274,8 @@ def clean_cube(
             Polarisation information
         wcs: WCS
             WCS information
+        beam_info:
+            Beam information
 
     Returns
     -------
@@ -353,7 +355,6 @@ def clean_cube(
         {"pixels": model_image.pixels + model_image_last.pixels}
     )
 
-    # TODO : Pass clean_beam if available
     restored_image = restore_cube(model_image, beam_info, residual_image)
 
     return restored_image, residual_image
