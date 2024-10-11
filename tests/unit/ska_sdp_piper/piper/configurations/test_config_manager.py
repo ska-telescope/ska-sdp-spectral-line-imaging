@@ -289,3 +289,20 @@ def test_should_throw_error_when_unknown_namespace_is_added(setup):
     config_manager = setup
     with pytest.raises(ValueError):
         config_manager.set("x.y,z", False)
+
+
+def test_should_be_able_to_set_param_with_default_none():
+    pipeline = {"stage1": True}
+    parameters = {"stage1": {"parameter": None}}
+    global_parameters = {}
+
+    config_manager = ConfigManager(pipeline, parameters, global_parameters)
+    config_manager.set("parameters.stage1.parameter", 10)
+
+    assert config_manager.config == {
+        "parameters": {
+            "stage1": {"parameter": 10},
+        },
+        "pipeline": {"stage1": True},
+        "global_parameters": {},
+    }

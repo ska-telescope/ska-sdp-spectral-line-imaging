@@ -138,7 +138,9 @@ class ConfigManager:
         ref = config_param[path[-1]]
         expected_type = type(ref)
         actual_type = type(value)
-        if expected_type != actual_type:
+        # TODO: This handling of None type bypasses type check,
+        # and should be removed in the future
+        if expected_type != actual_type and ref is not None:
             raise ValueError(
                 f"Type of value for {path} is {actual_type} should"
                 f" be {expected_type}"
