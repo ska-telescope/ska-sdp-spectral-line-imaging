@@ -52,6 +52,15 @@ from ..util import (
             bool, False, description="Whether to run clean algorithm"
         ),
         psf_image_path=ConfigParam(str, None, description="Path to PSF image"),
+        beam_info=ConfigParam(
+            dict,
+            {
+                "bmaj": None,
+                "bmin": None,
+                "bpa": None,
+            },
+            description="Beam information",
+        ),
     ),
 )
 def imaging_stage(
@@ -61,6 +70,7 @@ def imaging_stage(
     do_clean,
     n_iter_major,
     psf_image_path,
+    beam_info,
 ):
     """
     Creates a dirty image using ducc0.gridder.
@@ -81,6 +91,8 @@ def imaging_stage(
             Major cycle iterations
         psf_image_path: str
             Path to PSF image
+        beam_info: dict
+            Beam information
     Returns
     -------
         dict
@@ -157,6 +169,7 @@ def imaging_stage(
             deconvolution_params,
             polarization_frame,
             wcs,
+            beam_info,
         )
         output_image = restored_image
 

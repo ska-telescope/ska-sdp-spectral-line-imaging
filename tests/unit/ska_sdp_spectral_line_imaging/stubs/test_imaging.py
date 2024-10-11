@@ -121,7 +121,12 @@ def test_should_perform_cube_imaging(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
 )
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.fit_psf",
+    return_value="clean_beam",
+)
 def test_should_perform_major_cyle(
+    fit_psf_mock,
     cube_imaging_mock,
     restore_cube_mock,
     deconvolve_mock,
@@ -184,6 +189,7 @@ def test_should_perform_major_cyle(
         deconvolution_params,
         "polarization_frame",
         "wcs",
+        {"beam": None},
     )
 
     import_image_from_fits_mock.assert_called_once_with(
@@ -219,8 +225,9 @@ def test_should_perform_major_cyle(
         ps.VISIBILITY.attrs
     )
 
+    fit_psf_mock.assert_called_once_with(psf_image)
     restore_cube_mock.assert_called_once_with(
-        model_image, psf_image, "residual_image"
+        model_image, "clean_beam", "residual_image"
     )
 
     ps.assign.assert_called_once_with({"VISIBILITY": predicted_visibilities})
@@ -249,7 +256,12 @@ def test_should_perform_major_cyle(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.np.ones",
 )
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.fit_psf",
+    return_value="beam_info",
+)
 def test_should_create_psf_if_psf_is_none(
+    fit_psf_mock,
     np_ones_mock,
     data_array_mock,
     cube_imaging_mock,
@@ -325,6 +337,7 @@ def test_should_create_psf_if_psf_is_none(
         deconvolution_params,
         "polarization frame",
         "wcs",
+        {"beam": "beam"},
     )
 
     data_array_mock.assert_called_once_with(

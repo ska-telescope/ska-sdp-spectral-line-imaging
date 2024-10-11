@@ -38,6 +38,7 @@ def test_should_do_imaging_for_dirty_image(
         do_clean,
         0,
         "psf_path",
+        {"beam_info": "beam_info"},
     )
 
     get_pol_mock.assert_called_once_with(ps)
@@ -86,6 +87,7 @@ def test_should_do_imaging_for_clean_image(
         do_clean,
         15,
         "psf_path",
+        {"beam_info": "beam_info"},
     )
 
     get_pol_mock.assert_called_once_with(ps)
@@ -111,6 +113,7 @@ def test_should_do_imaging_for_clean_image(
         {"deconvolve_params": None},
         "polarization_frame",
         "wcs",
+        {"beam_info": "beam_info"},
     )
 
     assert result == {"ps": ps, "image_cube": "restored image"}
@@ -170,6 +173,7 @@ def test_should_estimate_image_and_cell_size(
         False,
         0,
         "psf_path",
+        {"beam_info": "beam_info"},
     )
 
     numpy_mock.abs.assert_called_once_with(ps.UVW)

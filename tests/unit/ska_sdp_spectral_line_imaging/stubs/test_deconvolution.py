@@ -149,9 +149,7 @@ def test_should_throw_exceptions_for_non_suported_algorithms(
     "ska_sdp_spectral_line_imaging.stubs.deconvolution"
     ".convert_clean_beam_to_pixels"
 )
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.fit_psf")
 def test_should_restore_cube(
-    fit_psf_mock,
     clean_beam_mock,
     gaussian_kernel_mock,
     apply_ufunc_mock,
@@ -159,7 +157,6 @@ def test_should_restore_cube(
     image_con_mock,
 ):
     model_image = Mock(name="model image")
-    psf_image = Mock(name="psf image")
     residual_image = Mock(name="residual image")
     image_mock = Mock(name="Image")
     xr_restored = Mock(name="Image")
@@ -171,7 +168,6 @@ def test_should_restore_cube(
     model_image.__getitem__ = get_item_mock
 
     image_con_mock.return_value = image_mock
-    fit_psf_mock.return_value = "clean_beam"
     clean_beam_mock.return_value = ["x", "y", "theta"]
     gaussian_kernel_mock.return_value = gaussian_kernel_mock
     apply_ufunc_mock.return_value = xr_restored
@@ -179,11 +175,9 @@ def test_should_restore_cube(
 
     image_mock.attrs.__setitem__ = Mock(name="set_item")
 
-    restored_image = restore_cube(model_image, psf_image, residual_image)
+    restored_image = restore_cube(model_image, "clean_beam", residual_image)
 
     assert restored_image == image_mock
-
-    fit_psf_mock.assert_called_once_with(psf_image)
     clean_beam_mock.assert_called_once_with(model_image, "clean_beam")
 
     gaussian_kernel_mock.assert_called_once_with(
@@ -234,51 +228,7 @@ def test_should_restore_cube(
     "ska_sdp_spectral_line_imaging.stubs.deconvolution"
     ".convert_clean_beam_to_pixels"
 )
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.fit_psf")
-def test_should_restore_cube_when_clean_beam_is_provided(
-    fit_psf_mock,
-    clean_beam_mock,
-    gaussian_kernel_mock,
-    apply_ufunc_mock,
-    convolve_fft_mock,
-    image_con_mock,
-):
-    model_image = Mock(name="model image")
-    psf_image = Mock(name="psf image")
-    residual_image = Mock(name="residual image")
-
-    image_mock = Mock(name="Image")
-
-    get_item_mock = Mock(name="get_item_mock")
-    get_item_mock.return_value = get_item_mock
-    residual_image.__getitem__ = get_item_mock
-    model_image.__getitem__ = get_item_mock
-
-    image_con_mock.return_value = image_mock
-    image_mock.attrs.__setitem__ = Mock(name="set_item")
-
-    restored_image = restore_cube(
-        model_image, psf_image, residual_image, clean_beam="clean_beam"
-    )
-
-    assert restored_image == image_mock
-
-    image_mock.attrs.__setitem__.assert_called_once_with(
-        "clean_beam", "clean_beam"
-    )
-
-
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.Image.constructor")
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.convolve_fft")
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.xr.apply_ufunc")
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.Gaussian2DKernel")
-@patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution"
-    ".convert_clean_beam_to_pixels"
-)
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.fit_psf")
 def test_should_restore_cube_without_adding_residual(
-    fit_psf_mock,
     clean_beam_mock,
     gaussian_kernel_mock,
     apply_ufunc_mock,
@@ -286,7 +236,6 @@ def test_should_restore_cube_without_adding_residual(
     image_con_mock,
 ):
     model_image = Mock(name="model image")
-    psf_image = Mock(name="psf image")
     image_mock = Mock(name="Image")
     xr_restored = Mock(name="Image")
 
@@ -295,14 +244,13 @@ def test_should_restore_cube_without_adding_residual(
     model_image.__getitem__ = get_item_mock
 
     image_con_mock.return_value = image_mock
-    fit_psf_mock.return_value = "clean_beam"
     clean_beam_mock.return_value = ["x", "y", "theta"]
     gaussian_kernel_mock.return_value = gaussian_kernel_mock
     apply_ufunc_mock.return_value = xr_restored
 
     image_mock.attrs.__setitem__ = Mock(name="set_item")
 
-    restored_image = restore_cube(model_image, psf_image)
+    restored_image = restore_cube(model_image, "clean_beam")
 
     assert restored_image == image_mock
     image_con_mock.assert_called_once_with(

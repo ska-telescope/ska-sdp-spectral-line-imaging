@@ -6,7 +6,7 @@ import xarray as xr
 from astropy.convolution import Gaussian2DKernel, convolve_fft
 from ska_sdp_datamodels.image import Image
 from ska_sdp_func_python.image.cleaners import hogbom
-from ska_sdp_func_python.image.deconvolution import common_arguments, fit_psf
+from ska_sdp_func_python.image.deconvolution import common_arguments
 from ska_sdp_func_python.image.operations import convert_clean_beam_to_pixels
 
 
@@ -155,7 +155,7 @@ def deconvolve_cube(
 
 # TODO : Write tests
 def restore_cube(
-    model: Image, psf: Image, residual: Image = None, clean_beam=None
+    model: Image, clean_beam: dict, residual: Image = None
 ) -> Image:
     """Restore the model image to the residuals.
 
@@ -171,10 +171,6 @@ def restore_cube(
 
     """
     logger = logging.getLogger()
-
-    if clean_beam is None:
-        # TODO: make fit_psf dask compatible
-        clean_beam = fit_psf(psf)
 
     logger.info(f"clean beam: {clean_beam}")
 

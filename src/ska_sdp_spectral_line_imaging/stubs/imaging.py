@@ -6,6 +6,7 @@ import ducc0.wgridder as wgridder
 import numpy as np
 import xarray as xr
 from ska_sdp_datamodels.image import Image, import_image_from_fits
+from ska_sdp_func_python.image.deconvolution import fit_psf
 
 from .deconvolution import deconvolve_cube, restore_cube
 from .model import subtract_visibility
@@ -250,6 +251,7 @@ def clean_cube(
     deconvolution_params,
     polarization_frame,
     wcs,
+    beam_info,
 ):
     """
     Perform cube clean on an xarray dataset
@@ -303,6 +305,10 @@ def clean_cube(
         wcs=dirty_image.image_acc.wcs,
     )
 
+    if any(value is None for value in beam_info.values()):
+        # TODO: Make dask compliant
+        beam_info = fit_psf(psf_image)
+
     for _ in range(n_iter_major):
 
         model_image_iter, _ = deconvolve_cube(
@@ -348,6 +354,6 @@ def clean_cube(
     )
 
     # TODO : Pass clean_beam if available
-    restored_image = restore_cube(model_image, psf_image, residual_image)
+    restored_image = restore_cube(model_image, beam_info, residual_image)
 
     return restored_image, residual_image
