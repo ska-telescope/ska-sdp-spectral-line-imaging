@@ -34,7 +34,7 @@ def export_residual(upstream_output, psout_name, _output_dir_):
     ps = upstream_output["ps"]
     output_path = os.path.join(_output_dir_, psout_name)
     ps.VISIBILITY.attrs.clear()
-    ps.VISIBILITY.to_zarr(store=f"{output_path}.zarr", compute=False)
+    ps.VISIBILITY.to_zarr(store=f"{output_path}.zarr")
     return upstream_output
 
 
@@ -64,7 +64,7 @@ def export_model(upstream_output, psout_name, _output_dir_):
     ps = upstream_output["ps"]
     output_path = os.path.join(_output_dir_, psout_name)
     ps.VISIBILITY_MODEL.attrs.clear()
-    ps.VISIBILITY_MODEL.to_zarr(store=f"{output_path}.zarr", compute=False)
+    ps.VISIBILITY_MODEL.to_zarr(store=f"{output_path}.zarr")
     return upstream_output
 
 
@@ -104,10 +104,10 @@ def export_image(upstream_output, image_name, _output_dir_):
 
     except Exception as ex:
         logger.exception(ex)
-        logger.info(
-            "Exporting to FITS failed. "
-            f"Writing image in zarr format to path {output_path}.zarr"
-        )
-        cube.to_zarr(store=f"{output_path}.zarr", compute=False)
+        # logger.info(
+        #     "Exporting to FITS failed. "
+        #     f"Writing image in zarr format to path {output_path}.zarr"
+        # )
+        # cube.to_zarr(store=f"{output_path}.zarr", compute=True)
 
     return upstream_output
