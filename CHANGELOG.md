@@ -1,6 +1,6 @@
 # Changelog
 
-## Latest
+## 0.4.0
 
 - Add option `--set` to sub-command `install-config` to override config
 
