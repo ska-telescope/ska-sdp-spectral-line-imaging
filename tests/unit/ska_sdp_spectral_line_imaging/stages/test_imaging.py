@@ -183,13 +183,13 @@ def test_should_estimate_image_and_cell_size(
 
     estimate_cell_size_mock.assert_called_once_with(
         3.45,
-        0.75e6,
+        749481.145,
         2.0,
     )
 
     min_antenna_diameter.round.assert_called_once_with(2)
 
-    estimate_image_size_mock.assert_called_once_with(1.50e6, 50.5, 0.75)
+    estimate_image_size_mock.assert_called_once_with(1498962.29, 50.5, 0.75)
 
     get_pol_mock.assert_called_once_with(ps)
     get_wcs_mock.assert_called_once_with(ps, 0.75, 500, 500)

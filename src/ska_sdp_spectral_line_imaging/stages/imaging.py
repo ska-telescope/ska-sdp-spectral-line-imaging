@@ -14,6 +14,9 @@ from ..util import (
     get_wcs,
 )
 
+# TODO: Find better place for constants
+SPEED_OF_LIGHT = 299792458
+
 
 @ConfigurableStage(
     "imaging",
@@ -110,7 +113,7 @@ def imaging_stage(
         # TODO: handle units properly. eg. Hz, MHz etc.
         #  Assumption, current unit is Hz.
         maximum_frequency = ps.frequency.max()
-        minimum_wavelength = 3.0e8 / maximum_frequency
+        minimum_wavelength = SPEED_OF_LIGHT / maximum_frequency
 
         # Taking maximum of u and v baselines, rounded
         max_baseline = np.maximum(umax, vmax).round(2)
@@ -127,7 +130,7 @@ def imaging_stage(
     logger.info(f"Using cell size = {float(cell_size)} arcseconds")
 
     if image_size is None:
-        maximum_wavelength = 3.0e8 / ps.frequency.min()
+        maximum_wavelength = SPEED_OF_LIGHT / ps.frequency.min()
         antenna_diameter = ps.antenna_xds.DISH_DIAMETER.min().round(2)
 
         logger.info(
