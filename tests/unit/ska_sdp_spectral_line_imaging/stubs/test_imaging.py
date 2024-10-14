@@ -115,7 +115,7 @@ def test_should_perform_cube_imaging(
     "ska_sdp_spectral_line_imaging.stubs.imaging.Image",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve_cube",
+    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve",
 )
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.restore_cube")
 @mock.patch(
@@ -201,8 +201,12 @@ def test_should_perform_major_cyle(
 
     deconvolve_mock.assert_has_calls(
         [
-            call(dirty_image1, psf_image, param1=1, param2=2),
-            call(dirty_image2, psf_image, param1=1, param2=2),
+            call(
+                dirty_image1, psf_image, **gridding_params, param1=1, param2=2
+            ),
+            call(
+                dirty_image2, psf_image, **gridding_params, param1=1, param2=2
+            ),
         ]
     )
 
@@ -244,7 +248,7 @@ def test_should_perform_major_cyle(
     "ska_sdp_spectral_line_imaging.stubs.imaging.Image",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve_cube",
+    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve",
 )
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.restore_cube")
 @mock.patch(

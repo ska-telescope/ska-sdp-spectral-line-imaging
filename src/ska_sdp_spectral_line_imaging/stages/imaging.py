@@ -44,6 +44,7 @@ from ..util import (
                 "nmoment": 3,
                 "findpeak": "RASCIL",
                 "niter": 100,
+                "use_radler": False,
             },
             description="Deconvolution parameters",
         ),

@@ -11,7 +11,7 @@ mkdir -p /build
 %post
 cd /build && \
 pip install --no-cache-dir poetry==1.8.3 && \
-poetry export --without-hashes -o requirements.txt && \
+poetry export --all-extras --without-hashes -o requirements.txt && \
 poetry build && \
 mkdir -p /install && \
 cp  /build/dist/*.whl /install && \

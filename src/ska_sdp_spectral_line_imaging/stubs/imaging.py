@@ -8,7 +8,7 @@ import xarray as xr
 from ska_sdp_datamodels.image import Image, import_image_from_fits
 from ska_sdp_func_python.image.deconvolution import fit_psf
 
-from .deconvolution import deconvolve_cube, restore_cube
+from .deconvolution import deconvolve, restore_cube
 from .model import subtract_visibility
 from .predict import predict_for_channels
 
@@ -313,8 +313,8 @@ def clean_cube(
 
     for _ in range(n_iter_major):
 
-        model_image_iter, _ = deconvolve_cube(
-            dirty_image, psf_image, **deconvolution_params
+        model_image_iter, _ = deconvolve(
+            dirty_image, psf_image, **gridding_params, **deconvolution_params
         )
 
         model_image = model_image.assign(
@@ -322,7 +322,7 @@ def clean_cube(
         )
 
         # TODO: Remove once data models are standardized
-        if "polarisation" in model_image.coords:
+        if "polarisation" in model_image.coords:  # pragma: no cover
             model_image = model_image.rename({"polarisation": "polarization"})
 
         model_visibility = predict_for_channels(
@@ -336,7 +336,7 @@ def clean_cube(
         )
 
         # TODO: Remove once data models are standardized
-        if "polarization" in model_image.coords:
+        if "polarization" in model_image.coords:  # pragma: no cover
             model_image = model_image.rename({"polarization": "polarisation"})
 
         model_ps = residual_ps.assign({"VISIBILITY": model_visibility})
@@ -347,8 +347,8 @@ def clean_cube(
             residual_ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
         )
 
-    model_image_last, residual_image = deconvolve_cube(
-        dirty_image, psf_image, **deconvolution_params
+    model_image_last, residual_image = deconvolve(
+        dirty_image, psf_image, **gridding_params, **deconvolution_params
     )
 
     model_image = model_image.assign(

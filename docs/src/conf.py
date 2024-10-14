@@ -76,7 +76,8 @@ autodoc_mock_imports = [
     "ska_sdp_func_python",
     "astropy",
     "matplotlib",
-    "pandas"
+    "pandas",
+    "radler"
 ]
 
 

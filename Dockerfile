@@ -2,7 +2,7 @@ FROM python:3.10-slim as BUILD
 WORKDIR /build
 COPY . ./
 RUN pip install --no-cache-dir poetry==1.8.3 && \
-    poetry export --without-hashes -o requirements.txt && \
+    poetry export --all-extras --without-hashes -o requirements.txt && \
     poetry build
 
 
