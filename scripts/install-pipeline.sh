@@ -19,5 +19,5 @@ else
 
     # Run poetry install
     echo "Running poetry install..."
-    poetry install --all-extras
+    poetry install
 fi

@@ -36,9 +36,9 @@ COMMIT_MSG_FILE="$1"
 TEMP_COMMIT_MSG_FILE="${COMMIT_MSG_FILE}.tmp"
 
 echo -e "\n\
-================================\n\
-    Generating commit message   \n\
-================================\n";
+==========================================\n\
+         Generating commit message        \n\
+==========================================\n";
 
 # Ask for JIRA ticket, title, and description
 ask_input "Enter JIRA ticket" jira_ticket
