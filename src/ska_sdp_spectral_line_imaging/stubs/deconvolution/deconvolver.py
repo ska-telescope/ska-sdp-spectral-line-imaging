@@ -1,11 +1,14 @@
 import logging
 from typing import Tuple
 
+import dask
 import numpy as np
 import xarray as xr
 from ska_sdp_datamodels.image import Image
-from ska_sdp_func_python.image.cleaners import hogbom
+from ska_sdp_func_python.image.cleaners import hogbom, msclean
 from ska_sdp_func_python.image.deconvolution import common_arguments
+
+from .cleaners import clean_with
 
 
 def deconvolve_cube(
@@ -70,10 +73,7 @@ def deconvolve_cube(
     # )
 
     window = xr.DataArray(
-        np.ones(
-            dirty["pixels"].shape,
-            dtype=dirty["pixels"].dtype,
-        ),
+        dask.array.ones_like(dirty["pixels"]),
         dims=dirty["pixels"].dims,
         coords=dirty["pixels"].coords,
     ).chunk(dirty["pixels"].chunksizes)
@@ -84,7 +84,7 @@ def deconvolve_cube(
     assert np.allclose(pmax, 1.0), "PSF does not have unit peak"
 
     # TODO: Take "scales" parameter when required later
-    fracthresh, gain, niter, thresh, _ = common_arguments(**kwargs)
+    fracthresh, gain, niter, thresh, scales = common_arguments(**kwargs)
 
     # TODO: port later once psf_support is not None
     # psf_support = kwargs.get("psf_support", None)
@@ -97,40 +97,37 @@ def deconvolve_cube(
 
     # TODO: Port other algorithms
     if algorithm == "msclean":
-        raise NotImplementedError("msclean is not implemented")
-    elif algorithm in ("msmfsclean", "mfsmsclean", "mmclean"):
-        raise NotImplementedError(
-            'msmfsclean", "mfsmsclean", "mmclean" are not implemented'
+        comp, res = clean_with(
+            msclean,
+            dirty,
+            psf,
+            window,
+            sensitivity,
+            gain=gain,
+            thresh=thresh,
+            niter=niter,
+            fracthresh=fracthresh,
+            scales=scales,
+            prefix=prefix,
         )
 
     elif algorithm == "hogbom":
-        # TODO: pass "prefix" to hogbom kwargs
-        comp, res = xr.apply_ufunc(
+        comp, res = clean_with(
             hogbom,
-            dirty["pixels"],
-            psf["pixels"],
+            dirty,
+            psf,
             window,
-            input_core_dims=[
-                ["y", "x"],
-                ["y", "x"],
-                ["y", "x"],
-            ],
-            output_core_dims=[["y", "x"], ["y", "x"]],
-            # TODO: parameterize dtype
-            output_dtypes=(np.float32, np.float32),
-            vectorize=True,
-            dask="parallelized",
-            keep_attrs=True,
-            kwargs=dict(
-                gain=gain, thresh=thresh, niter=niter, fracthresh=fracthresh
-            ),
+            include_sensitivity=False,
+            gain=gain,
+            thresh=thresh,
+            niter=niter,
+            fracthresh=fracthresh,
+            prefix=prefix,
         )
 
-    elif algorithm == "hogbom-complex":
-        raise NotImplementedError("hogbom complex is not complicated")
     else:
         raise ValueError(
-            f"deconvolve_cube {prefix}: Unknown algorithm {algorithm}"
+            f"deconvolve_cube {prefix}: Unsupported algorithm {algorithm}"
         )
 
     logger.info(f"Deconvolve_cube {prefix}: Deconvolution finished")

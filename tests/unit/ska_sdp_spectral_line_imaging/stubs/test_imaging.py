@@ -258,7 +258,7 @@ def test_should_perform_major_cyle(
     "ska_sdp_spectral_line_imaging.stubs.imaging.xr.DataArray",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.np.ones",
+    "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array.ones_like",
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.fit_psf",

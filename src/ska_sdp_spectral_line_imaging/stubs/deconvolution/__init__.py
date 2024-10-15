@@ -14,11 +14,15 @@ def deconvolve(
 
     Parameters
     ----------
-        dirty (Image): Dirty Image
-        psf (Image): Point Spread Function
-        use_radler (bool): Use radler to perform deconvolution
+        dirty: Image
+            Dirty Image
+        psf: Image
+            Point Spread Function
+        use_radler: bool
+            Use radler to perform deconvolution
             instead of SDP functions
-        **kwargs: Keyword arguments
+        **kwargs:
+            Keyword arguments
 
     Returns
     -------

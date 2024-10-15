@@ -221,12 +221,10 @@ def generate_psf_image(
         ska_sdp_datamodels.image.image_model.Image
     """
 
-    empty_psf_data = np.ones(ps.VISIBILITY.shape)
-
     psf_ps = ps.assign(
         {
             "VISIBILITY": xr.DataArray(
-                empty_psf_data,
+                dask.array.ones_like(ps.VISIBILITY),
                 attrs=ps.VISIBILITY.attrs,
                 coords=ps.VISIBILITY.coords,
             )
