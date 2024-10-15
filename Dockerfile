@@ -20,4 +20,6 @@ RUN pip install --no-cache-dir --no-compile -r requirements.txt ska_sdp_spectral
 
 WORKDIR /app
 
+COPY --from=BUILD /build/examples/install-config-and-run-pipeline.sh ./
+
 ENTRYPOINT ["spectral-line-imaging-pipeline"]
