@@ -1,9 +1,5 @@
-import logging
 from typing import Tuple
 
-import dask
-import numpy as np
-import xarray as xr
 from ska_sdp_datamodels.image import Image
 from ska_sdp_func_python.image.cleaners import hogbom, msclean
 from ska_sdp_func_python.image.deconvolution import common_arguments
@@ -11,10 +7,13 @@ from ska_sdp_func_python.image.deconvolution import common_arguments
 from .cleaners import clean_with
 
 
-def deconvolve_cube(
-    dirty: Image, psf: Image, sensitivity: Image = None, prefix="", **kwargs
-) -> Tuple[Image, Image]:
-    """Clean using a variety of algorithms.
+def deconvolve_cube(dirty: Image, psf: Image, **kwargs) -> Tuple[Image, Image]:
+    """
+    Note: This documentation copied from
+    ska_sdp_func_python.image.deconvolution.deconvolve_cube.
+    Not all parameters and algorithms are currently supported.
+
+    Clean using a variety of algorithms.
 
     The algorithms available are:
 
@@ -43,7 +42,7 @@ def deconvolve_cube(
     :param psf: Image Point Spread Function
     :param sensitivity: Sensitivity image (i.e. inverse noise level)
     :param prefix: Informational message for logging
-    :param window_shape: Window image (Bool) - clean where True
+    :param window_shape: Window description
     :param mask: Window in the form of an image, overrides window_shape
     :param algorithm: Cleaning algorithm:
                 'msclean'|'hogbom'|'hogbom-complex'|'mfsmsclean'
@@ -64,34 +63,23 @@ def deconvolve_cube(
         :py:func:`ska_sdp_func_python.image.cleaners.msmfsclean`
 
     """
-    logger = logging.getLogger()
-
-    # TODO: port later once window_shape is not None
+    # TODO: port later once window_shape is passed from config
     # window_shape = kwargs.get("window_shape", None)
     # window = find_window_list(
     #     dirty_list, prefix, window_shape=window_shape
     # )
 
-    window = xr.DataArray(
-        dask.array.ones_like(dirty["pixels"]),
-        dims=dirty["pixels"].dims,
-        coords=dirty["pixels"].coords,
-    ).chunk(dirty["pixels"].chunksizes)
+    # TODO: Pass these from caller function
+    sensitivity = None  # must be an Image instance
+    window = None  # must be an Image instance
 
-    # check_psf_peak
-    pmax = psf["pixels"].max(dim=["polarisation", "y", "x"])
-
-    assert np.allclose(pmax, 1.0), "PSF does not have unit peak"
-
-    # TODO: Take "scales" parameter when required later
     fracthresh, gain, niter, thresh, scales = common_arguments(**kwargs)
 
-    # TODO: port later once psf_support is not None
+    # TODO: port later once psf_support is is passed from config
     # psf_support = kwargs.get("psf_support", None)
     # psf_list = bound_psf_list(
     #     dirty_list, prefix, psf_list, psf_support=psf_support
     # )
-    # assert np.allclose(pmax, 1.0) ,"PSF does not have unit peak"
 
     algorithm = kwargs.get("algorithm", "hogbom")
 
@@ -108,7 +96,6 @@ def deconvolve_cube(
             niter=niter,
             fracthresh=fracthresh,
             scales=scales,
-            prefix=prefix,
         )
 
     elif algorithm == "hogbom":
@@ -122,15 +109,10 @@ def deconvolve_cube(
             thresh=thresh,
             niter=niter,
             fracthresh=fracthresh,
-            prefix=prefix,
         )
 
     else:
-        raise ValueError(
-            f"deconvolve_cube {prefix}: Unsupported algorithm {algorithm}"
-        )
-
-    logger.info(f"Deconvolve_cube {prefix}: Deconvolution finished")
+        raise ValueError(f"Deconvolve_cube: Unsupported algorithm {algorithm}")
 
     comp_image = Image.constructor(
         data=comp.data,

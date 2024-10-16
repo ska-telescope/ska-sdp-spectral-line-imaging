@@ -36,16 +36,11 @@ SPEED_OF_LIGHT = 299792458
         deconvolution_params=ConfigParam(
             dict,
             {
-                "prefix": "",
-                "window_shape": None,
-                "mask": None,
                 "algorithm": "hogbom",
                 "gain": 0.7,
                 "threshold": 0.0,
                 "fractional_threshold": 0.01,
                 "scales": [0, 3, 10, 30],
-                "nmoment": 3,
-                "findpeak": "RASCIL",
                 "niter": 100,
                 "use_radler": False,
             },

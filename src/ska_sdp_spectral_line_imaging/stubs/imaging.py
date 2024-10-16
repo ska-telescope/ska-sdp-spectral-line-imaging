@@ -1,5 +1,7 @@
 # pylint: disable=import-error,no-name-in-module,no-member
 
+import logging
+
 import dask
 import dask.array
 import ducc0.wgridder as wgridder
@@ -235,8 +237,9 @@ def generate_psf_image(
         psf_ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
     )
 
-    # TODO: Fix restore cube to accept clean_beam to remove load
-    psf_image.load()
+    # TODO: Do we have to make sure that peak of the psf_image is 1.0?
+    # assert np.isclose(psf_image.max() , 1.0)
+
     return psf_image
 
 
@@ -287,6 +290,8 @@ def clean_cube(
     ny = gridding_params.get("ny")
     residual_ps = ps
 
+    logger = logging.getLogger()
+
     if psf_image_path is None:
         psf_image = generate_psf_image(
             ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
@@ -306,8 +311,16 @@ def clean_cube(
     )
 
     if any(value is None for value in beam_info.values()):
-        # TODO: Make dask compliant
+        # TODO: Make fit_psf dask compliant to remove psf_image.load()
+        logger.warning(
+            "Calculating beam info. "
+            "This causes entire psf_image to LOAD INTO MEMORY. "
+            "This will slow down the computation."
+        )
+        psf_image.load()
         beam_info = fit_psf(psf_image)
+
+    logger.info(f"Beam information: {beam_info}")
 
     for _ in range(n_iter_major):
 

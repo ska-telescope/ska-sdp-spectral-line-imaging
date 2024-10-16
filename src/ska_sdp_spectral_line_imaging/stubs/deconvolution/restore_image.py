@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 import xarray as xr
 from astropy.convolution import Gaussian2DKernel, convolve_fft
@@ -23,10 +21,6 @@ def restore_cube(
     :return: restored image
 
     """
-    logger = logging.getLogger()
-
-    logger.info(f"clean beam: {clean_beam}")
-
     # TODO: make dask compatible
     beam_pixels = convert_clean_beam_to_pixels(model, clean_beam)
 
@@ -68,7 +62,5 @@ def restore_cube(
     )
 
     restored_image.attrs["clean_beam"] = clean_beam
-
-    logger.info("Image restoration finished")
 
     return restored_image

@@ -46,6 +46,9 @@ def radler_deconvolve_cube(
     dirty: Image, psf: Image, nx=None, ny=None, cell_size=None, **kwargs
 ) -> Tuple[Image, Image]:
     """
+    Note: This documentation copied from
+    ska_sdp_func_python.image.deconvolution.radler_deconvolve_list
+
     Clean using the Radler module, using various algorithms.
 
     The algorithms available are
@@ -71,7 +74,7 @@ def radler_deconvolve_cube(
     :param threshold: Clean threshold (0.0)
     :param scales: Scales (in pixels) for multiscale ([0, 3, 10, 30])
     :param niter: Maximum number of iterations
-    :param cellsize: Cell size of each pixel in the image
+    :param cell_size: Cell size of each pixel in the image
     :return: component image_list
 
     """
