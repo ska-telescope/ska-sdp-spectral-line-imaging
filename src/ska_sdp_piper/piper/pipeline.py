@@ -10,7 +10,6 @@ from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
 from .executors import ExecutorFactory
 from .named_instance import NamedInstance
 from .scheduler import DefaultScheduler
-from .stage import Stages
 from .utils import (
     LogUtil,
     create_output_dir,
@@ -39,6 +38,7 @@ class Pipeline(Command, metaclass=NamedInstance):
         stages=None,
         global_config=None,
         cli_args=None,
+        scheduler=None,
         **kwargs,
     ):
         """
@@ -48,7 +48,7 @@ class Pipeline(Command, metaclass=NamedInstance):
         ----------
           name: str
               Name of the pipeline
-          stages: list[stage.ConfigurableStage]
+          stages: piper.stages.Stages
               Stages to be executed
           global_config: Configuration
               Pipeline level configurations
@@ -65,13 +65,15 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self.logger = logging.getLogger(self.name)
 
-        self._stages = Stages(stages)
+        self._stages = stages
 
         self.config_manager = ConfigManager(
             pipeline=self._pipeline_config(),
             parameters=self._parameter(),
             global_parameters=self._global_config.items,
         )
+
+        self.scheduler = DefaultScheduler() if scheduler is None else scheduler
 
         self.sub_command(
             "run",
@@ -229,7 +231,6 @@ class Pipeline(Command, metaclass=NamedInstance):
         self.logger.info(f"Current run output path : {output_dir}")
 
         vis = read_dataset(infile_path)
-        scheduler = DefaultScheduler()
         executor = ExecutorFactory.get_executor(output_dir, **cli_args)
         if config_path:
             self.config_manager.update_config(config_path)
@@ -265,8 +266,8 @@ class Pipeline(Command, metaclass=NamedInstance):
         )
         self.config_manager.write_yml(config_output_file)
 
-        scheduler.schedule(executable_stages, verbose=verbose)
-        output_pipeline_data = executor.execute(scheduler.tasks)
+        self.scheduler.schedule(executable_stages, verbose=verbose)
+        output_pipeline_data = executor.execute(self.scheduler.tasks)
 
         write_dataset(output_pipeline_data, output_dir)
 

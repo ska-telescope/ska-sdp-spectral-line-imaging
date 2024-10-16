@@ -21,6 +21,7 @@ import logging
 from pathlib import Path
 
 from ska_sdp_piper.piper.pipeline import Pipeline
+from ska_sdp_piper.piper.stage import Stages
 from ska_sdp_piper.piper.utils import create_output_dir
 
 from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
@@ -36,17 +37,19 @@ logger = logging.getLogger()
 
 spectral_line_imaging_pipeline = Pipeline(
     "spectral_line_imaging_pipeline",
-    stages=[
-        select_field,
-        vis_stokes_conversion,
-        read_model,
-        predict_stage,
-        export_model,
-        cont_sub,
-        imaging_stage,
-        export_residual,
-        export_image,
-    ],
+    stages=Stages(
+        [
+            select_field,
+            vis_stokes_conversion,
+            read_model,
+            predict_stage,
+            export_model,
+            cont_sub,
+            imaging_stage,
+            export_residual,
+            export_image,
+        ]
+    ),
 )
 
 

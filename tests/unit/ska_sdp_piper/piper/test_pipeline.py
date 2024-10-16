@@ -5,6 +5,7 @@ from ska_sdp_piper.piper.command.cli_command_parser import CLIArgument
 from ska_sdp_piper.piper.configurations import Configuration
 from ska_sdp_piper.piper.constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
 from ska_sdp_piper.piper.pipeline import Pipeline
+from ska_sdp_piper.piper.stage import Stages
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -31,9 +32,12 @@ def mock_stages():
 
 
 @pytest.fixture(scope="function")
-def stages():
-    with mock.patch("ska_sdp_piper.piper.pipeline.Stages") as stages_mock:
+def stages(mock_stages):
+    with mock.patch("ska_sdp_piper.piper.stage.Stages") as stages_mock:
         stages_mock.return_value = stages_mock
+        stages_mock.__iter__.return_value = mock_stages
+        stages_mock.get_stages.return_value = mock_stages
+
         yield stages_mock
 
 
@@ -115,11 +119,11 @@ def timestamp_mock():
 
 
 def test_should_initialise_the_pipeline_with_default_cli_args(
-    cli_command_parser,
+    cli_command_parser, stages
 ):
     cli_arg_mock = Mock(name="cli_arg")
     cli_command_parser.return_value = cli_arg_mock
-    pipeline = Pipeline("test_pipeline")
+    pipeline = Pipeline("test_pipeline", stages=stages)
     cli_command_parser.assert_called_once()
     cli_arg_mock.create_sub_parser.assert_has_calls(
         [
@@ -140,12 +144,12 @@ def test_should_initialise_the_pipeline_with_default_cli_args(
 
 
 def test_should_initialise_the_pipeline_with_additional_cli_args(
-    cli_command_parser,
+    cli_command_parser, stages
 ):
     cli_arg_mock = Mock(name="cli_arg")
     cli_command_parser.return_value = cli_arg_mock
     cli_args = [CLIArgument("additional_arg1"), CLIArgument("additional_arg2")]
-    pipeline = Pipeline("test_pipeline", cli_args=cli_args)
+    pipeline = Pipeline("test_pipeline", cli_args=cli_args, stages=stages)
 
     cli_arg_mock.create_sub_parser.assert_has_calls(
         [
@@ -166,7 +170,7 @@ def test_should_initialise_the_pipeline_with_additional_cli_args(
 
 
 def test_should_run_the_pipeline_from_cli_command(
-    create_output_mock, cli_command_parser, timestamp_mock
+    create_output_mock, cli_command_parser, timestamp_mock, stages
 ):
     cli_command_parser.return_value = cli_command_parser
     cli_command_parser.cli_args_dict = {"input": "infile_path"}
@@ -181,7 +185,7 @@ def test_should_run_the_pipeline_from_cli_command(
     cli_command_parser.parse_args.return_value = args
     pipeline_run_mock = Mock(name="pipeline_run_mock")
 
-    pipeline = Pipeline("test_pipeline", stages=[])
+    pipeline = Pipeline("test_pipeline", stages=stages)
     args.sub_command = pipeline._run
     pipeline.run = pipeline_run_mock
 
@@ -204,7 +208,7 @@ def test_should_run_the_pipeline_from_cli_command(
 
 
 def test_should_run_the_pipeline_from_cli_command_with_default_output(
-    create_output_mock, cli_command_parser, timestamp_mock
+    create_output_mock, cli_command_parser, timestamp_mock, stages
 ):
     cli_command_parser.return_value = cli_command_parser
     args = Mock(name="CLI_args")
@@ -215,7 +219,7 @@ def test_should_run_the_pipeline_from_cli_command_with_default_output(
     cli_command_parser.parse_args.return_value = args
     pipeline_run_mock = Mock(name="pipeline_run_mock")
 
-    pipeline = Pipeline("test_pipeline", stages=[])
+    pipeline = Pipeline("test_pipeline", stages=stages)
     args.sub_command = pipeline._run
     pipeline.run = pipeline_run_mock
 
@@ -237,6 +241,18 @@ def test_should_run_the_pipeline_from_cli_command_with_default_output(
 
 @mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 @mock.patch("ska_sdp_piper.piper.pipeline.Configuration")
+def test_should_initialise_default_scheduler(
+    configuration_mock,
+    config_manager_mock,
+    default_scheduler,
+    stages,
+):
+    Pipeline("test_pipeline", stages=stages)
+    default_scheduler.assert_called_once()
+
+
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.Configuration")
 def test_should_run_the_pipeline(
     configuration_mock,
     config_manager_mock,
@@ -249,8 +265,6 @@ def test_should_run_the_pipeline(
     mock_stages,
     stages,
 ):
-    stages.__iter__.return_value = mock_stages
-    stages.get_stages.return_value = mock_stages
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage2"]
     config_manager_mock.stage_config.side_effect = [
@@ -262,7 +276,7 @@ def test_should_run_the_pipeline(
     configuration_mock.return_value = configuration_mock
     configuration_mock.items = {"a": 10}
 
-    pipeline = Pipeline("test_pipeline", stages=mock_stages)
+    pipeline = Pipeline("test_pipeline", stages=stages)
 
     pipeline.run(
         "infile_path",
@@ -299,12 +313,8 @@ def test_should_run_the_pipeline(
     )
 
 
-def test_should_run_the_pipeline_with_verbose(log_util):
-    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
-    stage1.name = "stage1"
-    stage1.config = {}
-
-    pipeline = Pipeline("test_pipeline", stages=[stage1])
+def test_should_run_the_pipeline_with_verbose(log_util, stages):
+    pipeline = Pipeline("test_pipeline", stages=stages)
     pipeline.run("infile_path", "output_dir", [], verbose=True)
 
     log_util.configure.assert_has_calls(
@@ -322,7 +332,8 @@ def test_should_run_the_pipeline_with_selected_stages(
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage3"]
 
-    pipeline = Pipeline("test_pipeline", stages=mock_stages)
+    stages = Stages(mock_stages)
+    pipeline = Pipeline("test_pipeline", stages=stages)
     pipeline.run("infile_path", "output_dir", stages=["stage1", "stage3"])
 
     config_manager_mock.assert_called_once_with(
@@ -347,7 +358,8 @@ def test_should_instantiate_dask_client(executor_factory):
     stage1.name = "stage1"
     stage1.config = {}
     stage1.stage_config = Configuration()
-    pipeline = Pipeline("test_pipeline", stages=[stage1])
+    stages = Stages([stage1])
+    pipeline = Pipeline("test_pipeline", stages=stages)
     dask_scheduler_address = "some_ip"
     pipeline.run(
         "infile_path",
@@ -363,12 +375,12 @@ def test_should_instantiate_dask_client(executor_factory):
 def test_should_run_the_pipeline_with_selected_stages_from_config(
     config_manager_mock, default_scheduler, create_output_mock, mock_stages
 ):
-    stage1, stage2, stage3 = mock_stages
+    stage1, _, stage3 = mock_stages
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage3"]
     create_output_mock.return_value = "/path/to/output/timestamp"
-
-    pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
+    stages = Stages(mock_stages)
+    pipeline = Pipeline("test_pipeline", stages=stages)
 
     pipeline.run(
         "infile_path", "/path/to/output", config_path="/path/to/config"
@@ -388,11 +400,12 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
 def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     config_manager_mock, default_scheduler, mock_stages
 ):
-    stage1, stage2, stage3 = mock_stages
+    stage1, stage2, _ = mock_stages
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage2"]
 
-    pipeline = Pipeline("test_pipeline", stages=[stage1, stage2, stage3])
+    stages = Stages(mock_stages)
+    pipeline = Pipeline("test_pipeline", stages=stages)
 
     pipeline.run(
         "infile_path",
@@ -424,8 +437,9 @@ def test_should_not_update_config_if_config_path_is_not_provided(
     stage1.name = "stage1"
 
     stage1.config = {}
+    stages = Stages([stage1])
 
-    pipeline = Pipeline("test_pipeline", stages=[stage1])
+    pipeline = Pipeline("test_pipeline", stages=stages)
 
     pipeline.run("infile_path", "output_dir")
 
@@ -438,7 +452,7 @@ def test_should_return_pipeline_default_configuration(config_manager_mock):
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.config = {"config": "config"}
 
-    pipeline = Pipeline("test_pipeline")
+    pipeline = Pipeline("test_pipeline", stages=Stages())
 
     assert pipeline.config == {"config": "config"}
 
@@ -449,7 +463,7 @@ def test_should_install_default_config(config_manager_mock):
     args_mock = Mock(name="arg_mock")
     args_mock.config_install_path = "/path/to/install"
     args_mock.overide_defaults = None
-    pipeline = Pipeline("test_pipeline")
+    pipeline = Pipeline("test_pipeline", stages=Stages())
     pipeline._install_config(args_mock)
 
     config_manager_mock.write_yml.assert_called_once_with(
@@ -474,7 +488,7 @@ def test_should_override_install_default_config(
         "parameters.y.z": ["oea", "aoe", "xyz"],
     }
 
-    pipeline = Pipeline("test_pipeline")
+    pipeline = Pipeline("test_pipeline", stages=Stages())
     pipeline._install_config(args_mock)
 
     yaml_mock.safe_load.assert_called_once_with(
@@ -504,7 +518,7 @@ def test_should_write_config_to_output_yaml_file(
     stage1.name = "stage1"
     stage1.config = {"stage1": "stage1_config"}
 
-    pipeline = Pipeline("test", stages=[stage1])
+    pipeline = Pipeline("test", stages=Stages([stage1]))
 
     pipeline.run("infile", "output_dir")
 
@@ -525,7 +539,7 @@ def test_should_write_config_to_output_yaml_on_failure(
     stage1.name = "stage1"
     stage1.config = {"stage1": "stage1_config"}
 
-    pipeline = Pipeline("test", stages=[stage1])
+    pipeline = Pipeline("test", stages=Stages([stage1]))
 
     with pytest.raises(Exception):
         pipeline.run("infile", "output_dir")
@@ -536,5 +550,5 @@ def test_should_write_config_to_output_yaml_on_failure(
 
 
 def test_should_get_instance_of_pipeline():
-    pipeline = Pipeline("test_pipeline", ["stage"])
+    pipeline = Pipeline("test_pipeline", Stages(["stage"]))
     assert pipeline == Pipeline("test_pipeline", _existing_instance_=True)
