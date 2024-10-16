@@ -10,6 +10,14 @@ from ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser import (
 )
 
 
+@pytest.fixture(scope="function")
+def default_scheduler():
+    with mock.patch(
+        "ska_sdp_spectral_line_imaging.scheduler.DefaultScheduler"
+    ) as default_scheduler_mock:
+        yield default_scheduler_mock
+
+
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
     ".select_field"
@@ -26,7 +34,11 @@ from ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser import (
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser.read_yml"
 )
 def test_should_initialise_diagnoser(
-    read_yml_mock, xarray_open_mock, read_dataset_mock, select_field
+    read_yml_mock,
+    xarray_open_mock,
+    read_dataset_mock,
+    select_field,
+    default_scheduler,
 ):
     output_path = Mock(name="output", spec=Path)
     channel = 1
@@ -60,7 +72,9 @@ def test_should_initialise_diagnoser(
 
     read_yml_mock.side_effect = [cli, config]
 
-    SpectralLineDiagnoser(input_path, output_path, channel)
+    SpectralLineDiagnoser(
+        input_path, output_path, channel, scheduler=default_scheduler
+    )
 
     input_path.glob.assert_has_calls(
         [mock.call("*.cli.yml"), mock.call("*.config.yml")]
@@ -99,7 +113,11 @@ def test_should_initialise_diagnoser(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser.read_yml"
 )
 def test_should_initialise_diagnoser_without_model_residual(
-    read_yml_mock, xarray_open_mock, read_dataset_mock, select_field
+    read_yml_mock,
+    xarray_open_mock,
+    read_dataset_mock,
+    select_field,
+    default_scheduler,
 ):
     output_path = Mock(name="output", spec=Path)
     channel = 1
@@ -129,7 +147,9 @@ def test_should_initialise_diagnoser_without_model_residual(
 
     read_yml_mock.side_effect = [cli, config]
 
-    SpectralLineDiagnoser(input_path, output_path, channel)
+    SpectralLineDiagnoser(
+        input_path, output_path, channel, scheduler=default_scheduler
+    )
 
     assert xarray_open_mock.call_count == 0
     input_path.glob.assert_has_calls(
@@ -194,7 +214,7 @@ def test_data():
     ".xr.open_zarr"
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser" ".np.abs"
+    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser.np.abs"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
@@ -226,6 +246,7 @@ def test_should_plot_residual_and_model(
     uv_dist_mock,
     store_spectral_csv_mock,
     test_data,
+    default_scheduler,
 ):
     uv_dist_mock.return_value = "uv-distance"
 
@@ -261,7 +282,9 @@ def test_should_plot_residual_and_model(
 
     read_yml_mock.side_effect = [cli, config]
 
-    diagnoser = SpectralLineDiagnoser(input_path, output_path, channel)
+    diagnoser = SpectralLineDiagnoser(
+        input_path, output_path, channel, scheduler=default_scheduler
+    )
     diagnoser.diagnose()
 
     assert amp_vs_channel_plot_mock.call_count == 4
@@ -338,7 +361,7 @@ def test_should_plot_residual_and_model(
     ".xr.open_zarr"
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser" ".np.abs"
+    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser.np.abs"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
@@ -369,6 +392,7 @@ def test_should_not_plot_residual_and_model_if_not_exported(
     zarr_mock,
     uv_dist_mock,
     test_data,
+    default_scheduler,
 ):
     uv_dist_mock.return_value = "uv-distance"
 
@@ -401,7 +425,9 @@ def test_should_not_plot_residual_and_model_if_not_exported(
 
     read_yml_mock.side_effect = [cli, config]
 
-    diagnoser = SpectralLineDiagnoser(input_path, output_path, channel)
+    diagnoser = SpectralLineDiagnoser(
+        input_path, output_path, channel, scheduler=default_scheduler
+    )
     diagnoser.diagnose()
 
     assert amp_vs_channel_plot_mock.call_count == 2
@@ -421,7 +447,7 @@ def test_should_not_plot_residual_and_model_if_not_exported(
     ".xr.open_zarr"
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser" ".np.abs"
+    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser.np.abs"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
@@ -453,6 +479,7 @@ def test_should_export_residual_csv(
     uv_dist_mock,
     store_spectral_csv_mock,
     test_data,
+    default_scheduler,
 ):
     uv_dist_mock.return_value = "uv-distance"
 
@@ -487,7 +514,9 @@ def test_should_export_residual_csv(
 
     abs_mock.return_value = [1, 2, 3, 4]
 
-    diagnoser = SpectralLineDiagnoser(input_path, output_path, channel)
+    diagnoser = SpectralLineDiagnoser(
+        input_path, output_path, channel, scheduler=default_scheduler
+    )
     diagnoser.diagnose()
 
     store_spectral_csv_mock.assert_called_once_with(

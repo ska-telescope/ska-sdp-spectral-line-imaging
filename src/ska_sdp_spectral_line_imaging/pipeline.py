@@ -26,6 +26,7 @@ from ska_sdp_piper.piper.utils import create_output_dir
 
 from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
 from .diagnosis.spectral_line_diagnoser import SpectralLineDiagnoser
+from .scheduler import DefaultScheduler
 from .stages.data_export import export_image, export_model, export_residual
 from .stages.imaging import imaging_stage
 from .stages.model import cont_sub, read_model, vis_stokes_conversion
@@ -34,6 +35,7 @@ from .stages.select_vis import select_field
 
 logger = logging.getLogger()
 
+scheduler = DefaultScheduler()
 
 spectral_line_imaging_pipeline = Pipeline(
     "spectral_line_imaging_pipeline",
@@ -50,6 +52,7 @@ spectral_line_imaging_pipeline = Pipeline(
             export_image,
         ]
     ),
+    scheduler=scheduler,
 )
 
 
@@ -81,5 +84,6 @@ def pipeline_diagnostic(cli_args):
         timestamped_output_dir,
         cli_args.channel,
         cli_args.dask_scheduler,
+        scheduler=scheduler,
     )
     diagnoser.diagnose()

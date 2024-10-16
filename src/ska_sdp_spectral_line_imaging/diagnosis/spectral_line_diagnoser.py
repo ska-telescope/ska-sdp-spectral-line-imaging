@@ -4,7 +4,6 @@ import numpy as np
 import xarray as xr
 
 from ska_sdp_piper.piper.executors import ExecutorFactory
-from ska_sdp_piper.piper.scheduler import DefaultScheduler
 from ska_sdp_piper.piper.utils import read_dataset, read_yml
 
 from ..stages.select_vis import select_field
@@ -36,7 +35,14 @@ class SpectralLineDiagnoser:
           Model used in continuum subtraction stage in pipeline.
     """
 
-    def __init__(self, input_path, output_path, channel, dask_scheduler=None):
+    def __init__(
+        self,
+        input_path,
+        output_path,
+        channel,
+        dask_scheduler=None,
+        scheduler=None,
+    ):
         """
         Initialise the Diagnoser object
         """
@@ -54,7 +60,7 @@ class SpectralLineDiagnoser:
         self.residual = None
         self.model = None
 
-        self.scheduler = DefaultScheduler()
+        self.scheduler = scheduler
 
         self.executor = ExecutorFactory.get_executor(
             self.output_dir, dask_scheduler

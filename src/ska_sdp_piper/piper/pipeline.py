@@ -9,7 +9,6 @@ from .configurations.config_manager import ConfigManager
 from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
 from .executors import ExecutorFactory
 from .named_instance import NamedInstance
-from .scheduler import DefaultScheduler
 from .utils import (
     LogUtil,
     create_output_dir,
@@ -36,9 +35,9 @@ class Pipeline(Command, metaclass=NamedInstance):
         self,
         name,
         stages=None,
+        scheduler=None,
         global_config=None,
         cli_args=None,
-        scheduler=None,
         **kwargs,
     ):
         """
@@ -73,7 +72,7 @@ class Pipeline(Command, metaclass=NamedInstance):
             global_parameters=self._global_config.items,
         )
 
-        self.scheduler = DefaultScheduler() if scheduler is None else scheduler
+        self.scheduler = scheduler
 
         self.sub_command(
             "run",

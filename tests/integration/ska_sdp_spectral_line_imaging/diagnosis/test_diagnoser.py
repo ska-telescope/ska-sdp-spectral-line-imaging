@@ -7,6 +7,7 @@ import pytest
 from ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser import (
     SpectralLineDiagnoser,
 )
+from ska_sdp_spectral_line_imaging.scheduler import DefaultScheduler
 from tests.integration.ska_sdp_spectral_line_imaging.test_pipeline import (
     RESOURCE_DIR,
     untar,
@@ -23,13 +24,14 @@ def prepare_test_sandbox(tmp_path):
 
 
 def test_should_create_plots(prepare_test_sandbox):
+    scheduler = DefaultScheduler()
     temp_path = prepare_test_sandbox
 
     timestamped_output_dir = Path("diagnosis-out/timestamped/")
     os.makedirs(timestamped_output_dir)
 
     diagnoser = SpectralLineDiagnoser(
-        Path(temp_path), timestamped_output_dir, channel=1
+        Path(temp_path), timestamped_output_dir, channel=1, scheduler=scheduler
     )
     diagnoser.diagnose()
 

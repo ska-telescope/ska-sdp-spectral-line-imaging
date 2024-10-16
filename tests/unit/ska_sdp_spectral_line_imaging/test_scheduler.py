@@ -1,9 +1,9 @@
 from mock import Mock, mock
 
-from ska_sdp_piper.piper.scheduler import DefaultScheduler
+from ska_sdp_spectral_line_imaging.scheduler import DefaultScheduler
 
 
-@mock.patch("ska_sdp_piper.piper.scheduler.dask.delayed")
+@mock.patch("ska_sdp_spectral_line_imaging.scheduler.dask.delayed")
 def test_should_schedule_stages_with_configuration_params(
     delayed_mock,
 ):
