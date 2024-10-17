@@ -36,21 +36,32 @@ SPEED_OF_LIGHT = 299792458
         deconvolution_params=ConfigParam(
             dict,
             {
-                "algorithm": "hogbom",
+                "algorithm": "multiscale",
                 "gain": 0.7,
                 "threshold": 0.0,
                 "fractional_threshold": 0.01,
                 "scales": [0, 3, 10, 30],
                 "niter": 100,
-                "use_radler": False,
+                "use_radler": True,
             },
             description="Deconvolution parameters",
         ),
-        n_iter_major=ConfigParam(int, 0, description="Major cycle iterations"),
-        do_clean=ConfigParam(
-            bool, False, description="Whether to run clean algorithm"
+        n_iter_major=ConfigParam(
+            int, 0, description="Number of major cycle iterations"
         ),
-        psf_image_path=ConfigParam(str, None, description="Path to PSF image"),
+        do_clean=ConfigParam(
+            bool,
+            False,
+            description="Whether to run clean algorithm. "
+            "If False, only the dirty image is generated. "
+            "If True, the restored image is generated.",
+        ),
+        psf_image_path=ConfigParam(
+            str,
+            None,
+            description="Path to PSF FITS image. "
+            "If None, the pipeline generates the psf image.",
+        ),
         beam_info=ConfigParam(
             dict,
             {
@@ -58,7 +69,9 @@ SPEED_OF_LIGHT = 299792458
                 "bmin": None,
                 "bpa": None,
             },
-            description="Beam information",
+            description="Beam information. "
+            "If any value is None, "
+            "pipeline calculates beam information using psf image.",
         ),
     ),
 )
@@ -73,8 +86,9 @@ def imaging_stage(
 ):
     """
     Creates a dirty image using ducc0.gridder.
-    Generated image is a square with length "image_size" pixels.
-    Each pixel of the image is a square of length "cell_size" arcseconds.
+
+    For detailed parameter info, please refer to
+    this `documentation <../stage_config.html>`_
 
     Parameters
     ----------

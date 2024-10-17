@@ -18,8 +18,16 @@ from ..stubs.model import subtract_visibility
 @ConfigurableStage(
     "read_model",
     configuration=Configuration(
-        image_name=ConfigParam(str, "wsclean"),
-        pols=ConfigParam(list, ["I", "Q", "U", "V"]),
+        image_name=ConfigParam(
+            str,
+            "wsclean",
+            description="Prefix path of the image(s) which contain "
+            "model data. Please refer `README <README.html>`_ to "
+            "understand the pre-requisites of the pipeline.",
+        ),
+        pols=ConfigParam(
+            list, ["I", "Q", "U", "V"], "Polarizations of the model images"
+        ),
     ),
 )
 def read_model(upstream_output, image_name, pols):
@@ -31,9 +39,9 @@ def read_model(upstream_output, image_name, pols):
         upstream_output: dict
             Output from the upstream stage
         image_name: str
-            Name of the image to be read
+            Prefix path of the image(s) which contain model data
         pos: list(str)
-            Polarizations to be included
+            Polarizations of the model image(s)
 
     Returns
     -------
@@ -42,7 +50,7 @@ def read_model(upstream_output, image_name, pols):
 
     ps = upstream_output["ps"]
     images = []
-
+    # TODO: Not dask compatible, loaded into memory by master / dask client
     for pol in pols:
         with fits.open(f"{image_name}-{pol}-image.fits") as f:
             images.append(f[0].data.squeeze())
@@ -59,8 +67,20 @@ def read_model(upstream_output, image_name, pols):
 @ConfigurableStage(
     "vis_stokes_conversion",
     configuration=Configuration(
-        input_polarisation_frame=ConfigParam(str, "linear"),
-        output_polarisation_frame=ConfigParam(str, "stokesIQUV"),
+        input_polarisation_frame=ConfigParam(
+            str,
+            "linear",
+            description="Polarization frame of the input visibility. "
+            "Supported options are: 'circular','circularnp', "
+            "'linear', 'linearnp', 'stokesIQUV', 'stokesIV', "
+            "'stokesIQ', 'stokesI'.",
+        ),
+        output_polarisation_frame=ConfigParam(
+            str,
+            "stokesIQUV",
+            description="Polarization frame of the output visibilities. "
+            "Supported options are same as output_polarisation_frame",
+        ),
     ),
 )
 def vis_stokes_conversion(
@@ -82,6 +102,9 @@ def vis_stokes_conversion(
     -------
         dict
     """
+
+    # TODO: Replace this entire function with the one present
+    # in sdp-func-python as that is more accurate
 
     ps = upstream_output["ps"]
 
@@ -108,8 +131,6 @@ def vis_stokes_conversion(
     converted_vis = converted_vis.assign_attrs(ps.VISIBILITY.attrs)
 
     ps = ps.assign({"VISIBILITY": converted_vis})
-
-    # TODO: Check is polarization of entire ps is updated
 
     return {"ps": ps}
 

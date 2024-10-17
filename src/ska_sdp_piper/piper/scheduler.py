@@ -1,6 +1,6 @@
 # pragma: exclude file
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
 
 class PiperScheduler(ABC):
@@ -16,6 +16,7 @@ class PiperScheduler(ABC):
     def extend(self, tasks):
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def tasks(self):
         pass

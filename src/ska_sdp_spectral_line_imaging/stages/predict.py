@@ -7,10 +7,10 @@ from ..stubs.predict import predict_for_channels
 @ConfigurableStage(
     "predict_stage",
     configuration=Configuration(
-        cell_size=ConfigParam(
-            float, 60.0, description="Cell size in arcsecond"
+        cell_size=ConfigParam(float, 60.0, "Cell size in arcsecond"),
+        epsilon=ConfigParam(
+            float, 1e-4, "Floating point accuracy for ducc gridder"
         ),
-        epsilon=ConfigParam(float, 1e-4),
     ),
 )
 def predict_stage(upstream_output, epsilon, cell_size):
@@ -22,7 +22,7 @@ def predict_stage(upstream_output, epsilon, cell_size):
         upstream_output: dict
             Output from the upstream stage
         epsilon: float
-            Epsilon
+            Floating point accuracy for ducc gridder
         cell_size: float
             Cell size in arcsecond
 

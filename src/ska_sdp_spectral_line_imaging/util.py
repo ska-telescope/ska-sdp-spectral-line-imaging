@@ -152,6 +152,7 @@ def get_wcs(observation, cell_size, nx, ny) -> WCS:
         dpol = 1.0
 
     fp_frame = field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
+    # computes immediately
     fp_center = field_and_source_xds.FIELD_PHASE_CENTER.to_numpy()
 
     # TODO: Is the fp_frame equal to frame?
@@ -163,6 +164,7 @@ def get_wcs(observation, cell_size, nx, ny) -> WCS:
 
     new_wcs.wcs.crpix = [nx // 2, ny // 2, 1, 1]
     new_wcs.wcs.cunit = ["deg", "deg", "", observation.frequency.units[0]]
+    # computes immediately
     new_wcs.wcs.cdelt = np.array(
         [-cell_size_degree, cell_size_degree, dpol, freq_channel_width]
     )

@@ -10,12 +10,14 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 @ConfigurableStage(
     "export_residual",
     Configuration(
-        psout_name=ConfigParam(str, "vis_residual"),
+        psout_name=ConfigParam(
+            str, "vis_residual", "Output path of residual data"
+        ),
     ),
 )
 def export_residual(upstream_output, psout_name, _output_dir_):
     """
-    Export continuum subtracted residual
+    Export continuum subtracted residual in zarr format.
 
     Parameters
     ----------
@@ -41,12 +43,12 @@ def export_residual(upstream_output, psout_name, _output_dir_):
 @ConfigurableStage(
     "export_model",
     Configuration(
-        psout_name=ConfigParam(str, "vis_model"),
+        psout_name=ConfigParam(str, "vis_model", "Output path of model data"),
     ),
 )
 def export_model(upstream_output, psout_name, _output_dir_):
     """
-    Export predicted model
+    Export predicted model in zarr format.
 
     Parameters
     ----------
@@ -71,12 +73,14 @@ def export_model(upstream_output, psout_name, _output_dir_):
 @ConfigurableStage(
     "export_image",
     Configuration(
-        image_name=ConfigParam(str, "spectral_cube"),
+        image_name=ConfigParam(
+            str, "spectral_cube", "Output path of the spectral cube"
+        ),
     ),
 )
 def export_image(upstream_output, image_name, _output_dir_):
     """
-    Export the generated cube image
+    Export the generated cube image in FITS format.
 
     Parameters
     ----------

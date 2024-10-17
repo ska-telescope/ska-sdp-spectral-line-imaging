@@ -298,6 +298,11 @@ def clean_cube(
         )
     else:
         # TODO: This returns image but frequency axis is not aligned
+        # Also, because of FITS format, image has to be loaded into memory.
+        logger.warning(
+            f"Loading FITS psf image from {psf_image_path} into memory."
+            "This may slow down the further computations."
+        )
         psf_image = import_image_from_fits(psf_image_path, fixpol=True)
 
         # TODO: Will be removed once coordinate issue is fixed
@@ -315,7 +320,7 @@ def clean_cube(
         logger.warning(
             "Calculating beam info. "
             "This causes entire psf_image to LOAD INTO MEMORY. "
-            "This will slow down the computation."
+            "This may slow down the further computations."
         )
         psf_image.load()
         beam_info = fit_psf(psf_image)

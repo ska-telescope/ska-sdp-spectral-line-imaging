@@ -5,7 +5,9 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 @ConfigurableStage(
     "select_vis",
     configuration=Configuration(
-        obs_id=ConfigParam(int, 0),
+        obs_id=ConfigParam(
+            int, 0, "The index of the partition present in processing set"
+        ),
     ),
 )
 # TODO: This is always supposed to be the first stage in the pipeline.

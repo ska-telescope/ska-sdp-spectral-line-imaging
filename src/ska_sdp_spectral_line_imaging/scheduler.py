@@ -9,7 +9,7 @@ class DefaultScheduler(PiperScheduler):
 
     Attributes
     ----------
-      tasks: [dask.delayed]
+    _tasks: list(Delayed)
         Dask delayed outputs from the scheduled tasks
     """
 
@@ -22,7 +22,7 @@ class DefaultScheduler(PiperScheduler):
 
         Parameters
         ----------
-          stages: list[stages.Stage]
+          stages: list(stages.Stage)
             List of stages to schedule
           verbose: bool
             Log debug statements
@@ -39,7 +39,7 @@ class DefaultScheduler(PiperScheduler):
 
         Parameters
         ----------
-          task: dask.delayed
+          task: Delayed
             Dask delayed object
         """
 
@@ -51,7 +51,7 @@ class DefaultScheduler(PiperScheduler):
 
         Parameters
         ----------
-          task: list[dask.delayed]
+          task: list(Delayed)
             Dask delayed objects
         """
 
@@ -59,4 +59,11 @@ class DefaultScheduler(PiperScheduler):
 
     @property
     def tasks(self):
+        """
+        Returns all the delayed task
+
+        Returns
+        -------
+            list(Delayed)
+        """
         return self._tasks
