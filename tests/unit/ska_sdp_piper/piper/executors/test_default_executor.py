@@ -10,5 +10,5 @@ def test_should_execute_scheduled_stages(compute_mock):
     executor.execute(tasks)
 
     compute_mock.assert_called_once_with(
-        "OUT_1", "OUT_2", "OUT_3", optimize=True
+        "OUT_1", "OUT_2", "OUT_3", optimize_graph=True
     )

@@ -21,7 +21,7 @@ def test_should_dask_execute_scheduled_stages_with_report(
         filename="output_dir/dask_report.html"
     )
     compute_mock.assert_called_once_with(
-        "OUT_1", "OUT_2", "OUT_3", optimize=True
+        "OUT_1", "OUT_2", "OUT_3", optimize_graph=True
     )
 
 
@@ -39,7 +39,7 @@ def test_should_dask_execute_scheduled_stages_without_report(
 
     assert performance_report_mock.call_count == 0
     compute_mock.assert_called_once_with(
-        "OUT_1", "OUT_2", "OUT_3", optimize=True
+        "OUT_1", "OUT_2", "OUT_3", optimize_graph=True
     )
 
 

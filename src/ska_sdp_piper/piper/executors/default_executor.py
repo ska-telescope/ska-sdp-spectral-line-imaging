@@ -22,4 +22,4 @@ class DefaultExecutor:
             Dask delayed outputs from the scheduled tasks
 
         """
-        return dask.compute(*tasks, optimize=True)
+        return dask.compute(*tasks, optimize_graph=True)
