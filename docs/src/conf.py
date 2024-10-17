@@ -25,8 +25,7 @@ sys.path.append(os.path.abspath('../../src'))
 
 
 def setup(app):
-    app.add_css_file("css/custom.css")
-    app.add_js_file("js/github.js")
+    app.add_css_file("custom.css")
 
 # -- Project information -----------------------------------------------------
 
@@ -122,6 +121,7 @@ myst_heading_anchors = 3
 # a list of builtin themes.
 
 html_theme = "ska_ser_sphinx_theme"
+html_static_path = ["_static"]
 html_context = {}
 
 latex_elements = {}

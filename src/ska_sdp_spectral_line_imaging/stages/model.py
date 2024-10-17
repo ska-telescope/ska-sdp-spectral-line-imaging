@@ -22,8 +22,9 @@ from ..stubs.model import subtract_visibility
             str,
             "wsclean",
             description="Prefix path of the image(s) which contain "
-            "model data. Please refer `README <README.html>`_ to "
-            "understand the pre-requisites of the pipeline.",
+            "model data. Please refer "
+            "`README <README.html#regarding-the-model-visibilities>`_ "
+            "to understand the pre-requisites of the pipeline.",
         ),
         pols=ConfigParam(
             list, ["I", "Q", "U", "V"], "Polarizations of the model images"

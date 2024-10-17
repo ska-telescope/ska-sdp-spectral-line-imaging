@@ -16,5 +16,6 @@ SKA SDP Spectral Line Imaging Pipeline
     piper
     launching_dask
     api/api
+    stage_config
 
 
