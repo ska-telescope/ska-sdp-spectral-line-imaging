@@ -1,6 +1,5 @@
 # pylint: disable=no-member
-import logging
-
+import pytest
 from mock import Mock, mock
 
 from ska_sdp_spectral_line_imaging.stages.data_export import (
@@ -8,116 +7,92 @@ from ska_sdp_spectral_line_imaging.stages.data_export import (
     export_model,
     export_residual,
 )
+from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
 def test_should_export_residual():
 
     observation = Mock(name="observation")
-
-    upstream_out = export_residual.stage_definition(
-        {"ps": observation}, "residual", "output_dir"
+    observation.VISIBILITY.to_zarr = Mock(
+        name="to_zarr", return_value="export_task"
     )
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = observation
+
+    export_residual.stage_definition(upstream_output, "residual", "output_dir")
 
     observation.VISIBILITY.attrs.clear.assert_called_once()
 
     observation.VISIBILITY.to_zarr.assert_called_once_with(
-        store="output_dir/residual.zarr"
+        store="output_dir/residual.zarr", compute=False
     )
 
-    assert upstream_out == {"ps": observation}
+    assert upstream_output.compute_tasks == ["export_task"]
 
 
 def test_should_export_model():
 
     observation = Mock(name="observation")
-
-    upstream_out = export_model.stage_definition(
-        {"ps": observation}, "model", "output_dir"
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = observation
+    observation.VISIBILITY_MODEL.to_zarr = Mock(
+        name="to_zarr", return_value="export_task"
     )
+
+    export_model.stage_definition(upstream_output, "model", "output_dir")
 
     observation.VISIBILITY_MODEL.attrs.clear.assert_called_once()
 
     observation.VISIBILITY_MODEL.to_zarr.assert_called_once_with(
-        store="output_dir/model.zarr"
+        store="output_dir/model.zarr", compute=False
     )
 
-    assert upstream_out == {"ps": observation}
+    assert upstream_output.compute_tasks == ["export_task"]
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.fits")
-def test_should_export_fits(mock_fits):
-
+@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.export_to_fits")
+def test_should_export_fits(mock_export_fits):
     cube = Mock(name="cube_data")
-    hdu_mock = Mock(name="hdu")
-    mock_fits.PrimaryHDU.return_value = hdu_mock
+    upstream_output = UpstreamOutput()
+    upstream_output["image_cube"] = cube
+    mock_export_fits.return_value = "fits_export"
 
-    upstream_out = export_image.stage_definition(
-        {"image_cube": cube}, "image_name", "output_dir"
+    export_image.stage_definition(
+        upstream_output, "image_name", "fits", "output_dir"
     )
 
-    mock_fits.PrimaryHDU.assert_called_once_with(
-        data=cube.pixels, header=cube.image_acc.wcs.to_header()
-    )
-
-    hdu_mock.writeto.assert_called_once_with("output_dir/image_name.fits")
+    mock_export_fits.assert_called_once_with(cube, "output_dir/image_name")
 
     cube.to_zarr.assert_not_called()
+    assert len(upstream_output.compute_tasks) == 1
 
-    assert upstream_out == {"image_cube": cube}
 
-
-# TODO: Revisit this once the image model pitch proceeds
-@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.fits")
-def test_should_export_zarr_in_case_of_HDU_exceptions(mock_fits, caplog):
+def test_should_export_zarr():
 
     cube = Mock(name="cube_data")
-    mock_fits.PrimaryHDU.side_effect = Exception()
+    cube.to_zarr = Mock(name="to_zarr", return_value="export_zarr")
+    upstream_output = UpstreamOutput()
+    upstream_output["image_cube"] = cube
 
-    with caplog.at_level(logging.INFO):
-        export_image.stage_definition(
-            {"image_cube": cube}, "image_name", "output_dir"
-        )
-
-    mock_fits.PrimaryHDU.assert_called_once_with(
-        data=cube.pixels, header=cube.image_acc.wcs.to_header()
+    export_image.stage_definition(
+        upstream_output, "image_name", "zarr", "output_dir"
     )
 
-    assert caplog.records[0].levelname == "ERROR"
+    cube.to_zarr.assert_called_once_with(
+        store="output_dir/image_name.zarr", compute=False
+    )
 
-    # cube.to_zarr.assert_called_once_with(
-    #     store="output_dir/image_name.zarr", compute=False
-    # )
-
-    # assert upstream_out == {"image_cube": cube}
+    assert upstream_output.compute_tasks == ["export_zarr"]
 
 
-# @mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.fits")
-# def test_should_export_zarr_in_case_of_io_exceptions(mock_fits, caplog):
+def test_should_throw_exception_for_unsupported_data_format():
 
-#     cube = Mock(name="cube_data")
-#     hdu_mock = Mock(name="hdu")
-#     hdu_mock.writeto.side_effect = Exception("Write exception")
-#     mock_fits.PrimaryHDU.return_value = hdu_mock
+    cube = Mock(name="cube_data")
+    cube.to_zarr = Mock(name="to_zarr", return_value="export_zarr")
+    upstream_output = UpstreamOutput()
+    upstream_output["image_cube"] = cube
 
-#     with caplog.at_level(logging.INFO):
-#         upstream_out = export_image.stage_definition(
-#             {"image_cube": cube}, "image_name", "output_dir"
-#         )
-
-#     mock_fits.PrimaryHDU.assert_called_once_with(
-#         data=cube.pixels, header=cube.image_acc.wcs.to_header()
-#     )
-
-#     hdu_mock.writeto.assert_called_once_with("output_dir/image_name.fits")
-
-#     assert caplog.records[0].levelname == "ERROR"
-#     assert (
-#         caplog.records[1].message == "Exporting to FITS failed. "
-#         "Writing image in zarr format to path output_dir/image_name.zarr"
-#     )
-
-#     cube.to_zarr.assert_called_once_with(
-#         store="output_dir/image_name.zarr", compute=False
-#     )
-
-#     assert upstream_out == {"image_cube": cube}
+    with pytest.raises(ValueError):
+        export_image.stage_definition(
+            upstream_output, "image_name", "non_supported_format", "output_dir"
+        )

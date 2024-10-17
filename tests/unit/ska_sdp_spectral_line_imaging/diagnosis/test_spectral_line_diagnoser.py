@@ -86,7 +86,9 @@ def test_should_initialise_diagnoser(
 
     read_dataset_mock.assert_called_once_with("INPUT_DATA")
     select_field.stage_definition.assert_called_once_with(
-        None, arguments="arguments", _input_data_="PROCESSING_SET"
+        default_scheduler._stage_outputs,
+        arguments="arguments",
+        _input_data_="PROCESSING_SET",
     )
 
     xarray_open_mock.assert_has_calls(
@@ -162,7 +164,9 @@ def test_should_initialise_diagnoser_without_model_residual(
 
     read_dataset_mock.assert_called_once_with("INPUT_DATA")
     select_field.stage_definition.assert_called_once_with(
-        None, arguments="arguments", _input_data_="PROCESSING_SET"
+        default_scheduler._stage_outputs,
+        arguments="arguments",
+        _input_data_="PROCESSING_SET",
     )
 
 
@@ -261,7 +265,7 @@ def test_should_plot_residual_and_model(
 
     input_ps, residual, model = test_data
 
-    select_field.stage_definition.return_value = {"ps": input_ps}
+    default_scheduler._stage_outputs.ps = input_ps
     read_dataset_mock.return_value = input_ps
 
     zarr_mock.side_effect = [

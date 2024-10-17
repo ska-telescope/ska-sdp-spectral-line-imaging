@@ -1,8 +1,10 @@
 import numpy as np
+from mock import Mock, patch
 
 from ska_sdp_spectral_line_imaging.util import (
     estimate_cell_size,
     estimate_image_size,
+    export_to_fits,
 )
 
 
@@ -34,6 +36,21 @@ def test_should_estimate_image_size():
 
     # verify
     np.testing.assert_array_equal(actual_image_size, expected_image_size)
+
+
+@patch("ska_sdp_spectral_line_imaging.util.fits")
+def test_should_export_to_fits(mock_fits):
+    cube = Mock(name="cube_data")
+    hdu_mock = Mock(name="hdu")
+    mock_fits.PrimaryHDU.return_value = hdu_mock
+
+    export_to_fits(cube, "output_dir/image_name").compute()
+
+    mock_fits.PrimaryHDU.assert_called_once_with(
+        data=cube.pixels, header=cube.image_acc.wcs.to_header()
+    )
+
+    hdu_mock.writeto.assert_called_once_with("output_dir/image_name.fits")
 
 
 # TODO

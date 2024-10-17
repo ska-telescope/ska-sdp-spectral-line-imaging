@@ -49,7 +49,6 @@ def read_model(upstream_output, image_name, pols):
         dict
     """
 
-    ps = upstream_output["ps"]
     images = []
     # TODO: Not dask compatible, loaded into memory by master / dask client
     for pol in pols:
@@ -62,7 +61,9 @@ def read_model(upstream_output, image_name, pols):
         np.stack(images), dims=["polarization", "y", "x"]
     )
 
-    return {"ps": ps, "model_image": image_stack}
+    upstream_output["model_image"] = image_stack
+
+    return upstream_output
 
 
 @ConfigurableStage(
@@ -107,7 +108,7 @@ def vis_stokes_conversion(
     # TODO: Replace this entire function with the one present
     # in sdp-func-python as that is more accurate
 
-    ps = upstream_output["ps"]
+    ps = upstream_output.ps
 
     converted_vis = xr.apply_ufunc(
         convert_pol_frame,
@@ -133,7 +134,9 @@ def vis_stokes_conversion(
 
     ps = ps.assign({"VISIBILITY": converted_vis})
 
-    return {"ps": ps}
+    upstream_output["ps"] = ps
+
+    return upstream_output
 
 
 @ConfigurableStage("continuum_subtraction")
@@ -151,8 +154,10 @@ def cont_sub(upstream_output):
         dict
     """
 
-    ps = upstream_output["ps"]
+    ps = upstream_output.ps
 
     model = ps.assign({"VISIBILITY": ps.VISIBILITY_MODEL})
 
-    return {"ps": subtract_visibility(ps, model)}
+    upstream_output["ps"] = subtract_visibility(ps, model)
+
+    return upstream_output

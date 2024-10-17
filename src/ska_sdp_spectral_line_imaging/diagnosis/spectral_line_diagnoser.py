@@ -243,11 +243,13 @@ class SpectralLineDiagnoser:
         pipeline_run_config = self.pipeline_config["pipeline"]
         input_ps = read_dataset(self.pipeline_args["input"])
         logger.info("Reading input visibility")
-        self.input_ps = select_field.stage_definition(
-            None,
+        select_field.stage_definition(
+            self.scheduler._stage_outputs,
             **select_vis_config,
             _input_data_=input_ps,
-        )["ps"]
+        )
+
+        self.input_ps = self.scheduler._stage_outputs.ps
 
         if pipeline_run_config.get("export_model"):
             logger.info("Reading model data")

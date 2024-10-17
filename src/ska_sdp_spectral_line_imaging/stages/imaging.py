@@ -112,7 +112,7 @@ def imaging_stage(
     """
     logger = logging.getLogger()
 
-    ps = upstream_output["ps"]
+    ps = upstream_output.ps
     cell_size = gridding_params.get("cell_size", None)
     image_size = gridding_params.get("image_size", None)
 
@@ -185,5 +185,6 @@ def imaging_stage(
             beam_info,
         )
         output_image = restored_image
+    upstream_output["image_cube"] = output_image
 
-    return {"ps": upstream_output["ps"], "image_cube": output_image}
+    return upstream_output

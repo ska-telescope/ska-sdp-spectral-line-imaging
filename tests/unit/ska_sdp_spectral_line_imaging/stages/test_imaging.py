@@ -3,6 +3,7 @@ from mock import mock
 from mock.mock import Mock
 
 from ska_sdp_spectral_line_imaging.stages.imaging import imaging_stage
+from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
 @mock.patch(
@@ -28,10 +29,13 @@ def test_should_do_imaging_for_dirty_image(
         "image_size": 456,
         "scaling_factor": 2.0,
     }
-    upstream_output = {"ps": ps}
+
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = ps
+
     do_clean = False
 
-    result = imaging_stage.stage_definition(
+    imaging_stage.stage_definition(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
@@ -50,7 +54,8 @@ def test_should_do_imaging_for_dirty_image(
 
     clean_cube_mock.assert_not_called()
 
-    assert result == {"ps": ps, "image_cube": "dirty image"}
+    assert upstream_output.ps == ps
+    assert upstream_output.image_cube == "dirty image"
 
 
 @mock.patch(
@@ -77,10 +82,12 @@ def test_should_do_imaging_for_clean_image(
         "image_size": 456,
         "scaling_factor": 2.0,
     }
-    upstream_output = {"ps": ps}
+
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = ps
     do_clean = True
 
-    result = imaging_stage.stage_definition(
+    imaging_stage.stage_definition(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
@@ -116,7 +123,8 @@ def test_should_do_imaging_for_clean_image(
         {"beam_info": "beam_info"},
     )
 
-    assert result == {"ps": ps, "image_cube": "restored image"}
+    assert upstream_output.ps == ps
+    assert upstream_output.image_cube == "restored image"
 
 
 @mock.patch(
@@ -164,9 +172,10 @@ def test_should_estimate_image_and_cell_size(
         "scaling_factor": 2.0,
     }
 
-    upstream_output = {"ps": ps}
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = ps
 
-    result = imaging_stage.stage_definition(
+    imaging_stage.stage_definition(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
@@ -198,4 +207,5 @@ def test_should_estimate_image_and_cell_size(
         ps, 0.75, 500, 500, 1e-4, "wcs", "polarization_frame"
     )
 
-    assert result == {"ps": ps, "image_cube": "dirty image"}
+    assert upstream_output.ps == ps
+    assert upstream_output.image_cube == "dirty image"

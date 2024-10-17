@@ -1,11 +1,35 @@
+import dask
 import numpy as np
 import xarray as xr
 from astropy import units as au
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.wcs import WCS
 from ska_sdp_datamodels.science_data_model.polarisation_model import (
     PolarisationFrame,
 )
+
+
+@dask.delayed
+def export_to_fits(image, output_path):
+    """
+    Export Image to fits
+
+    Parameters
+    ----------
+        image: Image
+            Image image to be exported
+        output_path: str
+            Output file name
+
+    Returns
+    -------
+        None
+    """
+    new_hdu = fits.PrimaryHDU(
+        data=image.pixels, header=image.image_acc.wcs.to_header()
+    )
+    new_hdu.writeto(f"{output_path}.fits")
 
 
 def estimate_cell_size(

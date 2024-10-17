@@ -2,6 +2,7 @@ import numpy as np
 import xarray as xr
 
 from ska_sdp_spectral_line_imaging.stages.predict import predict_stage
+from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
 def test_should_run_predict_stage(result_msv4):
@@ -11,8 +12,12 @@ def test_should_run_predict_stage(result_msv4):
         dims=["y", "x"],
     )
 
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = result_msv4
+    upstream_output["model_image"] = model
+
     stage_result = predict_stage.stage_definition(
-        {"ps": result_msv4, "model_image": model}, epsilon=1e-4, cell_size=15.0
+        upstream_output, epsilon=1e-4, cell_size=15.0
     )
 
     assert stage_result["ps"].VISIBILITY_MODEL.shape == (8, 1, 8, 21)
@@ -27,11 +32,12 @@ def test_should_run_dask_distributed(result_msv4):
         dims=["y", "x"],
     )
 
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = result_msv4.chunk(dict(frequency=2))
+    upstream_output["model_image"] = model
+
     stage_result = predict_stage.stage_definition(
-        {
-            "ps": result_msv4.chunk(dict(frequency=2)),
-            "model_image": model,
-        },
+        upstream_output,
         epsilon=1e-4,
         cell_size=15.0,
     )

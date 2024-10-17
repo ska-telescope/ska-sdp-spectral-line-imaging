@@ -1,6 +1,8 @@
-import dask
+from functools import reduce
 
 from ska_sdp_piper.piper.scheduler import PiperScheduler
+
+from .upstream_output import UpstreamOutput
 
 
 class DefaultScheduler(PiperScheduler):
@@ -14,7 +16,7 @@ class DefaultScheduler(PiperScheduler):
     """
 
     def __init__(self):
-        self._tasks = []
+        self._stage_outputs = UpstreamOutput()
 
     def schedule(self, stages, verbose=False):
         """
@@ -27,11 +29,9 @@ class DefaultScheduler(PiperScheduler):
           verbose: bool
             Log debug statements
         """
-        output = None
-        for stage in stages:
-            output = dask.delayed(stage)(output, verbose)
-
-            self._tasks.append(output)
+        self._stage_outputs = reduce(
+            lambda output, stage: stage(output), stages, self._stage_outputs
+        )
 
     def append(self, task):
         """
@@ -42,8 +42,7 @@ class DefaultScheduler(PiperScheduler):
           task: Delayed
             Dask delayed object
         """
-
-        self._tasks.append(task)
+        self._stage_outputs.add_compute_tasks(task)
 
     def extend(self, tasks):
         """
@@ -55,7 +54,7 @@ class DefaultScheduler(PiperScheduler):
             Dask delayed objects
         """
 
-        self._tasks.extend(tasks)
+        self._stage_outputs.add_compute_tasks(*tasks)
 
     @property
     def tasks(self):
@@ -66,4 +65,4 @@ class DefaultScheduler(PiperScheduler):
         -------
             list(Delayed)
         """
-        return self._tasks
+        return self._stage_outputs.compute_tasks

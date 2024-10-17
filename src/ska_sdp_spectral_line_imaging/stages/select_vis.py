@@ -35,5 +35,6 @@ def select_field(upstream_output, obs_id: int, _input_data_):
     # TODO: There is an issue in either xradio/xarray/dask that causes chunk
     # sizes to be different for coordinate variables
     selected_ps = ps[sel].unify_chunks()
+    upstream_output["ps"] = selected_ps
 
-    return {"ps": selected_ps}
+    return upstream_output

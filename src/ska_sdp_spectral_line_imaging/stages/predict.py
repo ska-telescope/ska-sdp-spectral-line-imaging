@@ -31,8 +31,8 @@ def predict_stage(upstream_output, epsilon, cell_size):
         dict
     """
 
-    ps = upstream_output["ps"]
-    model_image = upstream_output["model_image"]
+    ps = upstream_output.ps
+    model_image = upstream_output.model_image
 
     # TODO: If VISIBILITY_MODEL already exists in ps, do we want to copy the
     # attributes of existing VISIBILITY_MODEL to new VISIBILITY_MODEL?
@@ -45,4 +45,6 @@ def predict_stage(upstream_output, epsilon, cell_size):
         }
     )
 
-    return {"ps": ps}
+    upstream_output["ps"] = ps
+
+    return upstream_output

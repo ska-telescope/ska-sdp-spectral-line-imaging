@@ -1,5 +1,4 @@
 import inspect
-import logging
 
 from ska_sdp_piper.piper.exceptions import (
     NoStageToExecuteException,
@@ -72,7 +71,7 @@ class Stage:
         """
         self.__pipeline_parameters = dict(config=config, kwargs=kwargs)
 
-    def __call__(self, upstream_output, verbose=False):
+    def __call__(self, upstream_output):
         """
         Execute stage definition with upstream output
         and prepared paramenters
@@ -81,15 +80,7 @@ class Stage:
         ----------
             upstream_output: Any
                 Output from the upstream stage
-            verbose: bool (default: False)
-                Set verbosity level
         """
-
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-
-        if verbose:
-            logger.setLevel(logging.DEBUG)
 
         if self.__pipeline_parameters is None:
             raise PipelineMetadataMissingException(
@@ -109,9 +100,7 @@ class Stage:
             },
         }
 
-        logger.info(f"=============== START {self.name} ============= ")
         output = self.stage_definition(upstream_output, **stage_args)
-        logger.info(f"=============== FINISH {self.name} ============ ")
         return output
 
 
