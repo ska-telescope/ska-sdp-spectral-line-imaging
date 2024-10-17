@@ -5,10 +5,12 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 @ConfigurableStage(
     "select_vis",
     configuration=Configuration(
-        obs_mode=ConfigParam(list(), 0),
+        obs_id=ConfigParam(int, 0),
     ),
 )
-def select_field(upstream_output, obs_mode, _input_data_):
+# TODO: This is always supposed to be the first stage in the pipeline.
+# Can we make it unskippable?
+def select_field(upstream_output, obs_id: int, _input_data_):
     """
     Selects the field from processing set
 
@@ -16,8 +18,8 @@ def select_field(upstream_output, obs_mode, _input_data_):
     ----------
         upstream_output: Any
             Output from the upstream stage
-        obs_mode: list
-            List of obervational modes
+        obs_id: int
+            The index of the partition present in processing set
         _input_data_: ProcessingSet
             Input processing set
 
@@ -25,12 +27,9 @@ def select_field(upstream_output, obs_mode, _input_data_):
     -------
         dict
     """
-
     ps = _input_data_
-    # TODO: This is a hack to get the psname
-    psname = list(ps.keys())[0].split(".ps")[0]
+    sel = ps.summary().name[obs_id]
 
-    sel = f"{psname}.ps_{obs_mode}"
     # TODO: There is an issue in either xradio/xarray/dask that causes chunk
     # sizes to be different for coordinate variables
     selected_ps = ps[sel].unify_chunks()

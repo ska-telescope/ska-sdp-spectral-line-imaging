@@ -21,7 +21,7 @@ parameters:
     - U
     - V
   select_vis:
-    obs_mode: 0
+    obs_id: 0
   vis_stokes_conversion:
     input_polarisation_frame: linear
     output_polarisation_frame: stokesIQUV
