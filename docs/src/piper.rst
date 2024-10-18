@@ -90,7 +90,7 @@ The framework provides the following metadata arguments
 ...         obs_id=ConfigParam(int, 0),
 ...     ),
 ... )
-... def select_field_from_ps(output, obs_id, _input_data_):
+... def select_field_from_ps(upstream_output, obs_id, _input_data_):
 ...     ps = _input_data_
 ...     sel = ps.summary().name[obs_id]
 ...     return {"ps": ps[sel].unify_chunks()}
@@ -106,8 +106,8 @@ The framework provides the following metadata arguments
 ...         multiplier=ConfigParam(float, 1.0)
 ...     ),
 ... )
-... def process_vis(output, multiplier):
-...     ps = output["ps"]
+... def process_vis(upstream_output, multiplier):
+...     ps = upstream_output["ps"]
 ...     processed_vis = multiplier * ps.VISIBILITY
 ...     return {"processed_vis": processed_vis}
 
@@ -135,11 +135,11 @@ executes the stages in the order as provided.
 
 >>> Pipeline(
 ...     "process-vis-pipeline",
-...     stages=[
+...     stages=Stages([
 ...         select_field_from_ps,
 ...         process_vis,
 ...         export_processed_vis
-...     ]
+...     ])
 ... )
 
 ---------------------------------------------------
@@ -159,8 +159,8 @@ through the :py:attr:`_cli_args_` and :py:attr:`_global_parameters_` metadata ar
 ...         multiplier=ConfigParam(float, 1.0)
 ...     ),
 ... )
-... def process_vis(output, multiplier, _cli_args_, _global_parameters_):
-...     ps = output["ps"]
+... def process_vis(upstream_output, multiplier, _cli_args_, _global_parameters_):
+...     ps = upstream_output["ps"]
 ...     added_value = _cli_args_["added_value"]
 ...     div_value = _global_parameters_["div_value"]
 ...     processed_vis = (multiplier * ps.VISIBILITY + added_value) / div_value
@@ -172,11 +172,11 @@ The CLI argument and global parameters have to be registered with the pipeline a
 
 >>> pipeline = Pipeline(
 ...     "process-vis-pipeline",
-...     stages=[
+...     stages=Stages([
 ...         select_field_from_ps,
 ...         process_vis,
 ...         export_processed_vis
-...     ],
+...     ]),
 ...     cli_args=[
 ...        CLIArgument(
 ...            "--added-value",
@@ -243,7 +243,7 @@ Entire Pipeline Definition
 ...     ConfigParam,
 ...     Configuration,
 ... )
-... from ska_sdp_piper.stage import ConfigurableStage
+... from ska_sdp_piper.piper.stage import ConfigurableStage, Stages
 ... from ska_sdp_piper.piper.pipeline import Pipeline
 ...
 ...
@@ -253,7 +253,7 @@ Entire Pipeline Definition
 ...         obs_id=ConfigParam(int, 0),
 ...     ),
 ... )
-... def select_field_from_ps(output, obs_id, _input_data_):
+... def select_field_from_ps(upstream_output, obs_id, _input_data_):
 ...     ps = _input_data_
 ...     sel = ps.summary().name[obs_id]
 ...     return {"ps": ps[sel].unify_chunks()}
@@ -265,8 +265,8 @@ Entire Pipeline Definition
 ...         multiplier=ConfigParam(float, 1.0)
 ...     ),
 ... )
-... def process_vis(output, multiplier, _cli_args_, _global_parameters_):
-...     ps = output["ps"]
+... def process_vis(upstream_output, multiplier, _cli_args_, _global_parameters_):
+...     ps = upstream_output["ps"]
 ...     added_value = _cli_args_["added_value"]
 ...     div_value = _global_parameters_["div_value"]
 ...     processed_vis = (multiplier * ps.VISIBILITY + added_value) / div_value
@@ -284,11 +284,11 @@ Entire Pipeline Definition
 ... 
 ... pipeline = Pipeline(
 ...     "process-vis-pipeline",
-...     stages=[
+...     stages=Stages([
 ...         select_field_from_ps,
 ...         process_vis,
 ...         export_processed_vis
-...     ],
+...     ]),
 ...     cli_args=[
 ...        CLIArgument(
 ...            "--added-value",
