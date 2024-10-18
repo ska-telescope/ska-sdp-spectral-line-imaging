@@ -264,6 +264,22 @@ Entire Pipeline Definition
 ... )
 ... from ska_sdp_piper.piper.stage import ConfigurableStage, Stages
 ... from ska_sdp_piper.piper.pipeline import Pipeline
+... from ska_sdp_piper.piper.scheduler import PiperScheduler
+...
+...
+... class Scheduler(PiperScheduler):
+...     def __init__(self):
+...         self.__tasks = []
+... 
+...     def schedule(self, stages):
+...         output = None
+...         for stage in stages:
+...             output = stage(output)
+...             self.__tasks.append(output)
+... 
+...     @property
+...     def tasks(self):
+...         return self.__tasks
 ...
 ...
 ... @ConfigurableStage(
