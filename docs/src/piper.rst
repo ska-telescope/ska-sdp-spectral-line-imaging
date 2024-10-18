@@ -43,6 +43,7 @@ The four classes required to define a complete pipeline are
 - :py:class:`Configuration`
 - :py:class:`ConfigParam`
 - :py:class:`Pipeline`
+- Concrete implementation of :py:class:`PiperScheduler`
 
 ********
 Examples
@@ -126,6 +127,23 @@ The framework provides the following metadata arguments
 Note that we are using the :py:attr:`_output_dir_`  to store the
 output zarr file.
 
+Next we define a concrete implementation of the scheduler which will help us chain the pipeline together.
+
+>>> class Scheduler(PiperScheduler):
+... 
+...     def __init__(self):
+...         self.__tasks = []
+... 
+...     def schedule(self, stages):
+...         output = None
+...         for stage in stages:
+...             output = stage(output)
+...             self.__tasks.append(output)
+... 
+...     @property
+...     def tasks(self):
+...         return self.__tasks
+
 Once the stages are defined, a pipeline object is defined, which takes a name,
 which serves as the name of the pipeline, and eventually the executable
 generated post installation of the pipeline. The order of execution of the
@@ -139,7 +157,8 @@ executes the stages in the order as provided.
 ...         select_field_from_ps,
 ...         process_vis,
 ...         export_processed_vis
-...     ])
+...     ]),
+...     scheduler=Scheduler()
 ... )
 
 ---------------------------------------------------
@@ -289,6 +308,7 @@ Entire Pipeline Definition
 ...         process_vis,
 ...         export_processed_vis
 ...     ]),
+...     scheduler=Scheduler(),
 ...     cli_args=[
 ...        CLIArgument(
 ...            "--added-value",
