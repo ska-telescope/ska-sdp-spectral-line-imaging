@@ -98,6 +98,8 @@ In order to run the pipeline on a custom MSv2 dataset, you have to convert it to
 
 ### Regarding the model visibilities
 
+<!-- The relative hyperlink to this section is present in docstring and configuration of "read_model" stage -->
+
 If your MSv2 data already contains `MODEL_DATA` column , you don’t need to run the **read_model** and **predict_stage** stages, which can be turned off using the config file. Continuum subtraction stage will operate on `VISIBILITY` and existing `VISIBILITY_MODEL` variables.
 
 If `MODEL_DATA` column is not present, you can predict the model visibilities by inputting model FITS images to the pipeline.

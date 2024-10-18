@@ -88,7 +88,7 @@ def imaging_stage(
     Creates a dirty image using ducc0.gridder.
 
     For detailed parameter info, please refer to
-    this `documentation <../stage_config.html>`_
+    `Stage Configurations <../stage_config.html>`_
 
     Parameters
     ----------

@@ -33,7 +33,9 @@ from ..stubs.model import subtract_visibility
 )
 def read_model(upstream_output, image_name, pols):
     """
-    Read model from the image
+    Read model from the image.
+    Please refer `README <../README.html#regarding-the-model-visibilities>`_
+    to understand the supported format for model images.
 
     Parameters
     ----------
