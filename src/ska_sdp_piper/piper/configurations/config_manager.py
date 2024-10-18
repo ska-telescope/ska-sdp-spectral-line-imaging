@@ -140,7 +140,7 @@ class ConfigManager:
         actual_type = type(value)
         # TODO: This handling of None type bypasses type check,
         # and should be removed in the future
-        if expected_type != actual_type and ref is not None:
+        if expected_type is not actual_type and ref is not None:
             raise ValueError(
                 f"Type of value for {path} is {actual_type} should"
                 f" be {expected_type}"
