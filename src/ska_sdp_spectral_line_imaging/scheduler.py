@@ -18,7 +18,7 @@ class DefaultScheduler(PiperScheduler):
     def __init__(self):
         self._stage_outputs = UpstreamOutput()
 
-    def schedule(self, stages, verbose=False):
+    def schedule(self, stages):
         """
         Schedules the stages as dask delayed objects
 
@@ -26,8 +26,6 @@ class DefaultScheduler(PiperScheduler):
         ----------
           stages: list(stages.Stage)
             List of stages to schedule
-          verbose: bool
-            Log debug statements
         """
         self._stage_outputs = reduce(
             lambda output, stage: stage(output), stages, self._stage_outputs

@@ -265,7 +265,7 @@ class Pipeline(Command, metaclass=NamedInstance):
         )
         self.config_manager.write_yml(config_output_file)
 
-        self.scheduler.schedule(executable_stages, verbose=verbose)
+        self.scheduler.schedule(executable_stages)
         output_pipeline_data = executor.execute(self.scheduler.tasks)
 
         write_dataset(output_pipeline_data, output_dir)

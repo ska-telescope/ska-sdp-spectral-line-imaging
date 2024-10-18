@@ -1,22 +1,37 @@
 # pragma: exclude file
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 
 class PiperScheduler(ABC):
-    @abstractmethod
-    def schedule(self, stages, verbose=False):
-        pass
+    """
+    Scheduler interface required by piper to schedule the
+    execution of configurable stages
+    """
 
     @abstractmethod
-    def append(self, task):
+    def schedule(self, stages):
+        """
+        Contract for scheduling tasks
+
+        Parameters
+        ----------
+            stages: list[Stages]
+               List of stages to be scheduled
+
+        Returns
+        -------
+            None
+        """
         pass
 
-    @abstractmethod
-    def extend(self, tasks):
-        pass
-
-    @property
-    @abstractmethod
+    @abstractproperty
     def tasks(self):
+        """
+        Property returning the list of scheduled tasks to be executed
+
+        Returns
+        -------
+            list[dask.Delayed]
+        """
         pass

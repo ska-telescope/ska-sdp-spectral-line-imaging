@@ -314,10 +314,7 @@ def test_should_run_the_pipeline(
     executor_factory.get_executor.assert_called_once_with(
         "output_dir", input="path", dask_scheduler="10.191"
     )
-    default_scheduler.schedule.assert_called_once_with(
-        mock_stages,
-        verbose=False,
-    )
+    default_scheduler.schedule.assert_called_once_with(mock_stages)
 
     default_executor.execute.assert_called_once_with(default_scheduler.tasks)
 
@@ -373,10 +370,7 @@ def test_should_run_the_pipeline_with_selected_stages(
     )
 
     read_mock.assert_called_once_with("infile_path")
-    default_scheduler.schedule.assert_called_once_with(
-        [stage1, stage3],
-        verbose=False,
-    )
+    default_scheduler.schedule.assert_called_once_with([stage1, stage3])
 
 
 def test_should_instantiate_dask_client(executor_factory, default_scheduler):
@@ -420,10 +414,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
         "/path/to/config"
     )
 
-    default_scheduler.schedule.assert_called_once_with(
-        [stage1, stage3],
-        verbose=False,
-    )
+    default_scheduler.schedule.assert_called_once_with([stage1, stage3])
 
 
 @mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
@@ -453,10 +444,7 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
         {"stage1": True, "stage2": True, "stage3": False},
     )
 
-    default_scheduler.schedule.assert_called_once_with(
-        [stage1, stage2],
-        verbose=False,
-    )
+    default_scheduler.schedule.assert_called_once_with([stage1, stage2])
 
 
 @mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
