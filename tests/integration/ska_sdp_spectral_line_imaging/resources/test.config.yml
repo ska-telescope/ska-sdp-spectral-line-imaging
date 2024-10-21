@@ -25,6 +25,8 @@ parameters:
   vis_stokes_conversion:
     input_polarisation_frame: linear
     output_polarisation_frame: stokesIQUV
+  continuum_subtraction:
+    report_peak_channel: true
 pipeline:
   continuum_subtraction: true
   export_image: true

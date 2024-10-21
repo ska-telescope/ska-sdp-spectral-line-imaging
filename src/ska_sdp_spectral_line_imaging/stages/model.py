@@ -1,4 +1,6 @@
 # pylint: disable=no-member,import-error
+import logging
+
 import astropy.io.fits as fits
 import numpy as np
 import xarray as xr
@@ -13,6 +15,8 @@ from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
 from ..stubs.model import subtract_visibility
+
+logger = logging.getLogger()
 
 
 @ConfigurableStage(
@@ -141,8 +145,17 @@ def vis_stokes_conversion(
     return upstream_output
 
 
-@ConfigurableStage("continuum_subtraction")
-def cont_sub(upstream_output):
+@ConfigurableStage(
+    "continuum_subtraction",
+    configuration=Configuration(
+        report_peak_channel=ConfigParam(
+            bool,
+            True,
+            description="Report channel with peak emission/absorption",
+        ),
+    ),
+)
+def cont_sub(upstream_output, report_peak_channel):
     """
     Perform continuum subtraction
 
@@ -150,6 +163,8 @@ def cont_sub(upstream_output):
     ----------
         upstream_output: dict
             Output from the upstream stage
+        report_peak_channel: bool
+            Report channel with peak emission/absorption
 
     Returns
     -------
@@ -159,7 +174,19 @@ def cont_sub(upstream_output):
     ps = upstream_output.ps
 
     model = ps.assign({"VISIBILITY": ps.VISIBILITY_MODEL})
+    cont_sub_ps = subtract_visibility(ps, model)
+    upstream_output["ps"] = cont_sub_ps
 
-    upstream_output["ps"] = subtract_visibility(ps, model)
+    if report_peak_channel:
+        peak_channel = (
+            np.abs(cont_sub_ps.VISIBILITY)
+            .max(dim=["time", "baseline_id", "polarization"])
+            .idxmax()
+            .values
+        )
+
+        unit = cont_sub_ps.frequency.units[0]
+
+        logger.info(f"Peak visibility Channel: {peak_channel} {unit}")
 
     return upstream_output
