@@ -45,7 +45,7 @@ def deconvolve_cube(dirty: Image, psf: Image, **kwargs) -> Tuple[Image, Image]:
     :param window_shape: Window description
     :param mask: Window in the form of an image, overrides window_shape
     :param algorithm: Cleaning algorithm:
-                'msclean'|'hogbom'|'hogbom-complex'|'mfsmsclean'
+                'msclean'|'hogbom'
     :param gain: loop gain (float) 0.7
     :param threshold: Clean threshold (0.0)
     :param fractional_threshold: Fractional threshold (0.01)

@@ -122,13 +122,7 @@ def test_should_deconvolve_cube_using_msclean_with_default_common_arguments(
     assert residual_image == "residual_image"
 
 
-@patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.deconvolver."
-    "common_arguments"
-)
-def test_should_throw_exceptions_for_non_suported_algorithms(
-    common_arguments_mock,
-):
+def test_should_throw_exceptions_for_non_suported_algorithms():
     input_image = Mock(name="input image")
     psf_image = Mock(name="psf image")
 

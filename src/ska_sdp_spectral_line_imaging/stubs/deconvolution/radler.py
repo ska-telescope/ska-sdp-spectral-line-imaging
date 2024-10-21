@@ -11,19 +11,71 @@ except ModuleNotFoundError:  # pragma: no cover
     RADLER_AVAILABLE = False  # pragma: no cover
 
 
-def radler_deconvolve_channel(dirty_channel, psf, settings=None):
-    """Perform deconvolution using radler for a given channel data and returns
+def radler_deconvolve_channel(
+    dirty_channel,
+    psf,
+    nx=None,
+    ny=None,
+    cell_size=None,
+    algorithm="multiscale",
+    niter=500,
+    threshold=0.001,
+    gain=0.7,
+    scales=None,
+    **kwargs,
+):
+    """
+    Perform deconvolution using radler for a given channel data and returns
     restored model and the residual data
     Parameters
     ----------
-        dirty_channel (numpy.ndarray): Dirty channel data
-        psf (numpy.ndarray): PSF for the given channel
-        settings (radler.Settings): Radler settings
+        dirty_channel: numpy.ndarray
+            Dirty channel data
+        psf: numpy.ndarray
+            PSF for the given channel
+        nx: int
+            Number of x pixels
+        ny: int
+            Number of y pixels
+        cell_size: float
+            Cell size of each pixel in the image
+        algorithm: str
+            Cleaning algorithm: 'multiscale'|'iuwt'|'more_sane'|'generic_clean'
+        niter: int
+            Maximum number of iterations
+        threshold: float
+            Clean threshold (0.0)
+        gain: float
+            loop gain (float) 0.7
+        scales: List[int]
+            Scales (in pixels) for multiscale ([0, 3, 10, 30])
 
     Returns
     -------
         Tuple[numpy.ndarray, numpy.ndarray]
     """
+
+    ms_scales = [] if scales is None else scales
+
+    settings = rd.Settings()
+    settings.trimmed_image_width = nx
+    settings.trimmed_image_height = ny
+    settings.pixel_scale.x = cell_size
+    settings.pixel_scale.y = cell_size
+    settings.minor_iteration_count = niter
+    settings.threshold = threshold
+    settings.minor_loop_gain = gain
+
+    try:
+        settings.algorithm_type = getattr(rd.AlgorithmType, algorithm)
+    except AttributeError:
+        raise ValueError(
+            f"imaging_deconvolve with radler: Unknown algorithm {algorithm}"
+        )
+
+    if algorithm == "multiscale" and len(ms_scales) > 0:
+        settings.multiscale.scale_list = ms_scales
+
     restored_radler = np.zeros(dirty_channel.shape, dtype=np.float32)
     rw_dirty_channel = np.copy(dirty_channel)
     rw_psf = np.copy(psf)
@@ -43,7 +95,7 @@ def radler_deconvolve_channel(dirty_channel, psf, settings=None):
 
 
 def radler_deconvolve_cube(
-    dirty: Image, psf: Image, nx=None, ny=None, cell_size=None, **kwargs
+    dirty: Image, psf: Image, **kwargs
 ) -> Tuple[Image, Image]:
     """
     Note: This documentation copied from
@@ -61,51 +113,26 @@ def radler_deconvolve_cube(
 
     For example::
 
-         comp = radler_deconvolve_list(dirty_list, psf_list, niter=1000,
+         comp = radler_deconvolve_cube(dirty_list, psf_list, niter=1000,
                         gain=0.7, algorithm='msclean',
                         scales=[0, 3, 10, 30], threshold=0.01)
+    Parameters
+    ----------
+        dirty: Image
+            Cube dirty image
+        psf: Image
+            Point spread function image cube
+        **kwargs: keyword arguments
+            Additional keyword arguments
 
-    :param dirty_list: list of dirty image
-    :param psf_list: list of point spread function
-    :param prefix: Informational message for logging
-    :param algorithm: Cleaning algorithm:
-                'multiscale'|'iuwt'|'more_sane'|'generic_clean'
-    :param gain: loop gain (float) 0.7
-    :param threshold: Clean threshold (0.0)
-    :param scales: Scales (in pixels) for multiscale ([0, 3, 10, 30])
-    :param niter: Maximum number of iterations
-    :param cell_size: Cell size of each pixel in the image
-    :return: component image_list
+    Returns
+    -------
+        Component image cube
 
     """
 
     if not RADLER_AVAILABLE:
         raise ImportError("Unnable to import radler")
-
-    algorithm = kwargs.get("algorithm", "multiscale")
-    n_iterations = kwargs.get("niter", 500)
-    clean_threshold = kwargs.get("threshold", 0.001)
-    loop_gain = kwargs.get("gain", 0.7)
-    ms_scales = kwargs.get("scales", [])
-
-    settings = rd.Settings()
-    settings.trimmed_image_width = nx
-    settings.trimmed_image_height = ny
-    settings.pixel_scale.x = cell_size
-    settings.pixel_scale.y = cell_size
-    settings.minor_iteration_count = n_iterations
-    settings.threshold = clean_threshold
-    settings.minor_loop_gain = loop_gain
-
-    try:
-        settings.algorithm_type = getattr(rd.AlgorithmType, algorithm)
-    except AttributeError:
-        raise ValueError(
-            f"imaging_deconvolve with radler: Unknown algorithm {algorithm}"
-        )
-
-    if algorithm == "multiscale" and len(ms_scales) > 0:
-        settings.multiscale.scale_list = ms_scales
 
     restored_radler_cube, dirty_cube = xr.apply_ufunc(
         radler_deconvolve_channel,
@@ -121,7 +148,7 @@ def radler_deconvolve_cube(
         vectorize=True,
         dask="parallelized",
         keep_attrs=True,
-        kwargs=dict(settings=settings),
+        kwargs=kwargs,
     )
 
     comp_image = Image.constructor(

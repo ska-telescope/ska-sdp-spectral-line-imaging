@@ -33,16 +33,12 @@ class TestRadler:
         "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler."
         "xr.apply_ufunc"
     )
-    @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
-    )
     def test_should_do_convolution_using_radler(
-        self, settings_mock, apply_u_func_mock, image_mock
+        self, apply_u_func_mock, image_mock
     ):
 
         dirty = Mock(name="dirty")
         psf = Mock(name="psf")
-        settings_mock.return_value = settings_mock
 
         restored_model = Mock(name="restored_image")
         dirty_cube = Mock(name="dirty_cube")
@@ -69,7 +65,7 @@ class TestRadler:
             vectorize=True,
             dask="parallelized",
             keep_attrs=True,
-            kwargs=dict(settings=settings_mock),
+            kwargs=dict(nx=nx, ny=ny, cell_size=cell_size),
         )
 
         image_mock.constructor.assert_has_calls(
@@ -89,30 +85,25 @@ class TestRadler:
 
     @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.Image")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler."
-        "xr.apply_ufunc"
+        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Radler"
     )
+    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.np")
     @patch(
         "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
     )
     def test_should_set_scales_in_setting_for_radler(
-        self, settings_mock, apply_u_func_mock, image_mock
+        self, settings_mock, numpy_mock, radler_mock, image_mock
     ):
 
         dirty = Mock(name="dirty")
         psf = Mock(name="psf")
         settings_mock.return_value = settings_mock
 
-        restored_model = Mock(name="restored_image")
-        dirty_cube = Mock(name="dirty_cube")
-
-        apply_u_func_mock.return_value = [restored_model, dirty_cube]
-
         psf = Mock(name="psf")
         nx = "nx"
         ny = "ny"
         cell_size = "cell_size"
-        radler_deconvolve_cube(
+        radler_deconvolve_channel(
             dirty, psf, nx=nx, ny=ny, cell_size=cell_size, scales="scales"
         )
 
@@ -129,16 +120,17 @@ class TestRadler:
     )
     @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.Image")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler."
-        "xr.apply_ufunc"
+        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Radler"
     )
+    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.np")
     @patch(
         "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
     )
     def test_should_do_set_appropriate_algorithm_type_for_radler(
         self,
         settings_mock,
-        apply_u_func_mock,
+        numpy_mock,
+        radler_mock,
         image_mock,
         algorithm,
     ):
@@ -157,16 +149,11 @@ class TestRadler:
         psf = Mock(name="psf")
         settings_mock.return_value = settings_mock
 
-        restored_model = Mock(name="restored_image")
-        dirty_cube = Mock(name="dirty_cube")
-
-        apply_u_func_mock.return_value = [restored_model, dirty_cube]
-
         psf = Mock(name="psf")
         nx = "nx"
         ny = "ny"
         cell_size = "cell_size"
-        radler_deconvolve_cube(
+        radler_deconvolve_channel(
             dirty, psf, nx=nx, ny=ny, cell_size=cell_size, algorithm=algorithm
         )
 
@@ -174,31 +161,26 @@ class TestRadler:
 
     @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.Image")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler."
-        "xr.apply_ufunc"
+        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Radler"
     )
+    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.np")
     @patch(
         "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
     )
     def test_should_throw_exception_for_unknown_algorithm_type_for_radler(
-        self, settings_mock, apply_u_func_mock, image_mock
+        self, settings_mock, numpy_mock, radler_mock, image_mock
     ):
 
         dirty = Mock(name="dirty")
         psf = Mock(name="psf")
         settings_mock.return_value = settings_mock
 
-        restored_model = Mock(name="restored_image")
-        dirty_cube = Mock(name="dirty_cube")
-
-        apply_u_func_mock.return_value = [restored_model, dirty_cube]
-
         psf = Mock(name="psf")
         nx = "nx"
         ny = "ny"
         cell_size = "cell_size"
         with pytest.raises(ValueError):
-            radler_deconvolve_cube(
+            radler_deconvolve_channel(
                 dirty,
                 psf,
                 nx=nx,
@@ -211,17 +193,21 @@ class TestRadler:
         "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Radler"
     )
     @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.np")
+    @patch(
+        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
+    )
     def test_should_perform_deconvolution_per_channel_using_radler(
-        self, numpy_mock, radler_mock
+        self, settings_mock, numpy_mock, radler_mock
     ):
         import radler as rd
 
+        settings_mock.return_value = settings_mock
         dirty = Mock(name="dirty")
         psf = Mock(name="psf")
         dirty_copy = Mock(name="dirty_copy")
         psf_copy = Mock(name="psf_copy")
         restored_radler = Mock(name="restored_radler")
-        settings_mock = Mock(name="settings")
+
         numpy_mock.zeros.return_value = restored_radler
         numpy_mock.copy.side_effect = [dirty_copy, psf_copy]
 
