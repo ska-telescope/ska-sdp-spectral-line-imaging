@@ -81,6 +81,20 @@ spectral-line-imaging-pipeline run \
 
 For all the options, run `spectral-line-imaging-pipeline run --help`.
 
+### Autocompletions for bash and zsh
+
+```
+export YAML_PATH=/path/to/pipeline/default
+source ./scripts/bash-completions.bash
+```
+
+#### zsh
+
+```
+source ./scripts/bash-completions.bash
+bashcompinit
+```
+
 ## Some pre-requisites of the pipeline
 
 ### SKA LOW Data
