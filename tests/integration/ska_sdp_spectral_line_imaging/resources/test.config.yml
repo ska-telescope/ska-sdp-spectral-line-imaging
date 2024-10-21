@@ -1,5 +1,7 @@
 global_parameters: {}
 parameters:
+  continuum_subtraction:
+    report_peak_channel: true
   export_image:
     image_name: test_cube
   export_model:
@@ -14,19 +16,16 @@ parameters:
   predict_stage:
     cell_size: 60.0
   read_model:
-    image_name: tMS
+    image: ./tMS-%s-image.fits
+    image_type: continuum
     pols:
-    - I
-    - Q
-    - U
-    - V
+    - XX
+    - XY
+    - YX
+    - YY
   select_vis:
     obs_id: 0
-  vis_stokes_conversion:
-    input_polarisation_frame: linear
-    output_polarisation_frame: stokesIQUV
-  continuum_subtraction:
-    report_peak_channel: true
+  vis_stokes_conversion: {}
 pipeline:
   continuum_subtraction: true
   export_image: true
@@ -36,4 +35,4 @@ pipeline:
   predict_stage: true
   read_model: true
   select_vis: true
-  vis_stokes_conversion: true
+  vis_stokes_conversion: false

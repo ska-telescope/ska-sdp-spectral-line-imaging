@@ -1,5 +1,6 @@
 # pylint: disable=no-member,import-error
 import logging
+from typing import List
 
 import astropy.io.fits as fits
 import numpy as np
@@ -15,6 +16,7 @@ from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
 from ..stubs.model import subtract_visibility
+from ..upstream_output import UpstreamOutput
 
 logger = logging.getLogger()
 
@@ -22,52 +24,104 @@ logger = logging.getLogger()
 @ConfigurableStage(
     "read_model",
     configuration=Configuration(
-        image_name=ConfigParam(
+        image=ConfigParam(
             str,
-            "wsclean",
-            description="Prefix path of the image(s) which contain "
-            "model data. Please refer "
+            "/path/to/wsclean-%s-image.fits",
+            description="Path to the image file. The value must have a"
+            "`%s` placeholder to fill-in polarization values."
             "`README <README.html#regarding-the-model-visibilities>`_ "
-            "to understand the pre-requisites of the pipeline.",
+            "to understand the requirements of the model image.",
+        ),
+        image_type=ConfigParam(
+            str,
+            "continuum",
+            description="Type of the input images. Available options are "
+            "'spectral' or 'continuum'",
         ),
         pols=ConfigParam(
-            list, ["I", "Q", "U", "V"], "Polarizations of the model images"
+            list, ["I", "Q"], "Polarizations of the model images"
         ),
     ),
 )
-def read_model(upstream_output, image_name, pols):
+def read_model(
+    upstream_output: UpstreamOutput,
+    image: str,
+    image_type: str,
+    pols: List[str],
+) -> UpstreamOutput:
     """
-    Read model from the image.
+    Read model image(s) from FITS file(s).
+    Supports reading from continuum or spectral FITS images.
+
     Please refer `README <../README.html#regarding-the-model-visibilities>`_
-    to understand the supported format for model images.
+    to understand the requirements of the model image.
 
     Parameters
     ----------
-        upstream_output: dict
+        upstream_output: UpstreamOutput
             Output from the upstream stage
-        image_name: str
-            Prefix path of the image(s) which contain model data
-        pos: list(str)
-            Polarizations of the model image(s)
+
+        image: str
+            Path to the image file. The path must have a
+            `%s` placeholder to fill-in polarization values at runtime.
+
+            For example, if `pols` is `['I', 'Q']`, and `image` is
+            `/data/wsclean-%s-image.fits`, then the **read_model** stage
+            will try to read `/data/wsclean-I-image.fits` and
+            `/data/wsclean-%s-image.fits` images.
+
+            For each polarization, a seperate FITS image should be available.
+
+        image_type: str
+            Whether all the images being read are "continuum"
+            or "spectral"
+
+        pols: list(str)
+            A list of all the polarizations for which an image is available.
 
     Returns
     -------
-        dict
+        UpstreamOutput
     """
+    if image_type not in ["spectral", "continuum"]:
+        raise AttributeError("image_type must be spectral or continuum")
 
+    ps = upstream_output.ps
     images = []
+
     # TODO: Not dask compatible, loaded into memory by master / dask client
     for pol in pols:
-        with fits.open(f"{image_name}-{pol}-image.fits") as f:
+        image_path = image % pol
+        with fits.open(image_path) as f:
             images.append(f[0].data.squeeze())
 
-    # Dims are assigned as per ska-data-models Image class
-    # Only the "polarization" is different
-    image_stack = xr.DataArray(
-        np.stack(images), dims=["polarization", "y", "x"]
-    )
+    if image_type == "spectral":
+        # Dims are assigned as per ska-data-models Image class
+        # Only the "polarization" is different
+        dims = ["polarization", "frequency", "y", "x"]
+        chunks = {k: v for k, v in ps.chunksizes.items() if k in dims}
+        model_image = xr.DataArray(
+            np.stack(images, axis=0),
+            dims=dims,
+            coords={
+                # TODO: Frequency range should be read from WCS
+                # For now, copying frequency from ps
+                "frequency": ps.frequency,
+                "polarization": pols,
+            },
+        ).chunk(chunks)
+    else:  # "continuum"
+        dims = ["polarization", "y", "x"]
+        chunks = {k: v for k, v in ps.chunksizes.items() if k in dims}
+        model_image = xr.DataArray(
+            np.stack(images, axis=0),
+            dims=dims,
+            coords={
+                "polarization": pols,
+            },
+        ).chunk(chunks)
 
-    upstream_output["model_image"] = image_stack
+    upstream_output["model_image"] = model_image
 
     return upstream_output
 

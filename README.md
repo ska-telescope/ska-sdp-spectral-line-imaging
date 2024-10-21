@@ -71,7 +71,7 @@ spectral-line-imaging-pipeline install-config --config-install-path path/to/dir 
 
 Run the spectral line pipeline using the `run` subcommand.
 
-To run on the accompanying [SKA LOW](#ska-low-data) simulated data, run:
+To run on the accompanying [SKA MID](#ska-mid-data) simulated data, run:
 
 ```bash
 spectral-line-imaging-pipeline run \
@@ -97,9 +97,9 @@ bashcompinit
 
 ## Some pre-requisites of the pipeline
 
-### SKA LOW Data
+### SKA MID Data
 
-The data `ska_low_simulated_data.ps` and the config file `ska_low_config.yml` are present in SKA's google cloud bucket.
+The data `sim_mid_contsubbed_xrad31_freq1.ps`, the config file `spectral_line_imaging_pipeline.yml` and a psf image `ska_mid_gen_psf.fits` are present in SKA's google cloud bucket.
 Please contact members from team DHRUVA to know how to access it.
 
 ### Running pipeline on custom MSv2 dataset
@@ -110,22 +110,19 @@ In order to run the pipeline on a custom MSv2 dataset, you have to convert it to
 
 1. Have a look at the [example jupyter notebooks](https://github.com/casangi/xradio/blob/main/doc/meerkat_conversion.ipynb) present in the xradio github to know how to convert the data from MSv2 to a xradio processing set.
 
-### Regarding the model visibilities
+### Regarding the model visibilities and model images
 
 <!-- The relative hyperlink to this section is present in docstring and configuration of "read_model" stage -->
 
 If your MSv2 data already contains `MODEL_DATA` column , you don’t need to run the **read_model** and **predict_stage** stages, which can be turned off using the config file. Continuum subtraction stage will operate on `VISIBILITY` and existing `VISIBILITY_MODEL` variables.
 
-If `MODEL_DATA` column is not present, you can predict the model visibilities by inputting model FITS images to the pipeline.
-The **predict_stage** will generate `VISIBILITY_MODEL` variable by running `ducc0.wgridder.dirty2ms` operation on the FITS images.
-These FITS images are read as part of the **read_model** stage.
+If `MODEL_DATA` column is not present, you can predict the model visibilities by passing model FITS images to the pipeline via **read_model** stage.
+The **predict_stage** will generate `VISIBILITY_MODEL` data by running predict operation on the model image data.
 
-Some important points regarding the parameters of the **read_model** stage present in the YAML file:
+About the model FITS images:
 
-1. The `pols` param in **read_model** stage must contain a list of all the polarizations for which an image is available.
+1. All FITS images have to be either **spectral or continuum**. They may contain data which is 2-dimensional or 4-dimensional when loaded into numpy.
 
-1. For each polarization, a FITS image with name `<image_name>-<pol>-image.fits` should be present.
+1. Currently **read_model** does not support reading data of multiple polarizations from a single FITS file. So for each polarization, there has to be a seperate FITS image.
 
-    1. The `<image_name>` is another parameter of the **read_model** stage, which is the prefix of your image. For example, if the image is present at path `/home/user/ska_low_256-XX-image.fits`, then parameter should be `image_name : /home/user/ska_low_256`.
-
-    1. The `<pol>` should match with the polarization names present in the pols param. In above case, the parameter.
+1. The `pols` config param of the **read_model** stage should have the same order of polarization values as it is expected to be in the measurement set.

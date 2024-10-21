@@ -28,9 +28,9 @@ def test_should_run_dask_distributed(result_msv4):
 
     image_sz = 64
     model = xr.DataArray(
-        np.zeros(image_sz * image_sz).reshape((image_sz, image_sz)),
-        dims=["y", "x"],
-    )
+        np.random.rand(1, 8, image_sz, image_sz),
+        dims=["polarization", "frequency", "y", "x"],
+    ).chunk(dict(frequency=2))
 
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = result_msv4.chunk(dict(frequency=2))
