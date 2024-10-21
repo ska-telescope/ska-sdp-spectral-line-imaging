@@ -27,8 +27,8 @@ logger = logging.getLogger()
         image=ConfigParam(
             str,
             "/path/to/wsclean-%s-image.fits",
-            description="Path to the image file. The value must have a"
-            "`%s` placeholder to fill-in polarization values."
+            description="Path to the image file. The value must have a "
+            "`%s` placeholder to fill-in polarization values. Please refer "
             "`README <README.html#regarding-the-model-visibilities>`_ "
             "to understand the requirements of the model image.",
         ),
@@ -68,7 +68,7 @@ def read_model(
             For example, if `pols` is `['I', 'Q']`, and `image` is
             `/data/wsclean-%s-image.fits`, then the **read_model** stage
             will try to read `/data/wsclean-I-image.fits` and
-            `/data/wsclean-%s-image.fits` images.
+            `/data/wsclean-Q-image.fits` images.
 
             For each polarization, a seperate FITS image should be available.
 

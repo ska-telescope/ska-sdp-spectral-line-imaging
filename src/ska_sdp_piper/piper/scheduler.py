@@ -16,7 +16,7 @@ class PiperScheduler(ABC):
 
         Parameters
         ----------
-            stages: list[Stages]
+            stages: list[ska_sdp_piper.piper.stage.Stages]
                List of stages to be scheduled
 
         Returns

@@ -45,16 +45,18 @@ read_model
     :width: 100%
     :widths: 25, 10, 20, 45
 
-    +------------+--------+----------------------+--------------------------------------------------------------+
-    | Param      | Type   | Default              | Description                                                  |
-    +============+========+======================+==============================================================+
-    | image_name | str    | wsclean              | Prefix path of the image(s) which contain model data. Please |
-    |            |        |                      | refer `README <README.html#regarding-the-model-              |
-    |            |        |                      | visibilities>`_ to understand the pre-requisites of the      |
-    |            |        |                      | pipeline.                                                    |
-    +------------+--------+----------------------+--------------------------------------------------------------+
-    | pols       | list   | ['I', 'Q', 'U', 'V'] | Polarizations of the model images                            |
-    +------------+--------+----------------------+--------------------------------------------------------------+
+    +------------+--------+--------------------------------+-----------------------------------------------------------------------------+
+    | Param      | Type   | Default                        | Description                                                                 |
+    +============+========+================================+=============================================================================+
+    | image      | str    | /path/to/wsclean-%s-image.fits | Path to the image file. The value must have a `%s` placeholder to fill-in   |
+    |            |        |                                | polarization values. Please refer `README <README.html#regarding-the-model- |
+    |            |        |                                | visibilities>`_ to understand the requirements of the model image.          |
+    +------------+--------+--------------------------------+-----------------------------------------------------------------------------+
+    | image_type | str    | continuum                      | Type of the input images. Available options are 'spectral' or 'continuum'   |
+    +------------+--------+--------------------------------+-----------------------------------------------------------------------------+
+    | pols       | list   | ['I', 'Q']                     | Polarizations of the model images                                           |
+    +------------+--------+--------------------------------+-----------------------------------------------------------------------------+
+
 
 
 predict_stage
@@ -89,7 +91,15 @@ export_model
 continuum_subtraction
 *********************
 
-No parameters
+..  table::
+    :width: 100%
+    :widths: 25, 10, 20, 45
+
+    +---------------------+--------+-----------+----------------------------------------------+
+    | Param               | Type   | Default   | Description                                  |
+    +=====================+========+===========+==============================================+
+    | report_peak_channel | bool   | True      | Report channel with peak emission/absorption |
+    +---------------------+--------+-----------+----------------------------------------------+
 
 
 imaging

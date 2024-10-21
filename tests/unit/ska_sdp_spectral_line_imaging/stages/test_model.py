@@ -4,10 +4,7 @@ import pytest
 import xarray as xr
 from mock import MagicMock, Mock, patch
 
-from ska_sdp_spectral_line_imaging.stages.model import read_model
-from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
-
-from ska_sdp_spectral_line_imaging.stages.model import cont_sub
+from ska_sdp_spectral_line_imaging.stages.model import cont_sub, read_model
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 

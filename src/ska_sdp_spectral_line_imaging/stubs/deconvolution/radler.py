@@ -27,6 +27,7 @@ def radler_deconvolve_channel(
     """
     Perform deconvolution using radler for a given channel data and returns
     restored model and the residual data
+
     Parameters
     ----------
         dirty_channel: numpy.ndarray
@@ -104,18 +105,19 @@ def radler_deconvolve_cube(
     Clean using the Radler module, using various algorithms.
 
     The algorithms available are
-    (see: https://radler.readthedocs.io/en/latest/tree/cpp/algorithms.html):
+    (see: https://radler.readthedocs.io/en/latest/tree/cpp/algorithms.html)
 
-     msclean
-     iuwt
-     more_sane
-     generic_clean
+    msclean
+    iuwt
+    more_sane
+    generic_clean
 
-    For example::
+    For example:
 
-         comp = radler_deconvolve_cube(dirty_list, psf_list, niter=1000,
-                        gain=0.7, algorithm='msclean',
-                        scales=[0, 3, 10, 30], threshold=0.01)
+    comp = radler_deconvolve_cube(dirty_list, psf_list, niter=1000,
+                gain=0.7, algorithm='msclean',
+                scales=[0, 3, 10, 30], threshold=0.01)
+
     Parameters
     ----------
         dirty: Image
@@ -128,7 +130,6 @@ def radler_deconvolve_cube(
     Returns
     -------
         Component image cube
-
     """
 
     if not RADLER_AVAILABLE:
