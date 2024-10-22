@@ -21,7 +21,6 @@ SPEED_OF_LIGHT = 299792458
 @ConfigurableStage(
     "imaging",
     configuration=Configuration(
-        # TODO: Gridding parameters should have units documented somewhere
         gridding_params=ConfigParam(
             dict,
             {
@@ -32,7 +31,6 @@ SPEED_OF_LIGHT = 299792458
             },
             description="Gridding parameters",
         ),
-        # TODO: Deconv parameters should have units documented somewhere
         deconvolution_params=ConfigParam(
             dict,
             {

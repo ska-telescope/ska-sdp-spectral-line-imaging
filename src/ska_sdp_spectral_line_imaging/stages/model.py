@@ -83,6 +83,7 @@ def read_model(
     -------
         UpstreamOutput
     """
+    # TODO: Remove this check once piper can handle enum config params.
     if image_type not in ["spectral", "continuum"]:
         raise AttributeError("image_type must be spectral or continuum")
 
