@@ -1,6 +1,11 @@
 # pragma: exclude file
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
+from typing import List
+
+import dask
+
+from .stage.stages import Stage
 
 
 class PiperScheduler(ABC):
@@ -10,13 +15,13 @@ class PiperScheduler(ABC):
     """
 
     @abstractmethod
-    def schedule(self, stages):
+    def schedule(self, stages: List[Stage]) -> None:
         """
         Contract for scheduling tasks
 
         Parameters
         ----------
-            stages: list[ska_sdp_piper.piper.stage.Stages]
+            stages: list[stage.Stage]
                List of stages to be scheduled
 
         Returns
@@ -25,13 +30,14 @@ class PiperScheduler(ABC):
         """
         pass
 
-    @abstractproperty
-    def tasks(self):
+    @property
+    @abstractmethod
+    def tasks(self) -> List[dask.delayed]:
         """
         Property returning the list of scheduled tasks to be executed
 
         Returns
         -------
-            list[dask.Delayed]
+            list[dask.delayed]
         """
         pass
