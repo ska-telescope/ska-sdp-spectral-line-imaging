@@ -1,6 +1,6 @@
 # pylint: disable=no-member,import-error
 import logging
-from typing import List
+import os
 
 import astropy.io.fits as fits
 import numpy as np
@@ -27,10 +27,23 @@ logger = logging.getLogger()
         image=ConfigParam(
             str,
             "/path/to/wsclean-%s-image.fits",
-            description="Path to the image file. The value must have a "
-            "`%s` placeholder to fill-in polarization values. Please refer "
-            "`README <README.html#regarding-the-model-visibilities>`_ "
-            "to understand the requirements of the model image.",
+            description="""
+            Path to the image file. The value must have a
+            `%s` placeholder to fill-in polarization values.
+
+            The polarization values are taken from the polarization
+            coordinate present in the processing set in upstream_output.
+
+            For example, if polarization coordinates are ['I', 'Q'],
+            and `image` param is `/data/wsclean-%s-image.fits`, then the
+            read_model stage will try to read
+            `/data/wsclean-I-image.fits` and
+            `/data/wsclean-Q-image.fits` images.
+
+            Please refer
+            `README <README.html#regarding-the-model-visibilities>`_
+            to understand the requirements of the model image.
+            """,
         ),
         image_type=ConfigParam(
             str,
@@ -38,16 +51,12 @@ logger = logging.getLogger()
             description="Type of the input images. Available options are "
             "'spectral' or 'continuum'",
         ),
-        pols=ConfigParam(
-            list, ["I", "Q"], "Polarizations of the model images"
-        ),
     ),
 )
 def read_model(
     upstream_output: UpstreamOutput,
     image: str,
     image_type: str,
-    pols: List[str],
 ) -> UpstreamOutput:
     """
     Read model image(s) from FITS file(s).
@@ -64,32 +73,50 @@ def read_model(
         image: str
             Path to the image file. The path must have a
             `%s` placeholder to fill-in polarization values at runtime.
+            The polarization values are taken from the polarization
+            coordinate present in the processing set in upstream_output.
 
-            For example, if `pols` is `['I', 'Q']`, and `image` is
-            `/data/wsclean-%s-image.fits`, then the **read_model** stage
-            will try to read `/data/wsclean-I-image.fits` and
+            For example, if polarization coordinates are `['I', 'Q']`,
+            and `image` is `/data/wsclean-%s-image.fits`, then the
+            **read_model** stage will try to read
+            `/data/wsclean-I-image.fits` and
             `/data/wsclean-Q-image.fits` images.
 
-            For each polarization, a seperate FITS image should be available.
+            If the corresponding image is not available in filesystem,
+            this stage will raise an exception.
 
         image_type: str
             Whether all the images being read are "continuum"
             or "spectral"
 
-        pols: list(str)
-            A list of all the polarizations for which an image is available.
-
     Returns
     -------
         UpstreamOutput
+
+    Raises
+    ------
+        FileNotFoundError
+            If a FITS file for a model image is not found
+
+        AttributeError
+            If the image_type parameter is invalid
     """
     # TODO: Remove this check once piper can handle enum config params.
     if image_type not in ["spectral", "continuum"]:
         raise AttributeError("image_type must be spectral or continuum")
 
     ps = upstream_output.ps
-    images = []
+    pols = ps.polarization.values
 
+    for pol in pols:
+        image_path = image % pol
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(
+                f"FITS image {image_path} corresponding to "
+                f"polarization {pol} not found."
+            )
+
+    images = []
     # TODO: Not dask compatible, loaded into memory by master / dask client
     for pol in pols:
         image_path = image % pol

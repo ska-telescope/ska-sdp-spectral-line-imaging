@@ -125,6 +125,4 @@ About the model FITS images:
 
 1. If FITS image is spectral, it must have same frequency coordinates (the reference frequency, frequency delta and number of channels) as the measurement set.
 
-1. Currently **read_model** does not support reading data of multiple polarizations from a single FITS file. So for each polarization, there has to be a seperate FITS image.
-
-1. The `pols` config param of the **read_model** stage should have the same order of polarization values as it is expected to be in the measurement set.
+1. Currently **read_model** does not support reading data of multiple polarizations from a single FITS file. So for each polarization value in the processing set, there has to be a seperate FITS image.

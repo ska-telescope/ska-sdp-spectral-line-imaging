@@ -45,18 +45,22 @@ read_model
     :width: 100%
     :widths: 25, 10, 20, 45
 
-    +------------+--------+--------------------------------+-----------------------------------------------------------------------------+
-    | Param      | Type   | Default                        | Description                                                                 |
-    +============+========+================================+=============================================================================+
-    | image      | str    | /path/to/wsclean-%s-image.fits | Path to the image file. The value must have a `%s` placeholder to fill-in   |
-    |            |        |                                | polarization values. Please refer `README <README.html#regarding-the-model- |
-    |            |        |                                | visibilities>`_ to understand the requirements of the model image.          |
-    +------------+--------+--------------------------------+-----------------------------------------------------------------------------+
-    | image_type | str    | continuum                      | Type of the input images. Available options are 'spectral' or 'continuum'   |
-    +------------+--------+--------------------------------+-----------------------------------------------------------------------------+
-    | pols       | list   | ['I', 'Q']                     | Polarizations of the model images                                           |
-    +------------+--------+--------------------------------+-----------------------------------------------------------------------------+
-
+    +------------+--------+--------------------------------+--------------------------------------------------------------------------------+
+    | Param      | Type   | Default                        | Description                                                                    |
+    +============+========+================================+================================================================================+
+    | image      | str    | /path/to/wsclean-%s-image.fits | Path to the image file. The value must have a              `%s`                |
+    |            |        |                                | placeholder to fill-in polarization values.               The polarization     |
+    |            |        |                                | values are taken from the polarization              coordinate present in the  |
+    |            |        |                                | processing set in upstream_output.              For example, if polarization   |
+    |            |        |                                | coordinates are ['I', 'Q'],              and `image` param is                  |
+    |            |        |                                | `/data/wsclean-%s-image.fits`, then the              read_model stage will try |
+    |            |        |                                | to read              `/data/wsclean-I-image.fits` and                          |
+    |            |        |                                | `/data/wsclean-Q-image.fits` images.              Please refer                 |
+    |            |        |                                | `README <README.html#regarding-the-model-visibilities>`_              to       |
+    |            |        |                                | understand the requirements of the model image.                                |
+    +------------+--------+--------------------------------+--------------------------------------------------------------------------------+
+    | image_type | str    | continuum                      | Type of the input images. Available options are 'spectral' or 'continuum'      |
+    +------------+--------+--------------------------------+--------------------------------------------------------------------------------+
 
 
 predict_stage

@@ -62,16 +62,17 @@ def mock_ps():
         "baseline_id": 15,
         "time": 30,
     }
-    ps.polarization = ["I", "V"]
+    ps.polarization = xr.DataArray(["I", "V"], dims="polarization")
     ps.frequency = [1.0, 2.0, 3.0]
 
     yield ps
 
 
 @patch("ska_sdp_spectral_line_imaging.stages.model." "fits.open")
-def test_should_read_model_from_spectral_image(fits_open_mock, mock_ps):
-    pols = ["I", "V"]
-
+@patch("ska_sdp_spectral_line_imaging.stages.model." "os")
+def test_should_read_model_from_spectral_image(
+    os_mock, fits_open_mock, mock_ps
+):
     up_out = UpstreamOutput()
     up_out["ps"] = mock_ps
 
@@ -87,6 +88,8 @@ def test_should_read_model_from_spectral_image(fits_open_mock, mock_ps):
     enter_mock = MagicMock()
     enter_mock.__enter__.side_effect = [fits_hdu_I, fits_hdu_V]
     fits_open_mock.return_value = enter_mock
+
+    os_mock.path.exists.return_value = True
 
     expected_data = xr.DataArray(
         data=np.array(
@@ -107,8 +110,13 @@ def test_should_read_model_from_spectral_image(fits_open_mock, mock_ps):
         }
     )
 
-    upstrem_output = read_model.stage_definition(
-        up_out, image, image_type, pols
+    upstrem_output = read_model.stage_definition(up_out, image, image_type)
+
+    os_mock.path.exists.assert_has_calls(
+        [
+            mock.call("/path/ws-I-im.fits"),
+            mock.call("/path/ws-V-im.fits"),
+        ],
     )
 
     fits_open_mock.assert_has_calls(
@@ -127,9 +135,10 @@ def test_should_read_model_from_spectral_image(fits_open_mock, mock_ps):
 
 
 @patch("ska_sdp_spectral_line_imaging.stages.model." "fits.open")
-def test_should_read_model_from_continuum_image(fits_open_mock, mock_ps):
-    pols = ["I", "V"]
-
+@patch("ska_sdp_spectral_line_imaging.stages.model." "os")
+def test_should_read_model_from_continuum_image(
+    os_mock, fits_open_mock, mock_ps
+):
     up_out = UpstreamOutput()
     up_out["ps"] = mock_ps
 
@@ -145,6 +154,8 @@ def test_should_read_model_from_continuum_image(fits_open_mock, mock_ps):
     enter_mock = MagicMock()
     enter_mock.__enter__.side_effect = [fits_hdu_I, fits_hdu_V]
     fits_open_mock.return_value = enter_mock
+
+    os_mock.path.exists.return_value = True
 
     expected_data = xr.DataArray(
         data=np.array(
@@ -163,8 +174,13 @@ def test_should_read_model_from_continuum_image(fits_open_mock, mock_ps):
         }
     )
 
-    upstrem_output = read_model.stage_definition(
-        up_out, image, image_type, pols
+    upstrem_output = read_model.stage_definition(up_out, image, image_type)
+
+    os_mock.path.exists.assert_has_calls(
+        [
+            mock.call("/path/ws-I-im.fits"),
+            mock.call("/path/ws-V-im.fits"),
+        ],
     )
 
     fits_open_mock.assert_has_calls(
@@ -183,12 +199,39 @@ def test_should_read_model_from_continuum_image(fits_open_mock, mock_ps):
 
 
 def test_should_raise_attribute_error_for_invalid_image_type():
-    pols = [""]
     up_out = UpstreamOutput()
-    image = ""
+    image = "/path/ws-%s-im.fits"
     image_type = "invalid"
 
     with pytest.raises(AttributeError) as err:
-        read_model.stage_definition(up_out, image, image_type, pols)
+        read_model.stage_definition(up_out, image, image_type)
 
     assert "image_type must be spectral or continuum" in str(err.value)
+
+
+@patch("ska_sdp_spectral_line_imaging.stages.model." "os")
+def test_should_raise_file_not_found_error_for_missing_fits_file(
+    os_mock, mock_ps
+):
+    up_out = UpstreamOutput()
+    up_out["ps"] = mock_ps
+
+    image = "/path/ws-%s-im.fits"
+    image_type = "spectral"
+
+    os_mock.path.exists.side_effect = [True, False]
+
+    with pytest.raises(FileNotFoundError) as err:
+        read_model.stage_definition(up_out, image, image_type)
+
+    os_mock.path.exists.assert_has_calls(
+        [
+            mock.call("/path/ws-I-im.fits"),
+            mock.call("/path/ws-V-im.fits"),
+        ],
+    )
+
+    assert (
+        "FITS image /path/ws-V-im.fits corresponding to "
+        "polarization V not found." in str(err.value)
+    )

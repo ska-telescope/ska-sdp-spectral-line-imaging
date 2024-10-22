@@ -18,11 +18,6 @@ parameters:
   read_model:
     image: ./tMS-%s-image.fits
     image_type: continuum
-    pols:
-    - XX
-    - XY
-    - YX
-    - YY
   select_vis:
     obs_id: 0
   vis_stokes_conversion: {}
