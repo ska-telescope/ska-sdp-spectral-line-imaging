@@ -23,6 +23,36 @@ def test_should_not_report_peak_channel_value(
     numpy_mock.abs.assert_not_called()
 
 
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.logger")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.np")
+def test_should_report_peak_channel_value(
+    numpy_mock, subtract_visibility_mock, logger_mock
+):
+
+    observation = Mock(name="observation")
+    observation.frequency = Mock(name="frequency")
+    observation.frequency.units = ["Hz"]
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = observation
+    subtract_visibility_mock.return_value = observation
+    numpy_mock.abs = Mock(name="abs", return_value=numpy_mock)
+    numpy_mock.max = Mock(name="max", return_value=numpy_mock)
+    numpy_mock.idxmax = Mock(name="idxmax", return_value=numpy_mock)
+    numpy_mock.values = "VALUES"
+
+    cont_sub.stage_definition(upstream_output, True)
+
+    numpy_mock.abs.assert_called_once_with(observation.VISIBILITY)
+    numpy_mock.max.assert_called_once_with(
+        dim=["time", "baseline_id", "polarization"]
+    )
+    numpy_mock.idxmax.assert_called_once()
+    logger_mock.info.assert_called_once_with(
+        "Peak visibility Channel: VALUES Hz"
+    )
+
+
 @pytest.fixture(scope="function")
 def mock_ps():
     ps = Mock(name="ps")

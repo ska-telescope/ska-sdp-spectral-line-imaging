@@ -7,7 +7,7 @@ CONFIG_CLI_ARGS = [
         "--config-install-path",
         dest="config_install_path",
         type=str,
-        required=True,
+        default="./",
         help="Path to place the default config.",
     ),
     CLIArgument(

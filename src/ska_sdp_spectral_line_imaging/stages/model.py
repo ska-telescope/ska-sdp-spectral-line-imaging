@@ -216,14 +216,14 @@ def cont_sub(upstream_output, report_peak_channel):
 
     Parameters
     ----------
-        upstream_output: dict
+        upstream_output: UpstreamOutput
             Output from the upstream stage
         report_peak_channel: bool
             Report channel with peak emission/absorption
 
     Returns
     -------
-        dict
+        UpstreamOutput
     """
 
     ps = upstream_output.ps
@@ -233,6 +233,7 @@ def cont_sub(upstream_output, report_peak_channel):
     upstream_output["ps"] = cont_sub_ps
 
     if report_peak_channel:
+        # TODO: REMOVE .values once log is dask compatible.
         peak_channel = (
             np.abs(cont_sub_ps.VISIBILITY)
             .max(dim=["time", "baseline_id", "polarization"])
@@ -241,6 +242,11 @@ def cont_sub(upstream_output, report_peak_channel):
         )
 
         unit = cont_sub_ps.frequency.units[0]
+
+        logger.warning(
+            "Eager computation for peak done. This may slow down the"
+            " further computations due to excesive memory usage."
+        )
 
         logger.info(f"Peak visibility Channel: {peak_channel} {unit}")
 
