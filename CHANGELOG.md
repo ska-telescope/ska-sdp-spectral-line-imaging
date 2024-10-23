@@ -5,6 +5,7 @@
 - The `read_model` stage can accept a FITS spectral cube as a model image.
 - The `read_model` and `imaging` stage parameters have changed. Please refer the "Stage Configs" section of the documentation.
 - The `cont_sub` stage reports the peak channel, and is controlled via the configuration parameter `report_peak_channel` of type boolean. 
+- Added auto-complete script for bash and zsh
 
 ## 0.5.0
 
