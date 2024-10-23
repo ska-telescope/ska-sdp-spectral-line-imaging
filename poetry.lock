@@ -378,6 +378,33 @@ test-all = ["array-api-strict", "astropy[test]", "coverage[toml]", "ipython (>=4
 typing = ["typing-extensions (>=4.0.0)"]
 
 [[package]]
+name = "astropy-healpix"
+version = "1.0.3"
+description = "BSD-licensed HEALPix for Astropy"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "astropy_healpix-1.0.3-cp39-abi3-macosx_10_9_x86_64.whl", hash = "sha256:1a523b4bda2618a94efad12b60431c28c0f5ef4b5afb890d21a858aef2ed779a"},
+    {file = "astropy_healpix-1.0.3-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:fa34adecf7f5168d65cda05d40db95d4a1aad3e6b66f43489ed4aac471f76496"},
+    {file = "astropy_healpix-1.0.3-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6a7d2163421ba66e06ed40b7ce7ce89fea60a342d035974c98c2c06c6cf187e9"},
+    {file = "astropy_healpix-1.0.3-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a5b03a5b18c28ab7ac030a22157cfcd8ff951db7fc751e29e854c17d3da52537"},
+    {file = "astropy_healpix-1.0.3-cp39-abi3-win32.whl", hash = "sha256:ec083f48e091baa5ce97c2e96e94b9fc8921a8c370768a92ac14e86fa3465248"},
+    {file = "astropy_healpix-1.0.3-cp39-abi3-win_amd64.whl", hash = "sha256:e8c32aabfa1fa7d6fd629e3918680cd0585656cfca6ec0c5dafe9e1c7a304508"},
+    {file = "astropy_healpix-1.0.3-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:cce4687deb102d1e9dc40f381fcd33027cd9bd0ca7955aa0d70e464128c6914e"},
+    {file = "astropy_healpix-1.0.3-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f4d4e3e86d8d010eb50bd31ca0ba438c1b50cdc9ed251da97665a7821880206e"},
+    {file = "astropy_healpix-1.0.3-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:59b1dd358c5bcd6196213845c007cee4920b2e1936234374afc7d8cfd6506cfc"},
+    {file = "astropy_healpix-1.0.3.tar.gz", hash = "sha256:de5d2a7ec97b167045066971f25a150d1e4061f07159be23649634db36e79746"},
+]
+
+[package.dependencies]
+astropy = ">=3"
+numpy = ">=1.19"
+
+[package.extras]
+docs = ["matplotlib", "sphinx-astropy"]
+test = ["hypothesis", "pytest-astropy"]
+
+[[package]]
 name = "astropy-iers-data"
 version = "0.2024.8.5.0.32.23"
 description = "IERS Earth Rotation and Leap Second tables for the astropy core package"
@@ -1026,6 +1053,7 @@ click = ">=8.1"
 cloudpickle = ">=1.5.0"
 fsspec = ">=2021.09.0"
 importlib-metadata = {version = ">=4.13.0", markers = "python_version < \"3.12\""}
+numpy = {version = ">=1.21", optional = true, markers = "extra == \"array\""}
 packaging = ">=20.0"
 partd = ">=1.4.0"
 pyyaml = ">=5.3.1"
@@ -4147,6 +4175,47 @@ attrs = ">=22.2.0"
 rpds-py = ">=0.7.0"
 
 [[package]]
+name = "reproject"
+version = "0.14.0"
+description = "Reproject astronomical images"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "reproject-0.14.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:2c0db7c67169e729d2ddc1daa86024fcc5df2a4c66c811f4d74a2106d445f2bb"},
+    {file = "reproject-0.14.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:5d3cd8dd9cb940cf66af10449aefb5d8dc98c22e49142b198debc408dfe38027"},
+    {file = "reproject-0.14.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0d4095effaf6af677d24646925ba12257230404cb7bac233130f62728f09ed9d"},
+    {file = "reproject-0.14.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:81390685c1cfb443022917ebc9957e97a2f7c69abf36212744caae57dd19992c"},
+    {file = "reproject-0.14.0-cp310-cp310-win_amd64.whl", hash = "sha256:c846f273253179060af4a3980423d8e17ba5ef61809b1dba31c38f90dd2f3151"},
+    {file = "reproject-0.14.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:0053fd83358fc34350c1b3f2e2ad60e68d098575cfa4ef7d0955cddbe3ccfcf0"},
+    {file = "reproject-0.14.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:e291adfdba0df7ceb5f5b852143b416eabf760fe6e9329f12fbe55e25548e56c"},
+    {file = "reproject-0.14.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2045ef1d3ea73cae7a02d42e62988064c50727e24fb69de81836767a9a9ffae5"},
+    {file = "reproject-0.14.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b476830f80c369c41870d479798118c29445062ca608d6a10c8345f2f610398e"},
+    {file = "reproject-0.14.0-cp311-cp311-win_amd64.whl", hash = "sha256:7eab2e16bf63088712b20f64363dd9a8ccd9dcc3408451146a577039f169eb62"},
+    {file = "reproject-0.14.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:45322f14edbf2782c482b6fb5cb1330724f9079046626851aafb33ff2addf361"},
+    {file = "reproject-0.14.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:5ad86136ec60b4baa085db3b04e0cc19338aa430de8b93cb317c30306a891bc6"},
+    {file = "reproject-0.14.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e592c95a5101737090ff3b2b44698a74e08ce210daac1ff9e94bfbb5fa9fbe87"},
+    {file = "reproject-0.14.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9492686f65828e110110fcb3ea948a026c66ff03a78356805eff10ed1397006a"},
+    {file = "reproject-0.14.0-cp312-cp312-win_amd64.whl", hash = "sha256:e6242275b5318dd087f0bb7d4e55ea49eb24e79b72f46e3b9ef62c0085c377fc"},
+    {file = "reproject-0.14.0.tar.gz", hash = "sha256:dd3c4f77608498a583944d670b61a75c150049efc33606674b5189a11a39bbc0"},
+]
+
+[package.dependencies]
+astropy = ">=5.0"
+astropy-healpix = ">=1.0"
+cloudpickle = "*"
+dask = {version = ">=2021.8", extras = ["array"]}
+fsspec = "*"
+numpy = ">=1.23"
+scipy = ">=1.9"
+zarr = "*"
+
+[package.extras]
+all = ["shapely"]
+docs = ["matplotlib", "pyvo", "sphinx-astropy"]
+test = ["pytest-astropy"]
+testall = ["asdf", "gwcs", "pyvo", "shapely (>=2.0.2)", "sunpy[map] (>=2.1)"]
+
+[[package]]
 name = "requests"
 version = "2.32.3"
 description = "Python HTTP for Humans."
@@ -4494,13 +4563,13 @@ reference = "skao"
 
 [[package]]
 name = "ska-sdp-func-python"
-version = "0.4.1"
+version = "0.5.1"
 description = "SKA SDP Python-Based Processing Functions"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "ska_sdp_func_python-0.4.1-py3-none-any.whl", hash = "sha256:ea9423b901060489676de403cbe8c15a16c326e453a59f4368fab6c0f1c81c99"},
-    {file = "ska_sdp_func_python-0.4.1.tar.gz", hash = "sha256:220bc8edc9d09619239f5ef444c80b3a4528bdc8f18d7cb9967534710f5e1028"},
+    {file = "ska_sdp_func_python-0.5.1-py3-none-any.whl", hash = "sha256:4e1470b23ed848f742acbb5505f9868213be0ebfdc4b798baab39c9ab82076c1"},
+    {file = "ska_sdp_func_python-0.5.1.tar.gz", hash = "sha256:263001a277fcf008f702afeddbecba35bc67e3b3dcdef281ecb444364b9b8c64"},
 ]
 
 [package.dependencies]
@@ -4509,8 +4578,9 @@ astropy = ">=6.1,<7.0"
 ducc0 = ">=0.34,<0.35"
 numpy = ">=1.26,<2.0"
 photutils = ">=1.12,<2.0"
+reproject = ">=0.14,<0.15"
 scipy = ">=1.14,<2.0"
-ska-sdp-datamodels = ">=0.3.1,<0.4.0"
+ska-sdp-datamodels = ">=0.3.3,<0.4.0"
 xarray = ">=2024.7,<2025.0"
 
 [package.extras]
@@ -5481,4 +5551,4 @@ radler = ["radler"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "62aec42e57ff1e2d0dd337343d009db83d1bb7a2ac1bfc5ff5f7d0077289ade9"
+content-hash = "256e911c6dd9a8f4c29ba6492dc5603698cf606a8869b4122e8d109848720f97"
