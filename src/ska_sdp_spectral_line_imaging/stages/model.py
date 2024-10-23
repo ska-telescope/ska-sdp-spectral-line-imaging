@@ -5,14 +5,11 @@ import os
 import astropy.io.fits as fits
 import numpy as np
 import xarray as xr
-from ska_sdp_datamodels.science_data_model.polarisation_functions import (
-    convert_pol_frame,
-)
-from ska_sdp_datamodels.science_data_model.polarisation_model import (
-    PolarisationFrame,
-)
 from ska_sdp_func_python.xradio.visibility.operations import (
     subtract_visibility,
+)
+from ska_sdp_func_python.xradio.visibility.polarization import (
+    convert_polarization,
 )
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
@@ -159,25 +156,15 @@ def read_model(
 @ConfigurableStage(
     "vis_stokes_conversion",
     configuration=Configuration(
-        input_polarisation_frame=ConfigParam(
-            str,
-            "linear",
-            description="Polarization frame of the input visibility. "
-            "Supported options are: 'circular','circularnp', "
-            "'linear', 'linearnp', 'stokesIQUV', 'stokesIV', "
-            "'stokesIQ', 'stokesI'.",
-        ),
-        output_polarisation_frame=ConfigParam(
-            str,
-            "stokesIQUV",
-            description="Polarization frame of the output visibilities. "
-            "Supported options are same as output_polarisation_frame",
+        output_polarizations=ConfigParam(
+            list,
+            ["I", "Q"],
+            description="List of desired polarization codes, in the order "
+            "they will appear in the output dataset polarization axis",
         ),
     ),
 )
-def vis_stokes_conversion(
-    upstream_output, input_polarisation_frame, output_polarisation_frame
-):
+def vis_stokes_conversion(upstream_output, output_polarizations):
     """
     Visibility to stokes conversion
 
@@ -185,46 +172,17 @@ def vis_stokes_conversion(
     ----------
         upstream_output: dict
             Output from the upstream stage
-        input_polarisation_frame: str
-            Input polarization frame
-        output_polarisation_frame: str
-            Output polarization frame
+        output_polarizations: list
+            List of desired polarization codes, in the order they will appear
+            in the output dataset polarization axis
 
     Returns
     -------
         dict
     """
-
-    # TODO: Replace this entire function with the one present
-    # in sdp-func-python as that is more accurate
-
     ps = upstream_output.ps
 
-    converted_vis = xr.apply_ufunc(
-        convert_pol_frame,
-        ps.VISIBILITY,
-        kwargs=dict(
-            ipf=PolarisationFrame(input_polarisation_frame),
-            opf=PolarisationFrame(output_polarisation_frame),
-            polaxis=3,
-        ),
-        keep_attrs=True,
-        dask="allowed",
-    )
-
-    converted_vis = converted_vis.assign_coords(
-        {
-            "polarization": np.array(
-                PolarisationFrame(output_polarisation_frame).names
-            )
-        }
-    )
-
-    converted_vis = converted_vis.assign_attrs(ps.VISIBILITY.attrs)
-
-    ps = ps.assign({"VISIBILITY": converted_vis})
-
-    upstream_output["ps"] = ps
+    upstream_output["ps"] = convert_polarization(ps, output_polarizations)
 
     return upstream_output
 

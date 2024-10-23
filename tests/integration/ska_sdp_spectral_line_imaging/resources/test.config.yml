@@ -20,7 +20,12 @@ parameters:
     image_type: continuum
   select_vis:
     obs_id: 0
-  vis_stokes_conversion: {}
+  vis_stokes_conversion:
+    output_polarizations:
+    - I
+    - Q
+    - U
+    - V
 pipeline:
   continuum_subtraction: true
   export_image: true
@@ -30,4 +35,4 @@ pipeline:
   predict_stage: true
   read_model: true
   select_vis: true
-  vis_stokes_conversion: false
+  vis_stokes_conversion: true

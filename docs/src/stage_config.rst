@@ -26,17 +26,12 @@ vis_stokes_conversion
     :width: 100%
     :widths: 25, 10, 20, 45
 
-    +---------------------------+--------+------------+-------------------------------------------------------------+
-    | Param                     | Type   | Default    | Description                                                 |
-    +===========================+========+============+=============================================================+
-    | input_polarisation_frame  | str    | linear     | Polarization frame of the input visibility. Supported       |
-    |                           |        |            | options are: 'circular','circularnp', 'linear', 'linearnp', |
-    |                           |        |            | 'stokesIQUV', 'stokesIV', 'stokesIQ', 'stokesI'.            |
-    +---------------------------+--------+------------+-------------------------------------------------------------+
-    | output_polarisation_frame | str    | stokesIQUV | Polarization frame of the output visibilities. Supported    |
-    |                           |        |            | options are same as output_polarisation_frame               |
-    +---------------------------+--------+------------+-------------------------------------------------------------+
-
+    +----------------------+--------+------------+---------------------------------------------------------------------------------+
+    | Param                | Type   | Default    | Description                                                                     |
+    +======================+========+============+=================================================================================+
+    | output_polarizations | list   | ['I', 'Q'] | List of desired polarization codes, in the order they will appear in the output |
+    |                      |        |            | dataset polarization axis                                                       |
+    +----------------------+--------+------------+---------------------------------------------------------------------------------+
 
 read_model
 **********

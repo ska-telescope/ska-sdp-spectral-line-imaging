@@ -6,6 +6,9 @@
 - The `read_model` and `imaging` stage parameters have changed. Please refer the "Stage Configs" section of the documentation.
 - The `cont_sub` stage reports the peak channel, and is controlled via the configuration parameter `report_peak_channel` of type boolean. 
 - Added auto-complete script for bash and zsh
+- Use `subtract_visibility` and `convert_polarization` from `ska-sdp-func-python`
+- Remove `input_polarisation_frame` from `vis_stokes_conversion` stage
+- Rename `output_polarisation_frame` to `output_polarizations`, this option will consume an array of string for converting polarization frames
 
 ## 0.5.0
 

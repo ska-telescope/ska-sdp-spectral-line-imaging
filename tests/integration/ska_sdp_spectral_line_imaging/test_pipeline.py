@@ -28,7 +28,7 @@ def prepare_test_data(tmp_path):
     # does everything else, including cleaning up.
 
     untar(f"{RESOURCE_DIR}/tMS.ps.tgz", tmp_path)
-    for stoke in ["XX", "YY", "XY", "YX"]:
+    for stoke in ["I", "Q", "U", "V"]:
         shutil.copy(f"{RESOURCE_DIR}/tMS-{stoke}-image.fits", tmp_path)
     shutil.copy(f"{RESOURCE_DIR}/test.config.yml", tmp_path)
     os.chdir(tmp_path)
