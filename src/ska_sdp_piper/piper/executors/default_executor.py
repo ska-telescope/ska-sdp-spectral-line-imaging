@@ -18,7 +18,7 @@ class DefaultExecutor:
 
         Parameters
         ----------
-          tasks: list[dask.delayed]
+          tasks: list[dask.delayed.Delayed]
             Dask delayed outputs from the scheduled tasks
 
         """

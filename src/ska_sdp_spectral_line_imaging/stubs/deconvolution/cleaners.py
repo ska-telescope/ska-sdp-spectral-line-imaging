@@ -14,11 +14,11 @@ def apply_cleaner_with_sensitivity_only(
 
     Parameters
     ----------
-        dirty: xr.DataArray
+        dirty: xarray.DataArray
            Image to be cleaned
-        psf: xr.DataArray
+        psf: xarray.DataArray
            PSF Image
-        sensitivity: xr.DataArray
+        sensitivity: xarray.DataArray
            Sensitivity data
         cleaner: func
            cleaner function to be applied
@@ -43,7 +43,7 @@ def clean_with(
     **kwargs,
 ):
     """
-    Helps to manage parameters for xr.apply_ufunc
+    Helps to manage parameters for xarray.apply_ufunc
 
     Parameters
     ----------
@@ -53,7 +53,7 @@ def clean_with(
            Image to be cleaned
         psf: Image
            PSF Image
-        window: xr.DataArray
+        window: xarray.DataArray
            Window image (Bool) - clean where True
         sensitivity: Image
            Sensitivity Image

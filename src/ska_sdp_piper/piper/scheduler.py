@@ -38,6 +38,6 @@ class PiperScheduler(ABC):
 
         Returns
         -------
-            list[dask.delayed]
+            list[dask.delayed.Delayed]
         """
         pass
