@@ -1,0 +1,14 @@
+.coverage*
+/.eggs/
+/**/build/
+coverage.xml
+/**/**/__pycache__/
+*.egg-info
+/htmlcov
+.history
+*.log
+/output/
+dist/
+/diagnosis/
+/docs/src/api/
+/MANIFEST.skao.int

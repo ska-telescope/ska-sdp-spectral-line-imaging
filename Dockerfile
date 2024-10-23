@@ -9,7 +9,11 @@ RUN pip install --no-cache-dir poetry==1.8.3 && \
 FROM python:3.10-slim
 
 RUN apt-get update -y && apt-get upgrade -y && \
-  pip install --no-cache-dir pip==23.3
+apt-get clean && \
+rm -rf /var/lib/apt/lists
+
+RUN pip install --no-cache-dir pip==23.3
+
 WORKDIR /install
 
 COPY --from=BUILD /build/dist/*.whl /build/requirements.txt ./

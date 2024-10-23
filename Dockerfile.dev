@@ -1,0 +1,35 @@
+FROM python:3.10-slim
+
+RUN apt-get update -y && apt-get upgrade -y && \
+apt-get clean && \
+rm -rf /var/lib/apt/lists
+
+# pip
+ENV PIP_NO_CACHE_DIR=1 \
+PIP_VERSION=23.3
+
+RUN python3 -m pip install pip==$PIP_VERSION
+
+# poetry
+ENV POETRY_VERSION=1.8.3 \
+POETRY_VIRTUALENVS_CREATE=false \
+POETRY_NO_INTERACTION=1
+
+RUN python3 -m pip install poetry==$POETRY_VERSION
+
+# app
+ENV APP_PATH="/app"
+
+WORKDIR $APP_PATH
+
+COPY pyproject.toml poetry.lock ./
+# Installing all dependencies and extras
+RUN poetry install --no-root --all-extras --no-cache && \
+rm -rf /root/.cache/
+
+# copying rest of the files respecting .dockerignore
+COPY . .
+RUN poetry install --only-root --all-extras --no-cache && \
+rm -rf /root/.cache/
+
+ENTRYPOINT ["spectral-line-imaging-pipeline"]
