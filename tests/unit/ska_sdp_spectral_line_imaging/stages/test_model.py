@@ -9,6 +9,27 @@ from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
+def test_should_perform_continuum_subtraction(subtract_visibility_mock):
+
+    observation = Mock(name="observation")
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = observation
+    observation.assign.return_value = "model"
+    subtracted_vis = Mock(name="subtracted_vis")
+    subtracted_vis.VISIBILITY.assign_attrs.return_value = "sub_vis_with_attrs"
+    subtract_visibility_mock.return_value = subtracted_vis
+
+    cont_sub.stage_definition(upstream_output, False)
+    observation.assign.assert_called_once_with(
+        {"VISIBILITY": observation.VISIBILITY_MODEL}
+    )
+    subtract_visibility_mock.assert_called_once_with(observation, "model")
+    subtracted_vis.assign.assert_called_once_with(
+        {"VISIBILITY": "sub_vis_with_attrs"}
+    )
+
+
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.np")
 def test_should_not_report_peak_channel_value(
     numpy_mock, subtract_visibility_mock
@@ -33,6 +54,7 @@ def test_should_report_peak_channel_value(
     observation = Mock(name="observation")
     observation.frequency = Mock(name="frequency")
     observation.frequency.units = ["Hz"]
+    observation.assign.return_value = observation
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = observation
     subtract_visibility_mock.return_value = observation

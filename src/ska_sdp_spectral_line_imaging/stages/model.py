@@ -11,11 +11,13 @@ from ska_sdp_datamodels.science_data_model.polarisation_functions import (
 from ska_sdp_datamodels.science_data_model.polarisation_model import (
     PolarisationFrame,
 )
+from ska_sdp_func_python.xradio.visibility.operations import (
+    subtract_visibility,
+)
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
-from ..stubs.model import subtract_visibility
 from ..upstream_output import UpstreamOutput
 
 logger = logging.getLogger()
@@ -257,6 +259,14 @@ def cont_sub(upstream_output, report_peak_channel):
 
     model = ps.assign({"VISIBILITY": ps.VISIBILITY_MODEL})
     cont_sub_ps = subtract_visibility(ps, model)
+    # TODO: This has to be in ska-sdp-func-python's function
+    cont_sub_ps = cont_sub_ps.assign(
+        {
+            "VISIBILITY": cont_sub_ps.VISIBILITY.assign_attrs(
+                ps.VISIBILITY.attrs
+            )
+        }
+    )
     upstream_output["ps"] = cont_sub_ps
 
     if report_peak_channel:

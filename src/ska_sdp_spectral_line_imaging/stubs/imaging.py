@@ -9,9 +9,11 @@ import numpy as np
 import xarray as xr
 from ska_sdp_datamodels.image import Image, import_image_from_fits
 from ska_sdp_func_python.image.deconvolution import fit_psf
+from ska_sdp_func_python.xradio.visibility.operations import (
+    subtract_visibility,
+)
 
 from .deconvolution import deconvolve, restore_cube
-from .model import subtract_visibility
 from .predict import predict_for_channels
 
 
@@ -357,6 +359,7 @@ def clean_cube(
 
         model_ps = residual_ps.assign({"VISIBILITY": model_visibility})
 
+        # TODO: Attrs are skipped in v0.5.1 ska-sdp-func-python
         residual_ps = subtract_visibility(ps, model_ps)
 
         dirty_image = cube_imaging(
