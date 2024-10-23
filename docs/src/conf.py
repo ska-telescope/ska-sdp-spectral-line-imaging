@@ -76,7 +76,8 @@ autodoc_mock_imports = [
     "astropy",
     "matplotlib",
     "pandas",
-    "radler"
+    "radler",
+    "distributed"
 ]
 
 

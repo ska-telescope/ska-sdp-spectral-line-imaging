@@ -1,5 +1,8 @@
 import logging
 
+import dask
+import dask.distributed
+from distributed.diagnostics.plugin import WorkerPlugin
 from ska_ser_logging import configure_logging
 
 from .io_utils import timestamp
@@ -19,6 +22,7 @@ class LogUtil:
                 Set log verbosity to DEBUG
 
         """
+
         level = logging.INFO
         if verbose:
             level = logging.DEBUG
@@ -60,3 +64,30 @@ class LogUtil:
                 "handlers": ["console", "file"],
             },
         }
+
+
+class LogPlugin(WorkerPlugin):
+    def __init__(self, log_config, name, output_dir=None, verbose=False):
+        self.log_config = log_config
+        self.name = name
+        self.output_dir = output_dir
+        self.verbose = verbose
+
+    def setup(self, worker):
+        LogUtil.configure(self.name, self.output_dir, self.verbose)
+
+
+class Logger:
+    def __init__(self):
+        self.logger = logging.getLogger()
+
+    @dask.delayed
+    def delayed_log(self, formated_log_msg, _level_="info", **kwargs):
+        outputs = kwargs.copy()
+        for key, value in kwargs.items():
+            if isinstance(value, list):
+                outputs[key] = value[1](value[0])
+        getattr(self.logger, _level_)(formated_log_msg.format(**outputs))
+
+    def log(self, formated_log_msg, _level_="info", **kwargs):
+        getattr(self.logger, _level_)(formated_log_msg.format(**kwargs))

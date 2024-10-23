@@ -7,10 +7,11 @@ from .io_utils import (
     write_dataset,
     write_yml,
 )
-from .log_util import LogUtil
+from .log_util import Logger, LogUtil
 
 __all__ = [
     "create_output_dir",
+    "Logger",
     "timestamp",
     "LogUtil",
     "read_dataset",

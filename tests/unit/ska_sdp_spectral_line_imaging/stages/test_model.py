@@ -61,7 +61,6 @@ def test_should_report_peak_channel_value(
     numpy_mock.abs = Mock(name="abs", return_value=numpy_mock)
     numpy_mock.max = Mock(name="max", return_value=numpy_mock)
     numpy_mock.idxmax = Mock(name="idxmax", return_value=numpy_mock)
-    numpy_mock.values = "VALUES"
 
     cont_sub.stage_definition(upstream_output, True)
 
@@ -70,8 +69,11 @@ def test_should_report_peak_channel_value(
         dim=["time", "baseline_id", "polarization"]
     )
     numpy_mock.idxmax.assert_called_once()
-    logger_mock.info.assert_called_once_with(
-        "Peak visibility Channel: VALUES Hz"
+    logger_mock.delayed_log.assert_called_once_with(
+        "Peak visibility Channel: {peak_channel} {unit}",
+        "info",
+        peak_channel=[numpy_mock, float],
+        unit="Hz",
     )
 
 

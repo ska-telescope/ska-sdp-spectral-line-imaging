@@ -1,5 +1,6 @@
 from dask.distributed import Client, performance_report
 
+from ..utils.log_util import LogPlugin
 from .default_executor import DefaultExecutor
 
 
@@ -32,6 +33,10 @@ class DistributedExecutor(DefaultExecutor):
         """
         super().__init__()
         self.client = Client(dask_scheduler)
+
+        log_configure_plugin = LogPlugin("", output_dir)
+        self.client.register_worker_plugin(log_configure_plugin)
+
         self.client.forward_logging()
 
         self.report_file = f"{output_dir}/dask_report.html"

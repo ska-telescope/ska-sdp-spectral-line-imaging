@@ -9,6 +9,7 @@
 - Use `subtract_visibility` and `convert_polarization` from `ska-sdp-func-python`
 - Remove `input_polarisation_frame` from `vis_stokes_conversion` stage
 - Rename `output_polarisation_frame` to `output_polarizations`, this option will consume an array of string for converting polarization frames
+- Add dask worker plugin to configure logger. Introduce delayed logger
 
 ## 0.5.0
 

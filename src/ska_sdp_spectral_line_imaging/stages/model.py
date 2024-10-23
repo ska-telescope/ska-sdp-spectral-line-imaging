@@ -1,5 +1,4 @@
 # pylint: disable=no-member,import-error
-import logging
 import os
 
 import astropy.io.fits as fits
@@ -14,10 +13,11 @@ from ska_sdp_func_python.xradio.visibility.polarization import (
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
+from ska_sdp_piper.piper.utils import Logger
 
 from ..upstream_output import UpstreamOutput
 
-logger = logging.getLogger()
+logger = Logger()
 
 
 @ConfigurableStage(
@@ -228,21 +228,21 @@ def cont_sub(upstream_output, report_peak_channel):
     upstream_output["ps"] = cont_sub_ps
 
     if report_peak_channel:
-        # TODO: REMOVE .values once log is dask compatible.
         peak_channel = (
             np.abs(cont_sub_ps.VISIBILITY)
             .max(dim=["time", "baseline_id", "polarization"])
             .idxmax()
-            .values
         )
 
         unit = cont_sub_ps.frequency.units[0]
 
-        logger.warning(
-            "Eager computation for peak done. This may slow down the"
-            " further computations due to excesive memory usage."
+        upstream_output.add_compute_tasks(
+            logger.delayed_log(
+                "Peak visibility Channel: {peak_channel} {unit}",
+                "info",
+                peak_channel=[peak_channel, float],
+                unit=unit,
+            )
         )
-
-        logger.info(f"Peak visibility Channel: {peak_channel} {unit}")
 
     return upstream_output
