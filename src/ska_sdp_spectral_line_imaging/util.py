@@ -10,7 +10,7 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
 )
 
 
-def export_image_as(image, output_path, export_format="fits"):
+def export_data_as(image, output_path, export_format="fits"):
     """
     Export image in the desired export_format
 

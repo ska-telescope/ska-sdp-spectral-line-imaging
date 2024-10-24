@@ -3,7 +3,7 @@ import os
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
-from ..util import export_image_as
+from ..util import export_data_as
 
 
 @ConfigurableStage(
@@ -100,7 +100,7 @@ def export_image(upstream_output, _global_parameters_, _output_dir_):
     output_path = os.path.join(_output_dir_, _global_parameters_["image_name"])
     export_format = _global_parameters_["export_format"]
 
-    export_task = export_image_as(cube, output_path, export_format)
+    export_task = export_data_as(cube, output_path, export_format)
     upstream_output.add_compute_tasks(export_task)
 
     return upstream_output

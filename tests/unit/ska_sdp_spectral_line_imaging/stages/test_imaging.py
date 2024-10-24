@@ -1,4 +1,5 @@
 # pylint: disable=no-member
+import pytest
 from mock import mock
 from mock.mock import Mock, call
 
@@ -137,6 +138,19 @@ def test_should_do_imaging_for_clean_image(
     assert upstream_output.image_cube == "restored image"
 
 
+@pytest.mark.parametrize(
+    "exports,products,tasks",
+    [
+        (
+            [True, True, True],
+            ["model", "psf", "residual"],
+            ["task_1", "task_2", "task_3"],
+        ),
+        ([False, True, True], ["model", "residual"], ["task_1", "task_2"]),
+        ([True, False, True], ["psf", "residual"], ["task_1", "task_2"]),
+        ([True, True, False], ["model", "psf"], ["task_1", "task_2"]),
+    ],
+)
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
     return_value="polarization_frame",
@@ -144,15 +158,18 @@ def test_should_do_imaging_for_clean_image(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_image_as")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_data_as")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
 def test_should_export_clean_artefacts(
     clean_cube_mock,
     cube_imaging_mock,
-    export_image_as_mock,
+    export_data_as_mock,
     get_wcs_mock,
     get_pol_mock,
+    exports,
+    products,
+    tasks,
 ):
     cube_imaging_mock.return_value = "dirty image"
     clean_cube_mock.return_value = (
@@ -164,10 +181,10 @@ def test_should_export_clean_artefacts(
         },
     )
 
-    export_image_as_mock.side_effect = [
-        "model_task",
-        "psf_task",
-        "residual_task",
+    export_data_as_mock.side_effect = [
+        "task_1",
+        "task_2",
+        "task_3",
     ]
 
     ps = Mock(name="ps")
@@ -192,28 +209,21 @@ def test_should_export_clean_artefacts(
         15,
         "psf_path",
         {"beam_info": "beam_info"},
-        True,
-        True,
-        True,
+        *exports,
         "output_dir",
         {"image_name": "image_name", "export_format": "fits"},
     )
 
-    export_image_as_mock.assert_has_calls(
-        [
-            call("model_image", "output_dir/image_name.model", "fits"),
-            call("psf_image", "output_dir/image_name.psf", "fits"),
-            call("residual_image", "output_dir/image_name.residual", "fits"),
-        ]
-    )
+    calls = [
+        call(f"{product}_image", f"output_dir/image_name.{product}", "fits")
+        for product in products
+    ]
+
+    export_data_as_mock.assert_has_calls(calls)
 
     assert upstream_output.ps == ps
     assert upstream_output.image_cube == "restored image"
-    assert upstream_output.compute_tasks == [
-        "model_task",
-        "psf_task",
-        "residual_task",
-    ]
+    assert upstream_output.compute_tasks == tasks
 
 
 @mock.patch(

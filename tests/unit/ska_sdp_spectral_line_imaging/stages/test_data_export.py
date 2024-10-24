@@ -49,12 +49,12 @@ def test_should_export_model():
     assert upstream_output.compute_tasks == ["export_task"]
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.export_image_as")
-def test_should_export_fits(mock_export_image_as):
+@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.export_data_as")
+def test_should_export_fits(mock_export_data_as):
     cube = Mock(name="cube_data")
     upstream_output = UpstreamOutput()
     upstream_output["image_cube"] = cube
-    mock_export_image_as.return_value = "fits_export"
+    mock_export_data_as.return_value = "fits_export"
 
     export_image.stage_definition(
         upstream_output,
@@ -62,20 +62,20 @@ def test_should_export_fits(mock_export_image_as):
         "output_dir",
     )
 
-    mock_export_image_as.assert_called_once_with(
+    mock_export_data_as.assert_called_once_with(
         cube, "output_dir/image_name", "fits"
     )
 
     assert len(upstream_output.compute_tasks) == 1
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.export_image_as")
-def test_should_export_zarr(mock_export_image_as):
+@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.export_data_as")
+def test_should_export_zarr(mock_export_data_as):
 
     cube = Mock(name="cube_data")
     upstream_output = UpstreamOutput()
     upstream_output["image_cube"] = cube
-    mock_export_image_as.return_value = "export_zarr"
+    mock_export_data_as.return_value = "export_zarr"
 
     export_image.stage_definition(
         upstream_output,
@@ -83,7 +83,7 @@ def test_should_export_zarr(mock_export_image_as):
         "output_dir",
     )
 
-    mock_export_image_as.assert_called_once_with(
+    mock_export_data_as.assert_called_once_with(
         cube, "output_dir/image_name", "zarr"
     )
 
