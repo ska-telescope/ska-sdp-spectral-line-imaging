@@ -3,7 +3,6 @@ from mock import MagicMock, Mock, mock
 
 from ska_sdp_piper.piper.utils.io_utils import (
     create_output_dir,
-    read_dataset,
     read_yml,
     timestamp,
     write_yml,
@@ -50,18 +49,6 @@ def test_should_create_only_timestamped_folder(
     makedirs_mock.assert_called_once_with("./output/pipeline_name_timestamp")
 
     assert outfile == "./output/pipeline_name_timestamp"
-
-
-@mock.patch(
-    "ska_sdp_piper.piper.utils.io_utils.read_processing_set",
-    return_value="PROCESSING_SET",
-)
-def test_should_read_given_dataset(read_processing_set_mock):
-    infile = "./path/to/infile"
-    ps = read_dataset(infile)
-    read_processing_set_mock.assert_called_once_with(ps_store=infile)
-
-    assert ps == "PROCESSING_SET"
 
 
 @mock.patch("ska_sdp_piper.piper.utils.io_utils.yaml")

@@ -20,11 +20,7 @@ def default_scheduler():
 
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".select_field"
-)
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".read_dataset"
+    ".load_data"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
@@ -36,8 +32,7 @@ def default_scheduler():
 def test_should_initialise_diagnoser(
     read_yml_mock,
     xarray_open_mock,
-    read_dataset_mock,
-    select_field,
+    load_data_mock,
     default_scheduler,
 ):
     output_path = Mock(name="output", spec=Path)
@@ -51,10 +46,9 @@ def test_should_initialise_diagnoser(
     input_ps = Mock(name="input_ps")
     input_ps.VISIBILITY = "INPUT_VISIBILITY"
 
-    select_field.stage_definition.return_value = {
+    load_data_mock.stage_definition.return_value = {
         "ps": "SELECTED_INPUT_DATASET"
     }
-    read_dataset_mock.return_value = "PROCESSING_SET"
 
     xarray_open_mock.side_effect = [
         {"VISIBILITY_MODEL": "model_data"},
@@ -71,7 +65,7 @@ def test_should_initialise_diagnoser(
                 "psout_name": "ps_out_model",
                 "export_model": True,
             },
-            "select_vis": {"arguments": "arguments"},
+            "load_data": {"arguments": "arguments"},
         },
     }
     cli = {"input": "INPUT_DATA"}
@@ -90,11 +84,10 @@ def test_should_initialise_diagnoser(
         [mock.call("cli.yml"), mock.call("conf.yml")]
     )
 
-    read_dataset_mock.assert_called_once_with("INPUT_DATA")
-    select_field.stage_definition.assert_called_once_with(
+    load_data_mock.stage_definition.assert_called_once_with(
         default_scheduler._stage_outputs,
         arguments="arguments",
-        _input_data_="PROCESSING_SET",
+        _cli_args_={"input": "INPUT_DATA"},
     )
 
     xarray_open_mock.assert_has_calls(
@@ -107,11 +100,7 @@ def test_should_initialise_diagnoser(
 
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".select_field"
-)
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".read_dataset"
+    ".load_data"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
@@ -123,8 +112,7 @@ def test_should_initialise_diagnoser(
 def test_should_initialise_diagnoser_without_model_residual(
     read_yml_mock,
     xarray_open_mock,
-    read_dataset_mock,
-    select_field,
+    load_data_mock,
     default_scheduler,
 ):
     output_path = Mock(name="output", spec=Path)
@@ -138,10 +126,9 @@ def test_should_initialise_diagnoser_without_model_residual(
     input_ps = Mock(name="input_ps")
     input_ps.VISIBILITY = "INPUT_VISIBILITY"
 
-    select_field.stage_definition.return_value = {
+    load_data_mock.stage_definition.return_value = {
         "ps": "SELECTED_INPUT_DATASET"
     }
-    read_dataset_mock.return_value = "PROCESSING_SET"
 
     config = {
         "pipeline": {"continuum_subtraction": False, "predict_stage": False},
@@ -154,7 +141,7 @@ def test_should_initialise_diagnoser_without_model_residual(
                 "psout_name": "ps_out_model",
                 "export_model": True,
             },
-            "select_vis": {"arguments": "arguments"},
+            "load_data": {"arguments": "arguments"},
         },
     }
     cli = {"input": "INPUT_DATA"}
@@ -174,11 +161,10 @@ def test_should_initialise_diagnoser_without_model_residual(
         [mock.call("cli.yml"), mock.call("conf.yml")]
     )
 
-    read_dataset_mock.assert_called_once_with("INPUT_DATA")
-    select_field.stage_definition.assert_called_once_with(
+    load_data_mock.stage_definition.assert_called_once_with(
         default_scheduler._stage_outputs,
         arguments="arguments",
-        _input_data_="PROCESSING_SET",
+        _cli_args_={"input": "INPUT_DATA"},
     )
 
 
@@ -242,19 +228,14 @@ def test_data():
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".select_field"
-)
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".read_dataset"
+    ".load_data"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser.read_yml"
 )
 def test_should_plot_residual_and_model(
     read_yml_mock,
-    read_dataset_mock,
-    select_field,
+    load_data_mock,
     create_plot_mock,
     amp_vs_channel_plot_mock,
     abs_mock,
@@ -278,7 +259,6 @@ def test_should_plot_residual_and_model(
     input_ps, residual, model = test_data
 
     default_scheduler._stage_outputs.ps = input_ps
-    read_dataset_mock.return_value = input_ps
 
     zarr_mock.side_effect = [
         {"VISIBILITY_MODEL": model},
@@ -296,7 +276,7 @@ def test_should_plot_residual_and_model(
                 "psout_name": "ps_out_model",
                 "export_model": True,
             },
-            "select_vis": {"arguments": "arguments"},
+            "load_data": {"arguments": "arguments"},
             "read_model": {"pols": ["I", "Q", "U", "V"]},
         },
     }
@@ -395,19 +375,14 @@ def test_should_plot_residual_and_model(
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".select_field"
-)
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".read_dataset"
+    ".load_data"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser.read_yml"
 )
 def test_should_not_plot_residual_and_model_if_not_exported(
     read_yml_mock,
-    read_dataset_mock,
-    select_field,
+    load_data_mock,
     create_plot_mock,
     amp_vs_channel_plot_mock,
     abs_mock,
@@ -429,8 +404,7 @@ def test_should_not_plot_residual_and_model_if_not_exported(
 
     input_ps, residual, _ = test_data
 
-    select_field.stage_definition.return_value = {"ps": input_ps}
-    read_dataset_mock.return_value = input_ps
+    load_data_mock.stage_definition.return_value = {"ps": input_ps}
 
     zarr_mock.return_value = residual
 
@@ -445,7 +419,7 @@ def test_should_not_plot_residual_and_model_if_not_exported(
                 "psout_name": "ps_out_model",
                 "export_model": True,
             },
-            "select_vis": {"arguments": "arguments"},
+            "load_data": {"arguments": "arguments"},
             "read_model": {"pols": ["I", "Q", "U", "V"]},
         },
     }
@@ -487,19 +461,14 @@ def test_should_not_plot_residual_and_model_if_not_exported(
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".select_field"
-)
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser"
-    ".read_dataset"
+    ".load_data"
 )
 @mock.patch(
     "ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser.read_yml"
 )
 def test_should_export_residual_csv(
     read_yml_mock,
-    read_dataset_mock,
-    select_field,
+    load_data_mock,
     create_plot_mock,
     amp_vs_channel_plot_mock,
     abs_mock,
@@ -522,8 +491,7 @@ def test_should_export_residual_csv(
 
     input_ps, residual, _ = test_data
 
-    select_field.stage_definition.return_value = {"ps": input_ps}
-    read_dataset_mock.return_value = input_ps
+    load_data_mock.stage_definition.return_value = {"ps": input_ps}
 
     xarray_open_mock.return_value = residual
 
@@ -538,7 +506,7 @@ def test_should_export_residual_csv(
                 "psout_name": "ps_out_model",
                 "export_model": False,
             },
-            "select_vis": {"arguments": "arguments"},
+            "load_data": {"arguments": "arguments"},
             "read_model": {"pols": ["I", "Q", "U", "V"]},
         },
     }

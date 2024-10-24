@@ -19,7 +19,7 @@ parameters:
   read_model:
     image: ./tMS-%s-image.fits
     image_type: continuum
-  select_vis:
+  load_data:
     obs_id: 0
   vis_stokes_conversion:
     output_polarizations:
@@ -32,5 +32,5 @@ pipeline:
   imaging: true
   predict_stage: true
   read_model: true
-  select_vis: true
+  load_data: true
   vis_stokes_conversion: true

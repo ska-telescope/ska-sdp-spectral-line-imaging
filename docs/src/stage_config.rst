@@ -4,7 +4,7 @@ Stage Configs
 .. This file is referenced by "imaging" stage docstring by a relative reference
 .. to the generated html page.
 
-select_vis
+load_data
 **********
 
 ..  table::

@@ -78,21 +78,6 @@ def executor_factory(default_executor):
 
 
 @pytest.fixture(scope="function", autouse=True)
-def read_mock():
-    with mock.patch(
-        "ska_sdp_piper.piper.pipeline.read_dataset",
-        return_value="dataset",
-    ) as read:
-        yield read
-
-
-@pytest.fixture(scope="function", autouse=True)
-def write_mock():
-    with mock.patch("ska_sdp_piper.piper.pipeline.write_dataset") as write:
-        yield write
-
-
-@pytest.fixture(scope="function", autouse=True)
 def write_yml_mock():
     with mock.patch(
         "ska_sdp_piper.piper.pipeline.ConfigManager.write_yml"
@@ -210,7 +195,6 @@ def test_should_run_the_pipeline_from_cli_command(
         "./output/timestamp/test_pipeline_FORMATTED_TIME.cli.yml"
     )
     pipeline_run_mock.assert_called_once_with(
-        "infile_path",
         stages=["a", "b"],
         config_path="config_path",
         verbose=False,
@@ -248,7 +232,6 @@ def test_should_run_the_pipeline_from_cli_command_with_default_output(
         "./output/timestamp/test_pipeline_FORMATTED_TIME.cli.yml"
     )
     pipeline_run_mock.assert_called_once_with(
-        args.input,
         stages=[],
         config_path=args.config_path,
         verbose=True,
@@ -259,23 +242,9 @@ def test_should_run_the_pipeline_from_cli_command_with_default_output(
 
 @mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 @mock.patch("ska_sdp_piper.piper.pipeline.Configuration")
-def xtest_should_initialise_default_scheduler(
-    configuration_mock,
-    config_manager_mock,
-    default_scheduler,
-    stages,
-):
-    Pipeline("test_pipeline", stages=stages, scheduler=default_scheduler)
-    default_scheduler.assert_called_once()
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-@mock.patch("ska_sdp_piper.piper.pipeline.Configuration")
 def test_should_run_the_pipeline(
     configuration_mock,
     config_manager_mock,
-    read_mock,
-    write_mock,
     create_output_mock,
     executor_factory,
     default_scheduler,
@@ -299,7 +268,6 @@ def test_should_run_the_pipeline(
     )
 
     pipeline.run(
-        "infile_path",
         "output_dir",
         [],
         cli_args={"input": "path", "dask_scheduler": "10.191"},
@@ -310,7 +278,6 @@ def test_should_run_the_pipeline(
         parameters={},
         global_parameters={"a": 10},
     )
-    read_mock.assert_called_once_with("infile_path")
     executor_factory.get_executor.assert_called_once_with(
         "output_dir",
         name="test_pipeline",
@@ -321,12 +288,9 @@ def test_should_run_the_pipeline(
 
     default_executor.execute.assert_called_once_with(default_scheduler.tasks)
 
-    write_mock.assert_called_once_with("output", "output_dir")
-
     stages.update_pipeline_parameters.assert_called_once_with(
         config_manager_mock.stages_to_run,
         config_manager_mock.parameters,
-        _input_data_="dataset",
         _output_dir_="output_dir",
         _cli_args_={"input": "path", "dask_scheduler": "10.191"},
         _global_parameters_={"a": 10},
@@ -339,7 +303,7 @@ def test_should_run_the_pipeline_with_verbose(
     pipeline = Pipeline(
         "test_pipeline", stages=stages, scheduler=default_scheduler
     )
-    pipeline.run("infile_path", "output_dir", [], verbose=True)
+    pipeline.run("output_dir", [], verbose=True)
 
     log_util.configure.assert_has_calls(
         [
@@ -350,7 +314,7 @@ def test_should_run_the_pipeline_with_verbose(
 
 @mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_run_the_pipeline_with_selected_stages(
-    config_manager_mock, default_scheduler, read_mock, mock_stages
+    config_manager_mock, default_scheduler, mock_stages
 ):
     stage1, _, stage3 = mock_stages
     config_manager_mock.return_value = config_manager_mock
@@ -360,7 +324,7 @@ def test_should_run_the_pipeline_with_selected_stages(
     pipeline = Pipeline(
         "test_pipeline", stages=stages, scheduler=default_scheduler
     )
-    pipeline.run("infile_path", "output_dir", stages=["stage1", "stage3"])
+    pipeline.run("output_dir", stages=["stage1", "stage3"])
 
     config_manager_mock.assert_called_once_with(
         pipeline={"stage1": True, "stage2": True, "stage3": True},
@@ -372,7 +336,6 @@ def test_should_run_the_pipeline_with_selected_stages(
         {"stage1": True, "stage2": False, "stage3": True}
     )
 
-    read_mock.assert_called_once_with("infile_path")
     default_scheduler.schedule.assert_called_once_with([stage1, stage3])
 
 
@@ -387,7 +350,6 @@ def test_should_instantiate_dask_client(executor_factory, default_scheduler):
     )
     dask_scheduler_address = "some_ip"
     pipeline.run(
-        "infile_path",
         "output_dir",
         cli_args={"dask_scheduler": dask_scheduler_address},
     )
@@ -411,9 +373,7 @@ def test_should_run_the_pipeline_with_selected_stages_from_config(
         "test_pipeline", stages=stages, scheduler=default_scheduler
     )
 
-    pipeline.run(
-        "infile_path", "/path/to/output", config_path="/path/to/config"
-    )
+    pipeline.run("/path/to/output", config_path="/path/to/config")
 
     config_manager_mock.update_config.assert_called_once_with(
         "/path/to/config"
@@ -436,7 +396,6 @@ def test_should_run_the_pipeline_with_stages_from_cli_over_config(
     )
 
     pipeline.run(
-        "infile_path",
         "output_dir",
         ["stage1", "stage2"],
         config_path="/path/to/config",
@@ -468,7 +427,7 @@ def test_should_not_update_config_if_config_path_is_not_provided(
         "test_pipeline", stages=stages, scheduler=default_scheduler
     )
 
-    pipeline.run("infile_path", "output_dir")
+    pipeline.run("output_dir")
 
     assert config_manager_mock.update_config.call_count == 0
 
@@ -557,7 +516,7 @@ def test_should_write_config_to_output_yaml_file(
         "test", stages=Stages([stage1]), scheduler=default_scheduler
     )
 
-    pipeline.run("infile", "output_dir")
+    pipeline.run("output_dir")
 
     config_manager_mock.write_yml.assert_called_once_with(
         "output_dir/test_FORMATTED_TIME.config.yml"
@@ -581,7 +540,7 @@ def test_should_write_config_to_output_yaml_on_failure(
     )
 
     with pytest.raises(Exception):
-        pipeline.run("infile", "output_dir")
+        pipeline.run("output_dir")
 
     config_manager_mock.write_yml.assert_called_once_with(
         "output_dir/test_FORMATTED_TIME.config.yml"

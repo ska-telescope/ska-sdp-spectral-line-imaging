@@ -9,13 +9,7 @@ from .configurations.config_manager import ConfigManager
 from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
 from .executors import ExecutorFactory
 from .named_instance import NamedInstance
-from .utils import (
-    LogUtil,
-    create_output_dir,
-    read_dataset,
-    timestamp,
-    write_dataset,
-)
+from .utils import LogUtil, create_output_dir, timestamp
 
 
 class Pipeline(Command, metaclass=NamedInstance):
@@ -159,7 +153,6 @@ class Pipeline(Command, metaclass=NamedInstance):
         self._cli_command_parser.write_yml(cli_output_file)
 
         self.run(
-            cli_args.input,
             stages=stages,
             config_path=cli_args.config_path,
             verbose=(cli_args.verbose != 0),
@@ -192,7 +185,6 @@ class Pipeline(Command, metaclass=NamedInstance):
 
     def run(
         self,
-        infile_path,
         output_dir,
         stages=None,
         config_path=None,
@@ -204,8 +196,6 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         Parameters
         ----------
-          infile_path : str
-             Path to input file
           output_dir: str
              Path to output directory
           stages: list[str]
@@ -224,12 +214,11 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self.logger.info("=============== START =====================")
         self.logger.info(f"Executing {self.name} pipeline with metadata:")
-        self.logger.info(f"Infile Path: {infile_path}")
+        self.logger.info(f"Infile Path: {cli_args.get('input')}")
         self.logger.info(f"Stages: {stages}")
         self.logger.info(f"Configuration Path: {config_path}")
         self.logger.info(f"Current run output path : {output_dir}")
 
-        vis = read_dataset(infile_path)
         executor = ExecutorFactory.get_executor(
             output_dir, name=self.name, **cli_args
         )
@@ -246,7 +235,6 @@ class Pipeline(Command, metaclass=NamedInstance):
         self._stages.update_pipeline_parameters(
             self.config_manager.stages_to_run,
             self.config_manager.parameters,
-            _input_data_=vis,
             _output_dir_=output_dir,
             _cli_args_=cli_args,
             _global_parameters_=self.config_manager.global_parameters,
@@ -268,8 +256,6 @@ class Pipeline(Command, metaclass=NamedInstance):
         self.config_manager.write_yml(config_output_file)
 
         self.scheduler.schedule(executable_stages)
-        output_pipeline_data = executor.execute(self.scheduler.tasks)
-
-        write_dataset(output_pipeline_data, output_dir)
+        executor.execute(self.scheduler.tasks)
 
         self.logger.info("=============== FINISH =====================")

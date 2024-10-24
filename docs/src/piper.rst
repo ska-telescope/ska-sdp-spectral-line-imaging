@@ -55,7 +55,7 @@ Process Visibility Pipeline
 
 This is an example to demonstarate how to define a pipeline which performs some operations on visibility data present in a processing set. The pipeline consists of three stages
 
-- :py:func:`select_field`: Select the appropriate field from the processing set
+- :py:func:`load_data`: Load and select the appropriate field from the processing set
 - :py:func:`process_vis`: Multiplies visibility with a multiplier
 - :py:func:`export_vis`: Stores the processed visibilities into a zarr file
 
@@ -81,18 +81,19 @@ The framework provides the following metadata arguments
 * :py:attr:`_input_data_` : the input processing set
 * :py:attr:`_output_dir_`: the output path for the pipeline which can be used for writing out data from within the stages
   
-:py:func:`select_field` stage
+:py:func:`load_data` stage
   Configurable parameters
     * obs_id (int): default - 0
 
 >>> @ConfigurableStage(
-...     "select_field",
+...     "load_data",
 ...     configuration=Configuration(
 ...         obs_id=ConfigParam(int, 0),
 ...     ),
 ... )
-... def select_field_from_ps(upstream_output, obs_id, _input_data_):
-...     ps = _input_data_
+... def load_data_from_ps(upstream_output, obs_id, _cli_args_):
+...     input_path = _cli_args_["input"]
+...     ps = read_processing_set(ps_store=input_path)
 ...     sel = ps.summary().name[obs_id]
 ...     return {"ps": ps[sel].unify_chunks()}
 
@@ -154,7 +155,7 @@ executes the stages in the order as provided.
 >>> Pipeline(
 ...     "process-vis-pipeline",
 ...     stages=Stages([
-...         select_field_from_ps,
+...         load_data_from_ps,
 ...         process_vis,
 ...         export_processed_vis
 ...     ]),
@@ -192,7 +193,7 @@ The CLI argument and global parameters have to be registered with the pipeline a
 >>> pipeline = Pipeline(
 ...     "process-vis-pipeline",
 ...     stages=Stages([
-...         select_field_from_ps,
+...         load_data_from_ps,
 ...         process_vis,
 ...         export_processed_vis
 ...     ]),
@@ -256,7 +257,8 @@ Entire Pipeline Definition
 ... import os
 ... import shutil
 ... import xarray as xr
-... 
+... from xradio.vis.read_processing_set import read_processing_set
+...
 ... from ska_sdp_piper.piper.command import CLIArgument
 ... from ska_sdp_piper.piper.configurations import (
 ...     ConfigParam,
@@ -283,13 +285,14 @@ Entire Pipeline Definition
 ...
 ...
 ... @ConfigurableStage(
-...     "select_field",
+...     "load_data",
 ...     configuration=Configuration(
 ...         obs_id=ConfigParam(int, 0),
 ...     ),
 ... )
-... def select_field_from_ps(upstream_output, obs_id, _input_data_):
-...     ps = _input_data_
+... def load_data_from_ps(upstream_output, obs_id, _cli_args_):
+...     input_path = _cli_args_["input"]
+...     ps = read_processing_set(ps_store=input_path)
 ...     sel = ps.summary().name[obs_id]
 ...     return {"ps": ps[sel].unify_chunks()}
 ...
@@ -320,7 +323,7 @@ Entire Pipeline Definition
 ... pipeline = Pipeline(
 ...     "process-vis-pipeline",
 ...     stages=Stages([
-...         select_field_from_ps,
+...         load_data_from_ps,
 ...         process_vis,
 ...         export_processed_vis
 ...     ]),
@@ -410,13 +413,13 @@ process.
     export_vis: {}
     process_vis:
       multiplier: 1.0
-    select_field:
+    load_data:
       ddi: 0
       field_id: 0
   pipeline:
     export_vis: true
     process_vis: true
-    select_field: true
+    load_data: true
 
 The generated configuration consists of three sections
 

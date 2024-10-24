@@ -28,9 +28,9 @@ from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
 from .diagnosis.spectral_line_diagnoser import SpectralLineDiagnoser
 from .scheduler import DefaultScheduler
 from .stages.imaging import imaging_stage
+from .stages.load_data import load_data
 from .stages.model import cont_sub, read_model, vis_stokes_conversion
 from .stages.predict import predict_stage
-from .stages.select_vis import select_field
 
 logger = logging.getLogger()
 
@@ -40,7 +40,7 @@ spectral_line_imaging_pipeline = Pipeline(
     "spectral_line_imaging_pipeline",
     stages=Stages(
         [
-            select_field,
+            load_data,
             vis_stokes_conversion,
             read_model,
             predict_stage,

@@ -4,9 +4,9 @@ import numpy as np
 import xarray as xr
 
 from ska_sdp_piper.piper.executors import ExecutorFactory
-from ska_sdp_piper.piper.utils import read_dataset, read_yml
+from ska_sdp_piper.piper.utils import read_yml
 
-from ..stages.select_vis import select_field
+from ..stages.load_data import load_data
 from .utils import amp_vs_channel_plot, create_plot, store_spectral_csv
 
 logger = logging.getLogger()
@@ -239,7 +239,7 @@ class SpectralLineDiagnoser:
         """
 
         pipeline_parameter = self.pipeline_config["parameters"]
-        select_vis_config = pipeline_parameter["select_vis"]
+        load_data_config = pipeline_parameter["load_data"]
         pipeline_run_config = self.pipeline_config["pipeline"]
         is_model_exported = pipeline_run_config.get(
             "predict_stage", False
@@ -253,12 +253,11 @@ class SpectralLineDiagnoser:
             "export_residual", False
         )
 
-        input_ps = read_dataset(self.pipeline_args["input"])
         logger.info("Reading input visibility")
-        select_field.stage_definition(
+        load_data.stage_definition(
             self.scheduler._stage_outputs,
-            **select_vis_config,
-            _input_data_=input_ps,
+            **load_data_config,
+            _cli_args_=self.pipeline_args,
         )
 
         self.input_ps = self.scheduler._stage_outputs.ps

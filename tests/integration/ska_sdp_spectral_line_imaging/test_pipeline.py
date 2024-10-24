@@ -44,7 +44,7 @@ def test_pipeline(prepare_test_data):
     os.makedirs(output_dir)
 
     spectral_line_imaging_pipeline.run(
-        MSIN, output_dir, config_path="./test.config.yml"
+        output_dir, config_path="./test.config.yml", cli_args={"input": MSIN}
     )
 
     assert len(output_dir) > 0
