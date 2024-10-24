@@ -6,6 +6,7 @@ import numpy as np
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
+from ska_sdp_piper.piper.utils import delayed_log
 
 from ..stubs.imaging import clean_cube, cube_imaging
 from ..util import (
@@ -15,6 +16,8 @@ from ..util import (
     get_polarization,
     get_wcs,
 )
+
+logger = logging.getLogger()
 
 # TODO: Find better place for constants
 SPEED_OF_LIGHT = 299792458
@@ -147,7 +150,6 @@ def imaging_stage(
     -------
         UpstreamOutput
     """
-    logger = logging.getLogger()
 
     ps = upstream_output.ps
     cell_size = gridding_params.get("cell_size", None)
@@ -171,9 +173,14 @@ def imaging_stage(
 
         # Taking maximum of u and v baselines, rounded
         max_baseline = np.maximum(umax, vmax).round(2)
-        logger.info(
-            "Estimating cell size using baseline of "
-            f"{float(max_baseline)} meters"
+        upstream_output.add_compute_tasks(
+            delayed_log(
+                logger,
+                "Estimating cell size using baseline of "
+                "{max_baseline} meters",
+                "info",
+                max_baseline=[max_baseline, float],
+            )
         )
 
         cell_size = estimate_cell_size(
@@ -181,15 +188,27 @@ def imaging_stage(
         )
         gridding_params["cell_size"] = cell_size
 
-    logger.info(f"Using cell size = {float(cell_size)} arcseconds")
+    upstream_output.add_compute_tasks(
+        delayed_log(
+            logger,
+            "Using cell size = {cell_size} arcseconds",
+            "info",
+            cell_size=[cell_size, float],
+        )
+    )
 
     if image_size is None:
         maximum_wavelength = SPEED_OF_LIGHT / ps.frequency.min()
         antenna_diameter = ps.antenna_xds.DISH_DIAMETER.min().round(2)
 
-        logger.info(
-            "Estimating image size using antenna diameter of "
-            f"{float(antenna_diameter)} meters"
+        upstream_output.add_compute_tasks(
+            delayed_log(
+                logger,
+                "Estimating image size using antenna diameter of "
+                "{antenna_diameter} meters",
+                "info",
+                antenna_diameter=[antenna_diameter, float],
+            )
         )
 
         image_size = estimate_image_size(
@@ -197,7 +216,14 @@ def imaging_stage(
         )
         gridding_params["image_size"] = image_size
 
-    logger.info(f"Using image size = {int(image_size)} pixels")
+    upstream_output.add_compute_tasks(
+        delayed_log(
+            logger,
+            "Using image size = {image_size} pixels",
+            "info",
+            image_size=[image_size, int],
+        )
+    )
 
     gridding_params["nx"] = gridding_params["ny"] = image_size
 

@@ -1,4 +1,6 @@
 # pylint: disable=no-member
+import asyncio
+
 import pytest
 from mock import mock
 from mock.mock import Mock, call
@@ -144,11 +146,23 @@ def test_should_do_imaging_for_clean_image(
         (
             [True, True, True],
             ["model", "psf", "residual"],
-            ["task_1", "task_2", "task_3"],
+            ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
         ),
-        ([False, True, True], ["model", "residual"], ["task_1", "task_2"]),
-        ([True, False, True], ["psf", "residual"], ["task_1", "task_2"]),
-        ([True, True, False], ["model", "psf"], ["task_1", "task_2"]),
+        (
+            [False, True, True],
+            ["model", "residual"],
+            ["delayed_mock", "delayed_mock", "task_1", "task_2"],
+        ),
+        (
+            [True, False, True],
+            ["psf", "residual"],
+            ["delayed_mock", "delayed_mock", "task_1", "task_2"],
+        ),
+        (
+            [True, True, False],
+            ["model", "psf"],
+            ["delayed_mock", "delayed_mock", "task_1", "task_2"],
+        ),
     ],
 )
 @mock.patch(
@@ -161,7 +175,9 @@ def test_should_do_imaging_for_clean_image(
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_data_as")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.delayed_log")
 def test_should_export_clean_artefacts(
+    delayed_log_mock,
     clean_cube_mock,
     cube_imaging_mock,
     export_data_as_mock,
@@ -186,6 +202,8 @@ def test_should_export_clean_artefacts(
         "task_2",
         "task_3",
     ]
+    loop = asyncio.get_event_loop()
+    delayed_log_mock.return_value = "delayed_mock"
 
     ps = Mock(name="ps")
     ps.UVW = "UVW"
@@ -214,6 +232,14 @@ def test_should_export_clean_artefacts(
         {"image_name": "image_name", "export_format": "fits"},
     )
 
+    compute_tasks = []
+    for idx, task in enumerate(upstream_output.compute_tasks):
+        import inspect
+
+        if inspect.iscoroutine(task):
+            task = loop.run_until_complete(upstream_output.compute_tasks[idx])
+        compute_tasks.append(task)
+
     calls = [
         call(f"{product}_image", f"output_dir/image_name.{product}", "fits")
         for product in products
@@ -223,7 +249,7 @@ def test_should_export_clean_artefacts(
 
     assert upstream_output.ps == ps
     assert upstream_output.image_cube == "restored image"
-    assert upstream_output.compute_tasks == tasks
+    assert compute_tasks == tasks
 
 
 @mock.patch(
