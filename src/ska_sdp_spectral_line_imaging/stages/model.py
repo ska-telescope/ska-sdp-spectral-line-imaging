@@ -1,4 +1,5 @@
 # pylint: disable=no-member,import-error
+import logging
 import os
 
 import astropy.io.fits as fits
@@ -13,11 +14,11 @@ from ska_sdp_func_python.xradio.visibility.polarization import (
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
-from ska_sdp_piper.piper.utils import Logger
+from ska_sdp_piper.piper.utils import delayed_log
 
 from ..upstream_output import UpstreamOutput
 
-logger = Logger()
+logger = logging.getLogger()
 
 
 @ConfigurableStage(
@@ -237,7 +238,8 @@ def cont_sub(upstream_output, report_peak_channel):
         unit = cont_sub_ps.frequency.units[0]
 
         upstream_output.add_compute_tasks(
-            logger.delayed_log(
+            delayed_log(
+                logger,
                 "Peak visibility Channel: {peak_channel} {unit}",
                 "info",
                 peak_channel=[peak_channel, float],

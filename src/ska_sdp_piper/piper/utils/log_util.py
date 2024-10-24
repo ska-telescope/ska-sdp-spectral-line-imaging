@@ -77,17 +77,10 @@ class LogPlugin(WorkerPlugin):
         LogUtil.configure(self.name, self.output_dir, self.verbose)
 
 
-class Logger:
-    def __init__(self):
-        self.logger = logging.getLogger()
-
-    @dask.delayed
-    def delayed_log(self, formated_log_msg, _level_="info", **kwargs):
-        outputs = kwargs.copy()
-        for key, value in kwargs.items():
-            if isinstance(value, list):
-                outputs[key] = value[1](value[0])
-        getattr(self.logger, _level_)(formated_log_msg.format(**outputs))
-
-    def log(self, formated_log_msg, _level_="info", **kwargs):
-        getattr(self.logger, _level_)(formated_log_msg.format(**kwargs))
+@dask.delayed
+def delayed_log(logger, formated_log_msg, _level_="info", **kwargs):
+    outputs = kwargs.copy()
+    for key, value in kwargs.items():
+        if isinstance(value, list):
+            outputs[key] = value[1](value[0])
+    getattr(logger, _level_)(formated_log_msg.format(**outputs))
