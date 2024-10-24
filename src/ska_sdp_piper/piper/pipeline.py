@@ -230,7 +230,9 @@ class Pipeline(Command, metaclass=NamedInstance):
         self.logger.info(f"Current run output path : {output_dir}")
 
         vis = read_dataset(infile_path)
-        executor = ExecutorFactory.get_executor(output_dir, **cli_args)
+        executor = ExecutorFactory.get_executor(
+            output_dir, name=self.name, **cli_args
+        )
         if config_path:
             self.config_manager.update_config(config_path)
 

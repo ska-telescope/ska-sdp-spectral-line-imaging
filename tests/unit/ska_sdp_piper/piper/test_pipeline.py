@@ -312,7 +312,10 @@ def test_should_run_the_pipeline(
     )
     read_mock.assert_called_once_with("infile_path")
     executor_factory.get_executor.assert_called_once_with(
-        "output_dir", input="path", dask_scheduler="10.191"
+        "output_dir",
+        name="test_pipeline",
+        input="path",
+        dask_scheduler="10.191",
     )
     default_scheduler.schedule.assert_called_once_with(mock_stages)
 
@@ -389,7 +392,9 @@ def test_should_instantiate_dask_client(executor_factory, default_scheduler):
         cli_args={"dask_scheduler": dask_scheduler_address},
     )
     executor_factory.get_executor.assert_called_once_with(
-        "output_dir", dask_scheduler=dask_scheduler_address
+        "output_dir",
+        name="test_pipeline",
+        dask_scheduler=dask_scheduler_address,
     )
 
 

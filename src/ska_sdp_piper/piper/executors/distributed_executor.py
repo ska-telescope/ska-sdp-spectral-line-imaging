@@ -15,7 +15,13 @@ class DistributedExecutor(DefaultExecutor):
     """
 
     def __init__(
-        self, dask_scheduler, output_dir, with_report=False, **kwargs
+        self,
+        dask_scheduler,
+        output_dir,
+        name=None,
+        verbose=None,
+        with_report=False,
+        **kwargs,
     ):
         """
         Instantiate a distributed dask scheduler
@@ -34,7 +40,8 @@ class DistributedExecutor(DefaultExecutor):
         super().__init__()
         self.client = Client(dask_scheduler)
 
-        log_configure_plugin = LogPlugin("", output_dir)
+        # Setup worker plugin to configure the logs in the workers
+        log_configure_plugin = LogPlugin(name, output_dir, verbose=verbose)
         self.client.register_worker_plugin(log_configure_plugin)
 
         self.client.forward_logging()
