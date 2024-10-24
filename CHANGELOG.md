@@ -10,6 +10,7 @@
 - Remove `input_polarisation_frame` from `vis_stokes_conversion` stage
 - Rename `output_polarisation_frame` to `output_polarizations`, this option will consume an array of string for converting polarization frames
 - Add dask worker plugin to configure logger. Introduce delayed logger
+- Move export image name and format to Global Configuration from the export-image configuration.
 
 ## 0.5.0
 

@@ -1,6 +1,6 @@
 # pylint: disable=no-member
 from mock import mock
-from mock.mock import Mock
+from mock.mock import Mock, call
 
 from ska_sdp_spectral_line_imaging.stages.imaging import imaging_stage
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
@@ -43,6 +43,11 @@ def test_should_do_imaging_for_dirty_image(
         0,
         "psf_path",
         {"beam_info": "beam_info"},
+        False,
+        False,
+        False,
+        "output_dir",
+        {"image_name": "image_name", "export_format": "fits"},
     )
 
     get_pol_mock.assert_called_once_with(ps)
@@ -95,6 +100,11 @@ def test_should_do_imaging_for_clean_image(
         15,
         "psf_path",
         {"beam_info": "beam_info"},
+        False,
+        False,
+        False,
+        "output_dir",
+        {"image_name": "image_name", "export_format": "fits"},
     )
 
     get_pol_mock.assert_called_once_with(ps)
@@ -125,6 +135,85 @@ def test_should_do_imaging_for_clean_image(
 
     assert upstream_output.ps == ps
     assert upstream_output.image_cube == "restored image"
+
+
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
+    return_value="polarization_frame",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
+)
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_image_as")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
+def test_should_export_clean_artefacts(
+    clean_cube_mock,
+    cube_imaging_mock,
+    export_image_as_mock,
+    get_wcs_mock,
+    get_pol_mock,
+):
+    cube_imaging_mock.return_value = "dirty image"
+    clean_cube_mock.return_value = (
+        "restored image",
+        {
+            "residual": "residual_image",
+            "model": "model_image",
+            "psf": "psf_image",
+        },
+    )
+
+    export_image_as_mock.side_effect = [
+        "model_task",
+        "psf_task",
+        "residual_task",
+    ]
+
+    ps = Mock(name="ps")
+    ps.UVW = "UVW"
+    ps.frequency.reference_frequency = {"data": 123.01}
+    gridding_params = {
+        "epsilon": 1e-4,
+        "cell_size": 123,
+        "image_size": 456,
+        "scaling_factor": 2.0,
+    }
+
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = ps
+    do_clean = True
+
+    imaging_stage.stage_definition(
+        upstream_output,
+        gridding_params,
+        {"deconvolve_params": None},
+        do_clean,
+        15,
+        "psf_path",
+        {"beam_info": "beam_info"},
+        True,
+        True,
+        True,
+        "output_dir",
+        {"image_name": "image_name", "export_format": "fits"},
+    )
+
+    export_image_as_mock.assert_has_calls(
+        [
+            call("model_image", "output_dir/image_name.model", "fits"),
+            call("psf_image", "output_dir/image_name.psf", "fits"),
+            call("residual_image", "output_dir/image_name.residual", "fits"),
+        ]
+    )
+
+    assert upstream_output.ps == ps
+    assert upstream_output.image_cube == "restored image"
+    assert upstream_output.compute_tasks == [
+        "model_task",
+        "psf_task",
+        "residual_task",
+    ]
 
 
 @mock.patch(
@@ -183,6 +272,11 @@ def test_should_estimate_image_and_cell_size(
         0,
         "psf_path",
         {"beam_info": "beam_info"},
+        False,
+        False,
+        False,
+        "output_dir",
+        {"image_name": "image_name", "export_format": "fits"},
     )
 
     numpy_mock.abs.assert_called_once_with(ps.UVW)

@@ -10,6 +10,37 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
 )
 
 
+def export_image_as(image, output_path, export_format="fits"):
+    """
+    Export image in the desired export_format
+
+    Parameters
+    ----------
+        image: Image
+            Image image to be exported
+        output_path: str
+            Output file name
+        export_format: str
+            Data format for the image. Allowed values: fits|zarr
+
+    Returns
+    -------
+        dask.Delayed
+
+    Raises
+    ------
+        ValueError:
+            If the provided image format is not in fits or zarr
+    """
+
+    if export_format == "fits":
+        return export_to_fits(image, output_path)
+    elif export_format == "zarr":
+        return image.to_zarr(store=f"{output_path}.zarr", compute=False)
+    else:
+        raise ValueError(f"Unsupported format: {export_format}")
+
+
 @dask.delayed
 def export_to_fits(image, output_path):
     """

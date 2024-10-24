@@ -283,7 +283,9 @@ def clean_cube(
     Returns
     -------
         restored_image: ska_sdp_datamodels.image.image_model.Image
-        residual_image: ska_sdp_datamodels.image.image_model.Image
+        clean products: dict(
+           str -> ska_sdp_datamodels.image.image_model.Image
+        )
     """
     # TODO: Gridding parameters should have units documented somewhere
     epsilon = gridding_params.get("epsilon")
@@ -293,6 +295,8 @@ def clean_cube(
     residual_ps = ps
 
     logger = logging.getLogger()
+
+    imaging_products = {}
 
     if psf_image_path is None:
         psf_image = generate_psf_image(
@@ -310,6 +314,8 @@ def clean_cube(
         # TODO: Will be removed once coordinate issue is fixed
         # The frequency coords have floating point precision issue
         psf_image = psf_image.assign_coords(dirty_image.coords)
+
+    imaging_products["psf"] = psf_image
 
     model_image = Image.constructor(
         data=dask.array.zeros_like(dirty_image.pixels.data),
@@ -374,6 +380,9 @@ def clean_cube(
         {"pixels": model_image.pixels + model_image_last.pixels}
     )
 
+    imaging_products["model"] = model_image
+    imaging_products["residual"] = residual_image
+
     restored_image = restore_cube(model_image, beam_info, residual_image)
 
-    return restored_image, residual_image
+    return restored_image, imaging_products

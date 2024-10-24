@@ -1,5 +1,4 @@
 # pylint: disable=no-member
-import pytest
 from mock import Mock, mock
 
 from ska_sdp_spectral_line_imaging.stages.data_export import (
@@ -50,49 +49,42 @@ def test_should_export_model():
     assert upstream_output.compute_tasks == ["export_task"]
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.export_to_fits")
-def test_should_export_fits(mock_export_fits):
+@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.export_image_as")
+def test_should_export_fits(mock_export_image_as):
     cube = Mock(name="cube_data")
     upstream_output = UpstreamOutput()
     upstream_output["image_cube"] = cube
-    mock_export_fits.return_value = "fits_export"
+    mock_export_image_as.return_value = "fits_export"
 
     export_image.stage_definition(
-        upstream_output, "image_name", "fits", "output_dir"
+        upstream_output,
+        {"image_name": "image_name", "export_format": "fits"},
+        "output_dir",
     )
 
-    mock_export_fits.assert_called_once_with(cube, "output_dir/image_name")
+    mock_export_image_as.assert_called_once_with(
+        cube, "output_dir/image_name", "fits"
+    )
 
-    cube.to_zarr.assert_not_called()
     assert len(upstream_output.compute_tasks) == 1
 
 
-def test_should_export_zarr():
+@mock.patch("ska_sdp_spectral_line_imaging.stages.data_export.export_image_as")
+def test_should_export_zarr(mock_export_image_as):
 
     cube = Mock(name="cube_data")
-    cube.to_zarr = Mock(name="to_zarr", return_value="export_zarr")
     upstream_output = UpstreamOutput()
     upstream_output["image_cube"] = cube
+    mock_export_image_as.return_value = "export_zarr"
 
     export_image.stage_definition(
-        upstream_output, "image_name", "zarr", "output_dir"
+        upstream_output,
+        {"image_name": "image_name", "export_format": "zarr"},
+        "output_dir",
     )
 
-    cube.to_zarr.assert_called_once_with(
-        store="output_dir/image_name.zarr", compute=False
+    mock_export_image_as.assert_called_once_with(
+        cube, "output_dir/image_name", "zarr"
     )
 
     assert upstream_output.compute_tasks == ["export_zarr"]
-
-
-def test_should_throw_exception_for_unsupported_data_format():
-
-    cube = Mock(name="cube_data")
-    cube.to_zarr = Mock(name="to_zarr", return_value="export_zarr")
-    upstream_output = UpstreamOutput()
-    upstream_output["image_cube"] = cube
-
-    with pytest.raises(ValueError):
-        export_image.stage_definition(
-            upstream_output, "image_name", "non_supported_format", "output_dir"
-        )

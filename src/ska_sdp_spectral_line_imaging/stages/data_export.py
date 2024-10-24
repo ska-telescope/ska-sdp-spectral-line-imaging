@@ -3,7 +3,7 @@ import os
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
-from ..util import export_to_fits
+from ..util import export_image_as
 
 
 @ConfigurableStage(
@@ -77,18 +77,8 @@ def export_model(upstream_output, psout_name, _output_dir_):
     return upstream_output
 
 
-@ConfigurableStage(
-    "export_image",
-    Configuration(
-        image_name=ConfigParam(
-            str, "spectral_cube", "Output path of the spectral cube"
-        ),
-        export_format=ConfigParam(
-            str, "fits", "Data format for the image. Allowed values: fits|zarr"
-        ),
-    ),
-)
-def export_image(upstream_output, image_name, export_format, _output_dir_):
+@ConfigurableStage("export_image")
+def export_image(upstream_output, _global_parameters_, _output_dir_):
     """
     Export the generated cube image in FITS format.
 
@@ -96,10 +86,8 @@ def export_image(upstream_output, image_name, export_format, _output_dir_):
     ----------
         upstream_output: dict
             Output from the upstream stage
-        image_name: str
-            Output file name
-        export_format: str
-            Data format for the image. Allowed values: fits|zarr
+        _global_parameters_: Configuration
+            Configuration parameters common to pipeline
         _output_dir_: str
             Output directory created for the run
 
@@ -109,15 +97,10 @@ def export_image(upstream_output, image_name, export_format, _output_dir_):
     """
 
     cube = upstream_output["image_cube"]
-    output_path = os.path.join(_output_dir_, image_name)
+    output_path = os.path.join(_output_dir_, _global_parameters_["image_name"])
+    export_format = _global_parameters_["export_format"]
 
-    if export_format == "fits":
-        export_task = export_to_fits(cube, output_path)
-    elif export_format == "zarr":
-        export_task = cube.to_zarr(store=f"{output_path}.zarr", compute=False)
-    else:
-        raise ValueError(f"Unsupported format: {export_format}")
-
+    export_task = export_image_as(cube, output_path, export_format)
     upstream_output.add_compute_tasks(export_task)
 
     return upstream_output

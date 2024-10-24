@@ -1,9 +1,10 @@
-global_parameters: {}
+global_parameters:
+  image_name: test_cube
+  export_format: fits
 parameters:
   continuum_subtraction:
     report_peak_channel: true
-  export_image:
-    image_name: test_cube
+  export_image: {}
   export_model:
     psout_name: model
   export_residual:

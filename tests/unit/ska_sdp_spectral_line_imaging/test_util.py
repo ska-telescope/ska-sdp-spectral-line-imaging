@@ -1,11 +1,51 @@
+import asyncio
+
 import numpy as np
+import pytest
 from mock import Mock, patch
 
 from ska_sdp_spectral_line_imaging.util import (
     estimate_cell_size,
     estimate_image_size,
+    export_image_as,
     export_to_fits,
 )
+
+
+def test_should_export_image_as_zarr():
+    image = Mock(name="image")
+    image.to_zarr = Mock(name="to_zarr", return_value="zarr_task")
+    export_task = export_image_as(image, "output_path", export_format="zarr")
+
+    image.to_zarr.assert_called_once_with(
+        store="output_path.zarr", compute=False
+    )
+
+    assert export_task == "zarr_task"
+
+
+@patch("ska_sdp_spectral_line_imaging.util.export_to_fits")
+def test_should_export_image_as_fits(export_to_fits_mock):
+    loop = asyncio.get_event_loop()
+
+    image = Mock(name="image")
+    export_to_fits_mock.return_value = "fits_task"
+
+    export_task = loop.run_until_complete(
+        export_image_as(image, "output_path", export_format="fits")
+    )
+
+    export_to_fits_mock.assert_called_once_with(image, "output_path")
+
+    assert export_task == "fits_task"
+
+
+def test_should_throw_exception_for_unsupported_data_format():
+
+    image = Mock(name="image")
+
+    with pytest.raises(ValueError):
+        export_image_as(image, "output_path", export_format="unsuported")
 
 
 def test_should_estimate_cell_size_in_arcsec():

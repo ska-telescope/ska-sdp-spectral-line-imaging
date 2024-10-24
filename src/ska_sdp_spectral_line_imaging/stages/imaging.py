@@ -1,5 +1,6 @@
 # pylint: disable=no-member,import-error
 import logging
+import os
 
 import numpy as np
 
@@ -10,6 +11,7 @@ from ..stubs.imaging import clean_cube, cube_imaging
 from ..util import (
     estimate_cell_size,
     estimate_image_size,
+    export_image_as,
     get_polarization,
     get_wcs,
 )
@@ -71,6 +73,27 @@ SPEED_OF_LIGHT = 299792458
             "If any value is None, "
             "pipeline calculates beam information using psf image.",
         ),
+        export_psf_image=ConfigParam(
+            bool,
+            False,
+            description="Whether to export the psf image."
+            " The format of export is obtained from export"
+            " format in the global configuration",
+        ),
+        export_model_image=ConfigParam(
+            bool,
+            False,
+            description="Whether to export the model image "
+            "generated as part of clean. The format of export "
+            "is obtained from export format in the global configuration",
+        ),
+        export_residual_image=ConfigParam(
+            bool,
+            False,
+            description="Whether to export the residual image "
+            "generated as part of clean. The format of export "
+            "is obtained from export format in the global configuration",
+        ),
     ),
 )
 def imaging_stage(
@@ -81,6 +104,11 @@ def imaging_stage(
     n_iter_major,
     psf_image_path,
     beam_info,
+    export_psf_image,
+    export_model_image,
+    export_residual_image,
+    _output_dir_,
+    _global_parameters_,
 ):
     """
     Creates a dirty image using ducc0.gridder.
@@ -90,7 +118,7 @@ def imaging_stage(
 
     Parameters
     ----------
-        upstream_output: dict
+        upstream_output: UpstreamOutput
             Output from the upstream stage
         gridding_params: dict
             Parameters for gridding the visibility
@@ -104,15 +132,34 @@ def imaging_stage(
             Path to PSF image
         beam_info: dict
             Beam information
+        export_psf_image: bool
+            Whether to export psf image
+        export_model_image: bool
+            Whether to export model image
+        export_residual_image: bool
+            Whether to export residual image
+        _output_dir_: str
+            Output directory created for the run
+        _global_parameters_: dict
+            Configuration parameters common to pipeline
+
     Returns
     -------
-        dict
+        UpstreamOutput
     """
     logger = logging.getLogger()
 
     ps = upstream_output.ps
     cell_size = gridding_params.get("cell_size", None)
     image_size = gridding_params.get("image_size", None)
+    output_path = os.path.join(_output_dir_, _global_parameters_["image_name"])
+    export_format = _global_parameters_["export_format"]
+
+    clean_export_flags = {
+        "model": export_model_image,
+        "psf": export_psf_image,
+        "residual": export_residual_image,
+    }
 
     if cell_size is None:
         scaling_factor = gridding_params.get("scaling_factor", 3.0)
@@ -170,8 +217,7 @@ def imaging_stage(
     output_image = dirty_image
 
     if do_clean:
-        # TODO: Not exporting residual image for now
-        restored_image, _ = clean_cube(
+        restored_image, imaging_products = clean_cube(
             ps,
             psf_image_path,
             dirty_image,
@@ -183,6 +229,19 @@ def imaging_stage(
             beam_info,
         )
         output_image = restored_image
+
+        upstream_output.add_compute_tasks(
+            *[
+                export_image_as(
+                    imaging_products[artefact_type],
+                    f"{output_path}.{artefact_type}",
+                    export_format,
+                )
+                for artefact_type, export_flag in clean_export_flags.items()
+                if export_flag
+            ]
+        )
+
     upstream_output["image_cube"] = output_image
 
     return upstream_output

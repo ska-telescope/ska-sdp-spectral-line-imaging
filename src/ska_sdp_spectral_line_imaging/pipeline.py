@@ -20,6 +20,7 @@
 import logging
 from pathlib import Path
 
+from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.pipeline import Pipeline
 from ska_sdp_piper.piper.stage import Stages
 from ska_sdp_piper.piper.utils import create_output_dir
@@ -53,6 +54,14 @@ spectral_line_imaging_pipeline = Pipeline(
         ]
     ),
     scheduler=scheduler,
+    global_config=Configuration(
+        image_name=ConfigParam(
+            str, "spectral_cube", "Output path of the spectral cube"
+        ),
+        export_format=ConfigParam(
+            str, "fits", "Data format for the image. Allowed values: fits|zarr"
+        ),
+    ),
 )
 
 
