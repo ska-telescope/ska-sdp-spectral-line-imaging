@@ -67,8 +67,7 @@ class LogUtil:
 
 
 class LogPlugin(WorkerPlugin):
-    def __init__(self, log_config, name, output_dir=None, verbose=False):
-        self.log_config = log_config
+    def __init__(self, name, output_dir, verbose):
         self.name = name
         self.output_dir = output_dir
         self.verbose = verbose

@@ -18,8 +18,8 @@ class DistributedExecutor(DefaultExecutor):
         self,
         dask_scheduler,
         output_dir,
-        name=None,
-        verbose=None,
+        name,
+        verbose=False,
         with_report=False,
         **kwargs,
     ):
@@ -32,6 +32,10 @@ class DistributedExecutor(DefaultExecutor):
             URL of the dask scheduler
           output_dir: str
             Path to output directory
+          name: str
+            File prefix of log file
+          verbose: bool
+            Enable verbose logging in worker
           with_report: bool
             Execute and generate report if with_report == False
           **kwargs: dict
