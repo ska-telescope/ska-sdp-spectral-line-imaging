@@ -20,7 +20,6 @@
 import logging
 from pathlib import Path
 
-from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.pipeline import Pipeline
 from ska_sdp_piper.piper.stage import Stages
 from ska_sdp_piper.piper.utils import create_output_dir
@@ -28,7 +27,6 @@ from ska_sdp_piper.piper.utils import create_output_dir
 from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
 from .diagnosis.spectral_line_diagnoser import SpectralLineDiagnoser
 from .scheduler import DefaultScheduler
-from .stages.data_export import export_image, export_model, export_residual
 from .stages.imaging import imaging_stage
 from .stages.model import cont_sub, read_model, vis_stokes_conversion
 from .stages.predict import predict_stage
@@ -46,22 +44,11 @@ spectral_line_imaging_pipeline = Pipeline(
             vis_stokes_conversion,
             read_model,
             predict_stage,
-            export_model,
             cont_sub,
             imaging_stage,
-            export_residual,
-            export_image,
         ]
     ),
     scheduler=scheduler,
-    global_config=Configuration(
-        image_name=ConfigParam(
-            str, "spectral_cube", "Output path of the spectral cube"
-        ),
-        export_format=ConfigParam(
-            str, "fits", "Data format for the image. Allowed values: fits|zarr"
-        ),
-    ),
 )
 
 

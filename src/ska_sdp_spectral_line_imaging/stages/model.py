@@ -17,6 +17,7 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 from ska_sdp_piper.piper.utils import delayed_log
 
 from ..upstream_output import UpstreamOutput
+from ..util import export_data_as
 
 logger = logging.getLogger()
 
@@ -196,9 +197,21 @@ def vis_stokes_conversion(upstream_output, output_polarizations):
             True,
             description="Report channel with peak emission/absorption",
         ),
+        export_residual=ConfigParam(
+            bool, False, "Export the residual visibilities"
+        ),
+        psout_name=ConfigParam(
+            str, "vis_residual", "Output path of residual data"
+        ),
     ),
 )
-def cont_sub(upstream_output, report_peak_channel):
+def cont_sub(
+    upstream_output,
+    report_peak_channel,
+    export_residual,
+    psout_name,
+    _output_dir_,
+):
     """
     Perform continuum subtraction
 
@@ -218,6 +231,16 @@ def cont_sub(upstream_output, report_peak_channel):
 
     model = ps.assign({"VISIBILITY": ps.VISIBILITY_MODEL})
     cont_sub_ps = subtract_visibility(ps, model)
+
+    if export_residual:
+        output_path = os.path.join(_output_dir_, psout_name)
+        cont_sub_ps.VISIBILITY.attrs.clear()
+        upstream_output.add_compute_tasks(
+            export_data_as(
+                cont_sub_ps.VISIBILITY, output_path, export_format="zarr"
+            )
+        )
+
     # TODO: This has to be in ska-sdp-func-python's function
     cont_sub_ps = cont_sub_ps.assign(
         {

@@ -241,6 +241,18 @@ class SpectralLineDiagnoser:
         pipeline_parameter = self.pipeline_config["parameters"]
         select_vis_config = pipeline_parameter["select_vis"]
         pipeline_run_config = self.pipeline_config["pipeline"]
+        is_model_exported = pipeline_run_config.get(
+            "predict_stage", False
+        ) and pipeline_parameter.get("predict_stage", {}).get(
+            "export_model", False
+        )
+
+        is_residual_exported = pipeline_run_config.get(
+            "continuum_subtraction", False
+        ) and pipeline_parameter.get("continuum_subtraction", {}).get(
+            "export_residual", False
+        )
+
         input_ps = read_dataset(self.pipeline_args["input"])
         logger.info("Reading input visibility")
         select_field.stage_definition(
@@ -251,19 +263,22 @@ class SpectralLineDiagnoser:
 
         self.input_ps = self.scheduler._stage_outputs.ps
 
-        if pipeline_run_config.get("export_model"):
+        if is_model_exported:
             logger.info("Reading model data")
-            ps_out = pipeline_parameter["export_model"]["psout_name"] + ".zarr"
+            ps_out = (
+                pipeline_parameter["predict_stage"]["psout_name"] + ".zarr"
+            )
             self.model = xr.open_zarr(self.input_path / ps_out)[
                 "VISIBILITY_MODEL"
             ]
         else:
             logger.info("Export model stage not run.")
 
-        if pipeline_run_config.get("export_residual"):
+        if is_residual_exported:
             logger.info("Reading residual data")
             ps_out = (
-                pipeline_parameter["export_residual"]["psout_name"] + ".zarr"
+                pipeline_parameter["continuum_subtraction"]["psout_name"]
+                + ".zarr"
             )
             self.residual = xr.open_zarr(self.input_path / ps_out)
         else:

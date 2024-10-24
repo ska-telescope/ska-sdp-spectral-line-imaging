@@ -282,7 +282,6 @@ def clean_cube(
 
     Returns
     -------
-        restored_image: ska_sdp_datamodels.image.image_model.Image
         clean products: dict(
            str -> ska_sdp_datamodels.image.image_model.Image
         )
@@ -383,6 +382,8 @@ def clean_cube(
     imaging_products["model"] = model_image
     imaging_products["residual"] = residual_image
 
-    restored_image = restore_cube(model_image, beam_info, residual_image)
+    imaging_products["restored"] = restore_cube(
+        model_image, beam_info, residual_image
+    )
 
-    return restored_image, imaging_products
+    return imaging_products

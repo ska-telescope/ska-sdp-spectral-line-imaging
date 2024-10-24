@@ -17,7 +17,12 @@ def test_should_be_able_to_distribute_predict(predict_for_channels_mock):
     upstream_output["model_image"] = model
 
     predict_stage.stage_definition(
-        upstream_output, epsilon=1e-4, cell_size=10.0
+        upstream_output,
+        epsilon=1e-4,
+        cell_size=10.0,
+        export_model=False,
+        psout_name="ps_out",
+        _output_dir_="output_path",
     )
 
     predict_for_channels_mock.assert_called_once_with(ps, model, 1e-4, 10.0)

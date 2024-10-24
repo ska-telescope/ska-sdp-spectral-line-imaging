@@ -17,7 +17,12 @@ def test_should_run_predict_stage(result_msv4):
     upstream_output["model_image"] = model
 
     stage_result = predict_stage.stage_definition(
-        upstream_output, epsilon=1e-4, cell_size=15.0
+        upstream_output,
+        epsilon=1e-4,
+        cell_size=15.0,
+        export_model=False,
+        psout_name="ps_out",
+        _output_dir_="out_dir",
     )
 
     assert stage_result["ps"].VISIBILITY_MODEL.shape == (8, 1, 8, 21)
@@ -40,6 +45,9 @@ def test_should_run_dask_distributed(result_msv4):
         upstream_output,
         epsilon=1e-4,
         cell_size=15.0,
+        export_model=False,
+        psout_name="ps_out",
+        _output_dir_="out_dir",
     )
 
     assert stage_result["ps"].VISIBILITY_MODEL.shape == (8, 1, 8, 21)

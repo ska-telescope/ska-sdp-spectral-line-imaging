@@ -10,18 +10,18 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
 )
 
 
-def export_data_as(image, output_path, export_format="fits"):
+def export_data_as(data, output_path, export_format="fits"):
     """
-    Export image in the desired export_format
+    Export data in the desired export_format
 
     Parameters
     ----------
-        image: Image
-            Image image to be exported
+        data: Xarray Data array
+            Data to be exported
         output_path: str
             Output file name
         export_format: str
-            Data format for the image. Allowed values: fits|zarr
+            Data format for the data. Allowed values: fits|zarr
 
     Returns
     -------
@@ -30,13 +30,14 @@ def export_data_as(image, output_path, export_format="fits"):
     Raises
     ------
         ValueError:
-            If the provided image format is not in fits or zarr
+            If the provided data format is not in fits or zarr
     """
 
     if export_format == "fits":
-        return export_to_fits(image, output_path)
+        return export_to_fits(data, output_path)
     elif export_format == "zarr":
-        return image.to_zarr(store=f"{output_path}.zarr", compute=False)
+
+        return data.to_zarr(store=f"{output_path}.zarr", compute=False)
     else:
         raise ValueError(f"Unsupported format: {export_format}")
 

@@ -40,7 +40,6 @@ def test_pipeline(prepare_test_data):
     """
     Given a MSv4 and a model image the pipepile should output a stokes cube
     """
-
     output_dir = "./pipeline_output"
     os.makedirs(output_dir)
 
@@ -49,8 +48,7 @@ def test_pipeline(prepare_test_data):
     )
 
     assert len(output_dir) > 0
-    assert os.path.exists(f"./{output_dir}/test_cube.fits")
-    assert not os.path.isdir(f"./{output_dir}/test_cube.zarr")
 
+    assert os.path.exists(f"./{output_dir}/test_cube.dirty.fits")
     assert os.path.isdir(f"./{output_dir}/residual.zarr")
     assert os.path.isdir(f"./{output_dir}/model.zarr")

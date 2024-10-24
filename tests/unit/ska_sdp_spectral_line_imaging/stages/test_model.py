@@ -19,7 +19,9 @@ def test_should_perform_continuum_subtraction(subtract_visibility_mock):
     subtracted_vis.VISIBILITY.assign_attrs.return_value = "sub_vis_with_attrs"
     subtract_visibility_mock.return_value = subtracted_vis
 
-    cont_sub.stage_definition(upstream_output, False)
+    cont_sub.stage_definition(
+        upstream_output, False, False, "ps_out", "output_path"
+    )
     observation.assign.assert_called_once_with(
         {"VISIBILITY": observation.VISIBILITY_MODEL}
     )
@@ -39,7 +41,9 @@ def test_should_not_report_peak_channel_value(
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = observation
 
-    cont_sub.stage_definition(upstream_output, False)
+    cont_sub.stage_definition(
+        upstream_output, False, False, "ps_out", "output_path"
+    )
 
     numpy_mock.abs.assert_not_called()
 
@@ -63,7 +67,9 @@ def test_should_report_peak_channel_value(
     numpy_mock.max = Mock(name="max", return_value=numpy_mock)
     numpy_mock.idxmax = Mock(name="idxmax", return_value=numpy_mock)
 
-    cont_sub.stage_definition(upstream_output, True)
+    cont_sub.stage_definition(
+        upstream_output, True, False, "ps_out", "output_path"
+    )
 
     numpy_mock.abs.assert_called_once_with(observation.VISIBILITY)
     numpy_mock.max.assert_called_once_with(

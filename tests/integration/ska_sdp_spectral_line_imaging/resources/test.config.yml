@@ -1,21 +1,21 @@
-global_parameters:
-  image_name: test_cube
-  export_format: fits
+global_parameters: {}
 parameters:
   continuum_subtraction:
     report_peak_channel: true
-  export_image: {}
-  export_model:
-    psout_name: model
-  export_residual:
     psout_name: residual
-  imaging:   
+    export_residual: true
+  imaging:
+    image_name: test_cube
+    export_format: fits
+    export_image: true
     gridding_params:
       cell_size: 60.0
       epsilon: 0.0001
       image_size: 16
   predict_stage:
+    psout_name: model
     cell_size: 60.0
+    export_model: true
   read_model:
     image: ./tMS-%s-image.fits
     image_type: continuum
@@ -29,9 +29,6 @@ parameters:
     - V
 pipeline:
   continuum_subtraction: true
-  export_image: true
-  export_model: true
-  export_residual: true
   imaging: true
   predict_stage: true
   read_model: true

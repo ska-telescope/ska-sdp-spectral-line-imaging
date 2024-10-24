@@ -76,26 +76,35 @@ SPEED_OF_LIGHT = 299792458
             "If any value is None, "
             "pipeline calculates beam information using psf image.",
         ),
+        image_name=ConfigParam(
+            str, "spectral_cube", "Output path of the spectral cube"
+        ),
+        export_format=ConfigParam(
+            str, "fits", "Data format for the image. Allowed values: fits|zarr"
+        ),
         export_psf_image=ConfigParam(
             bool,
             False,
-            description="Whether to export the psf image."
-            " The format of export is obtained from export"
-            " format in the global configuration",
+            description="Whether to export the psf image.",
         ),
         export_model_image=ConfigParam(
             bool,
             False,
             description="Whether to export the model image "
-            "generated as part of clean. The format of export "
-            "is obtained from export format in the global configuration",
+            "generated as part of clean.",
         ),
         export_residual_image=ConfigParam(
             bool,
             False,
             description="Whether to export the residual image "
-            "generated as part of clean. The format of export "
-            "is obtained from export format in the global configuration",
+            "generated as part of clean.",
+        ),
+        export_image=ConfigParam(
+            bool,
+            False,
+            description="Whether to export the restored image "
+            "generated as part of clean. If clean is not run then "
+            "export the dirty image",
         ),
     ),
 )
@@ -107,11 +116,13 @@ def imaging_stage(
     n_iter_major,
     psf_image_path,
     beam_info,
+    image_name,
+    export_format,
     export_psf_image,
     export_model_image,
     export_residual_image,
+    export_image,
     _output_dir_,
-    _global_parameters_,
 ):
     """
     Creates a dirty image using ducc0.gridder.
@@ -135,12 +146,18 @@ def imaging_stage(
             Path to PSF image
         beam_info: dict
             Beam information
+        image_name: str
+            Prefix name of the exported image
+        export_format: str
+            "Data format for the image. Allowed values: fits|zarr"
         export_psf_image: bool
             Whether to export psf image
         export_model_image: bool
             Whether to export model image
         export_residual_image: bool
             Whether to export residual image
+        export_image: bool
+            Whether to export restored/dirty image
         _output_dir_: str
             Output directory created for the run
         _global_parameters_: dict
@@ -154,13 +171,13 @@ def imaging_stage(
     ps = upstream_output.ps
     cell_size = gridding_params.get("cell_size", None)
     image_size = gridding_params.get("image_size", None)
-    output_path = os.path.join(_output_dir_, _global_parameters_["image_name"])
-    export_format = _global_parameters_["export_format"]
+    output_path = os.path.join(_output_dir_, image_name)
 
     clean_export_flags = {
         "model": export_model_image,
         "psf": export_psf_image,
         "residual": export_residual_image,
+        "restored": export_image,
     }
 
     if cell_size is None:
@@ -243,7 +260,7 @@ def imaging_stage(
     output_image = dirty_image
 
     if do_clean:
-        restored_image, imaging_products = clean_cube(
+        imaging_products = clean_cube(
             ps,
             psf_image_path,
             dirty_image,
@@ -254,7 +271,8 @@ def imaging_stage(
             wcs,
             beam_info,
         )
-        output_image = restored_image
+
+        output_image = imaging_products["restored"]
 
         upstream_output.add_compute_tasks(
             *[
@@ -266,6 +284,15 @@ def imaging_stage(
                 for artefact_type, export_flag in clean_export_flags.items()
                 if export_flag
             ]
+        )
+
+    elif export_image:
+        upstream_output.add_compute_tasks(
+            export_data_as(
+                dirty_image,
+                f"{output_path}.dirty",
+                export_format,
+            )
         )
 
     upstream_output["image_cube"] = output_image

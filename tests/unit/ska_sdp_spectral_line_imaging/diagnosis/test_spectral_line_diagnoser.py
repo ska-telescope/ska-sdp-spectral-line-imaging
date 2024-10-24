@@ -61,10 +61,16 @@ def test_should_initialise_diagnoser(
         "residual_data",
     ]
     config = {
-        "pipeline": {"export_model": True, "export_residual": True},
+        "pipeline": {"continuum_subtraction": True, "predict_stage": True},
         "parameters": {
-            "export_residual": {"psout_name": "ps_out_residual"},
-            "export_model": {"psout_name": "ps_out_model"},
+            "continuum_subtraction": {
+                "psout_name": "ps_out_residual",
+                "export_residual": True,
+            },
+            "predict_stage": {
+                "psout_name": "ps_out_model",
+                "export_model": True,
+            },
             "select_vis": {"arguments": "arguments"},
         },
     }
@@ -138,10 +144,16 @@ def test_should_initialise_diagnoser_without_model_residual(
     read_dataset_mock.return_value = "PROCESSING_SET"
 
     config = {
-        "pipeline": {"export_model": False, "export_residual": False},
+        "pipeline": {"continuum_subtraction": False, "predict_stage": False},
         "parameters": {
-            "export_residual": {"psout_name": "ps_out_residual"},
-            "export_model": {"psout_name": "ps_out_model"},
+            "continuum_subtraction": {
+                "psout_name": "ps_out_residual",
+                "export_residual": True,
+            },
+            "predict_stage": {
+                "psout_name": "ps_out_model",
+                "export_model": True,
+            },
             "select_vis": {"arguments": "arguments"},
         },
     }
@@ -274,10 +286,16 @@ def test_should_plot_residual_and_model(
     ]
 
     config = {
-        "pipeline": {"export_model": True, "export_residual": True},
+        "pipeline": {"continuum_subtraction": True, "predict_stage": True},
         "parameters": {
-            "export_residual": {"psout_name": "ps_out_residual"},
-            "export_model": {"psout_name": "ps_out_model"},
+            "continuum_subtraction": {
+                "psout_name": "ps_out_residual",
+                "export_residual": True,
+            },
+            "predict_stage": {
+                "psout_name": "ps_out_model",
+                "export_model": True,
+            },
             "select_vis": {"arguments": "arguments"},
             "read_model": {"pols": ["I", "Q", "U", "V"]},
         },
@@ -417,10 +435,16 @@ def test_should_not_plot_residual_and_model_if_not_exported(
     zarr_mock.return_value = residual
 
     config = {
-        "pipeline": {"export_model": False, "export_residual": False},
+        "pipeline": {"continuum_subtraction": False, "predict_stage": False},
         "parameters": {
-            "export_residual": {"psout_name": "ps_out_residual"},
-            "export_model": {"psout_name": "ps_out_model"},
+            "continuum_subtraction": {
+                "psout_name": "ps_out_residual",
+                "export_residual": True,
+            },
+            "predict_stage": {
+                "psout_name": "ps_out_model",
+                "export_model": True,
+            },
             "select_vis": {"arguments": "arguments"},
             "read_model": {"pols": ["I", "Q", "U", "V"]},
         },
@@ -504,10 +528,16 @@ def test_should_export_residual_csv(
     xarray_open_mock.return_value = residual
 
     config = {
-        "pipeline": {"export_model": False, "export_residual": True},
+        "pipeline": {"continuum_subtraction": True, "predict_stage": True},
         "parameters": {
-            "export_residual": {"psout_name": "ps_out_residual"},
-            "export_model": {"psout_name": "ps_out_model"},
+            "continuum_subtraction": {
+                "psout_name": "ps_out_residual",
+                "export_residual": True,
+            },
+            "predict_stage": {
+                "psout_name": "ps_out_model",
+                "export_model": False,
+            },
             "select_vis": {"arguments": "arguments"},
             "read_model": {"pols": ["I", "Q", "U", "V"]},
         },

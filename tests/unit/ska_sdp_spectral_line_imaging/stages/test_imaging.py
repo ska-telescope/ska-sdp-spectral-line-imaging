@@ -46,11 +46,13 @@ def test_should_do_imaging_for_dirty_image(
         0,
         "psf_path",
         {"beam_info": "beam_info"},
+        "image_name",
+        "fits",
+        False,
         False,
         False,
         False,
         "output_dir",
-        {"image_name": "image_name", "export_format": "fits"},
     )
 
     get_pol_mock.assert_called_once_with(ps)
@@ -79,7 +81,12 @@ def test_should_do_imaging_for_clean_image(
     clean_cube_mock, cube_imaging_mock, get_wcs_mock, get_pol_mock
 ):
     cube_imaging_mock.return_value = "dirty image"
-    clean_cube_mock.return_value = ("restored image", "residual image")
+    clean_cube_mock.return_value = {
+        "residual": "residual_image",
+        "model": "model_image",
+        "psf": "psf_image",
+        "restored": "restored_image",
+    }
 
     ps = Mock(name="ps")
     ps.UVW = "UVW"
@@ -103,11 +110,13 @@ def test_should_do_imaging_for_clean_image(
         15,
         "psf_path",
         {"beam_info": "beam_info"},
+        "image_name",
+        "fits",
+        False,
         False,
         False,
         False,
         "output_dir",
-        {"image_name": "image_name", "export_format": "fits"},
     )
 
     get_pol_mock.assert_called_once_with(ps)
@@ -137,31 +146,60 @@ def test_should_do_imaging_for_clean_image(
     )
 
     assert upstream_output.ps == ps
-    assert upstream_output.image_cube == "restored image"
+    assert upstream_output.image_cube == "restored_image"
 
 
 @pytest.mark.parametrize(
-    "exports,products,tasks",
+    "do_clean,exports,products,tasks,output",
     [
         (
-            [True, True, True],
+            True,
+            [True, True, True, True],
+            ["model", "psf", "residual", "restored"],
+            [
+                "delayed_mock",
+                "delayed_mock",
+                "task_1",
+                "task_2",
+                "task_3",
+                "task_4",
+            ],
+            "restored_image",
+        ),
+        (
+            False,
+            [True, True, True, True],
+            ["dirty"],
+            ["delayed_mock", "delayed_mock", "task_1"],
+            "dirty_image",
+        ),
+        (
+            True,
+            [False, True, True, True],
+            ["model", "residual", "restored"],
+            ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
+            "restored_image",
+        ),
+        (
+            True,
+            [True, False, True, True],
+            ["psf", "residual", "restored"],
+            ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
+            "restored_image",
+        ),
+        (
+            True,
+            [True, True, False, True],
+            ["model", "psf", "restored"],
+            ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
+            "restored_image",
+        ),
+        (
+            True,
+            [True, True, True, False],
             ["model", "psf", "residual"],
             ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
-        ),
-        (
-            [False, True, True],
-            ["model", "residual"],
-            ["delayed_mock", "delayed_mock", "task_1", "task_2"],
-        ),
-        (
-            [True, False, True],
-            ["psf", "residual"],
-            ["delayed_mock", "delayed_mock", "task_1", "task_2"],
-        ),
-        (
-            [True, True, False],
-            ["model", "psf"],
-            ["delayed_mock", "delayed_mock", "task_1", "task_2"],
+            "restored_image",
         ),
     ],
 )
@@ -183,24 +221,25 @@ def test_should_export_clean_artefacts(
     export_data_as_mock,
     get_wcs_mock,
     get_pol_mock,
+    do_clean,
     exports,
     products,
     tasks,
+    output,
 ):
-    cube_imaging_mock.return_value = "dirty image"
-    clean_cube_mock.return_value = (
-        "restored image",
-        {
-            "residual": "residual_image",
-            "model": "model_image",
-            "psf": "psf_image",
-        },
-    )
+    cube_imaging_mock.return_value = "dirty_image"
+    clean_cube_mock.return_value = {
+        "residual": "residual_image",
+        "model": "model_image",
+        "psf": "psf_image",
+        "restored": "restored_image",
+    }
 
     export_data_as_mock.side_effect = [
         "task_1",
         "task_2",
         "task_3",
+        "task_4",
     ]
     loop = asyncio.get_event_loop()
     delayed_log_mock.return_value = "delayed_mock"
@@ -217,7 +256,6 @@ def test_should_export_clean_artefacts(
 
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = ps
-    do_clean = True
 
     imaging_stage.stage_definition(
         upstream_output,
@@ -227,9 +265,10 @@ def test_should_export_clean_artefacts(
         15,
         "psf_path",
         {"beam_info": "beam_info"},
+        "image_name",
+        "fits",
         *exports,
         "output_dir",
-        {"image_name": "image_name", "export_format": "fits"},
     )
 
     compute_tasks = []
@@ -248,7 +287,6 @@ def test_should_export_clean_artefacts(
     export_data_as_mock.assert_has_calls(calls)
 
     assert upstream_output.ps == ps
-    assert upstream_output.image_cube == "restored image"
     assert compute_tasks == tasks
 
 
@@ -308,11 +346,13 @@ def test_should_estimate_image_and_cell_size(
         0,
         "psf_path",
         {"beam_info": "beam_info"},
+        "image_name",
+        "fits",
+        False,
         False,
         False,
         False,
         "output_dir",
-        {"image_name": "image_name", "export_format": "fits"},
     )
 
     numpy_mock.abs.assert_called_once_with(ps.UVW)

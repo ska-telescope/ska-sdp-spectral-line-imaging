@@ -1,7 +1,10 @@
+import os
+
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
 from ..stubs.predict import predict_for_channels
+from ..util import export_data_as
 
 
 @ConfigurableStage(
@@ -11,9 +14,13 @@ from ..stubs.predict import predict_for_channels
         epsilon=ConfigParam(
             float, 1e-4, "Floating point accuracy for ducc gridder"
         ),
+        export_model=ConfigParam(bool, False, "Export the predicted model"),
+        psout_name=ConfigParam(str, "vis_model", "Output path of model data"),
     ),
 )
-def predict_stage(upstream_output, epsilon, cell_size):
+def predict_stage(
+    upstream_output, epsilon, cell_size, export_model, psout_name, _output_dir_
+):
     """
     Perform model prediction
 
@@ -44,6 +51,15 @@ def predict_stage(upstream_output, epsilon, cell_size):
             )
         }
     )
+
+    if export_model:
+        output_path = os.path.join(_output_dir_, psout_name)
+        ps.VISIBILITY_MODEL.attrs.clear()
+        upstream_output.add_compute_tasks(
+            export_data_as(
+                ps.VISIBILITY_MODEL, output_path, export_format="zarr"
+            )
+        )
 
     upstream_output["ps"] = ps
 
