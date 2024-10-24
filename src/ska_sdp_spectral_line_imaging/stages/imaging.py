@@ -160,8 +160,6 @@ def imaging_stage(
             Whether to export restored/dirty image
         _output_dir_: str
             Output directory created for the run
-        _global_parameters_: dict
-            Configuration parameters common to pipeline
 
     Returns
     -------
