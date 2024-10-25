@@ -18,7 +18,6 @@ class DistributedExecutor(DefaultExecutor):
         self,
         dask_scheduler,
         output_dir,
-        name,
         verbose=False,
         with_report=False,
         **kwargs,
@@ -32,8 +31,6 @@ class DistributedExecutor(DefaultExecutor):
             URL of the dask scheduler
           output_dir: str
             Path to output directory
-          name: str
-            File prefix of log file
           verbose: bool
             Enable verbose logging in worker
           with_report: bool
@@ -44,8 +41,8 @@ class DistributedExecutor(DefaultExecutor):
         super().__init__()
         self.client = Client(dask_scheduler)
 
-        # Setup worker plugin to configure the logs in the workers
-        log_configure_plugin = LogPlugin(name, output_dir, verbose=verbose)
+        # Setup worker plugin to configure the level for logs
+        log_configure_plugin = LogPlugin(verbose=verbose)
         self.client.register_worker_plugin(log_configure_plugin)
 
         self.client.forward_logging()

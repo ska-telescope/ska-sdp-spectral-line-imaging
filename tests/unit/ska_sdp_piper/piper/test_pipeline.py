@@ -280,7 +280,6 @@ def test_should_run_the_pipeline(
     )
     executor_factory.get_executor.assert_called_once_with(
         "output_dir",
-        name="test_pipeline",
         input="path",
         dask_scheduler="10.191",
     )
@@ -297,9 +296,11 @@ def test_should_run_the_pipeline(
     )
 
 
+@mock.patch("ska_sdp_piper.piper.pipeline.timestamp")
 def test_should_run_the_pipeline_with_verbose(
-    log_util, stages, default_scheduler
+    timestamp_mock, log_util, stages, default_scheduler
 ):
+    timestamp_mock.return_value = "FORMATTED_TIME"
     pipeline = Pipeline(
         "test_pipeline", stages=stages, scheduler=default_scheduler
     )
@@ -307,15 +308,19 @@ def test_should_run_the_pipeline_with_verbose(
 
     log_util.configure.assert_has_calls(
         [
-            mock.call("test_pipeline", output_dir="output_dir", verbose=True),
+            mock.call(
+                "output_dir/test_pipeline_FORMATTED_TIME.log", verbose=True
+            ),
         ]
     )
 
 
+@mock.patch("ska_sdp_piper.piper.pipeline.timestamp")
 @mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_run_the_pipeline_with_selected_stages(
-    config_manager_mock, default_scheduler, mock_stages
+    config_manager_mock, timestamp_mock, default_scheduler, mock_stages
 ):
+    timestamp_mock.return_value = "FORMATTED_TIME"
     stage1, _, stage3 = mock_stages
     config_manager_mock.return_value = config_manager_mock
     config_manager_mock.stages_to_run = ["stage1", "stage3"]
@@ -339,7 +344,11 @@ def test_should_run_the_pipeline_with_selected_stages(
     default_scheduler.schedule.assert_called_once_with([stage1, stage3])
 
 
-def test_should_instantiate_dask_client(executor_factory, default_scheduler):
+@mock.patch("ska_sdp_piper.piper.pipeline.timestamp")
+def test_should_instantiate_dask_client(
+    timestamp_mock, executor_factory, default_scheduler
+):
+    timestamp_mock.return_value = "FORMATTED_TIME"
     stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
     stage1.name = "stage1"
     stage1.config = {}
@@ -355,7 +364,6 @@ def test_should_instantiate_dask_client(executor_factory, default_scheduler):
     )
     executor_factory.get_executor.assert_called_once_with(
         "output_dir",
-        name="test_pipeline",
         dask_scheduler=dask_scheduler_address,
     )
 

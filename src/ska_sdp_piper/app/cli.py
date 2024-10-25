@@ -31,7 +31,7 @@ def install(
            Path to place the default config.
     """
 
-    LogUtil.configure(pipeline_name)
+    LogUtil.configure()
     logger.info("=============== START INSTALL =====================")
     executable_pipeline = ExecutablePipeline(pipeline_name, pipeline_path)
     executable_pipeline.validate_pipeline()
@@ -51,7 +51,7 @@ def uninstall(pipeline_name, pipeline_path):
             Path to the pipeline to be uninstalled
     """
 
-    LogUtil.configure(pipeline_name)
+    LogUtil.configure()
     logger.info("=============== START UNINSTALL =====================")
     executable_pipeline = ExecutablePipeline(pipeline_name, pipeline_path)
     executable_pipeline.validate_pipeline()

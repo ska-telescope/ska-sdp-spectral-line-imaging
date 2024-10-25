@@ -209,8 +209,8 @@ class Pipeline(Command, metaclass=NamedInstance):
         """
         stages = [] if stages is None else stages
         cli_args = {} if cli_args is None else cli_args
-
-        LogUtil.configure(self.name, output_dir=output_dir, verbose=verbose)
+        log_file = f"{output_dir}/{self.name}_{timestamp()}.log"
+        LogUtil.configure(log_file, verbose=verbose)
 
         self.logger.info("=============== START =====================")
         self.logger.info(f"Executing {self.name} pipeline with metadata:")
@@ -219,9 +219,7 @@ class Pipeline(Command, metaclass=NamedInstance):
         self.logger.info(f"Configuration Path: {config_path}")
         self.logger.info(f"Current run output path : {output_dir}")
 
-        executor = ExecutorFactory.get_executor(
-            output_dir, name=self.name, **cli_args
-        )
+        executor = ExecutorFactory.get_executor(output_dir, **cli_args)
         if config_path:
             self.config_manager.update_config(config_path)
 

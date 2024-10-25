@@ -13,9 +13,7 @@ from ska_sdp_piper.piper.executors.distributed_executor import (
 def test_should_dask_execute_scheduled_stages_with_report(
     compute_mock, client_mock, performance_report_mock
 ):
-    executor = DistributedExecutor(
-        "url", "output_dir", "test_pipeline", with_report=True
-    )
+    executor = DistributedExecutor("url", "output_dir", with_report=True)
     tasks = ["OUT_1", "OUT_2", "OUT_3"]
     executor.execute(tasks)
 
@@ -35,7 +33,7 @@ def test_should_dask_execute_scheduled_stages_with_report(
 def test_should_dask_execute_scheduled_stages_without_report(
     compute_mock, client_mock, performance_report_mock
 ):
-    executor = DistributedExecutor("url", "output_dir", "test_pipeline")
+    executor = DistributedExecutor("url", "output_dir")
     tasks = ["OUT_1", "OUT_2", "OUT_3"]
     executor.execute(tasks)
 
@@ -49,7 +47,7 @@ def test_should_dask_execute_scheduled_stages_without_report(
 def test_should_create_dask_client_with_logging_forwarded(client_mock):
     client_mock.return_value = client_mock
 
-    DistributedExecutor("dask_url", "output_dir", "test_pipeline")
+    DistributedExecutor("dask_url", "output_dir")
 
     client_mock.assert_called_once_with("dask_url")
     client_mock.forward_logging.assert_called_once()

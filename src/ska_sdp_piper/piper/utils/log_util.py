@@ -2,22 +2,20 @@ import logging
 
 import dask
 import dask.distributed
-from distributed.diagnostics.plugin import WorkerPlugin
+from distributed import WorkerPlugin
 from ska_ser_logging import configure_logging
-
-from .io_utils import timestamp
 
 
 class LogUtil:
     @classmethod
-    def configure(cls, name, output_dir=None, verbose=False):
+    def configure(cls, log_file=None, verbose=False):
         """
         Configure the log using standardised config
 
         Parameters
         ----------
-            name: str
-                Pipeline name
+            log_file: str
+                Path to log file
             verbose: bool
                 Set log verbosity to DEBUG
 
@@ -29,29 +27,26 @@ class LogUtil:
 
         configure_logging(
             level=level,
-            overrides=cls.__additional_log_config(name, output_dir),
+            overrides=cls.__additional_log_config(log_file),
         )
 
     @classmethod
-    def __additional_log_config(cls, pipeline_name, output_dir=None):
+    def __additional_log_config(cls, log_file):
         """
         Get updated log configuration
 
         Parameters
         ----------
-            pipeline_name: str
-                Log file name
-            output_dir: str
-                Output directory
+            log_file: str
+                Path to log file
 
         Returns
         -------
             dictionary config
         """
-        if output_dir is None:
+        if log_file is None:
             return
 
-        log_file = f"{output_dir}/{pipeline_name}_" f"{timestamp()}.log"
         return {
             "handlers": {
                 "file": {
@@ -67,13 +62,12 @@ class LogUtil:
 
 
 class LogPlugin(WorkerPlugin):
-    def __init__(self, name, output_dir, verbose):
-        self.name = name
-        self.output_dir = output_dir
+    def __init__(self, log_file=None, verbose=False):
+        self.log_file = log_file
         self.verbose = verbose
 
     def setup(self, worker):
-        LogUtil.configure(self.name, self.output_dir, self.verbose)
+        LogUtil.configure(self.log_file, self.verbose)
 
 
 @dask.delayed
