@@ -2,6 +2,7 @@ import logging
 
 import dask
 import dask.distributed
+import xarray as xr
 from distributed import WorkerPlugin
 from ska_ser_logging import configure_logging
 
@@ -73,7 +74,7 @@ class LogPlugin(WorkerPlugin):
 @dask.delayed
 def delayed_log(logger, formated_log_msg, **kwargs):
     outputs = kwargs.copy()
-    for key, value in kwargs.items():
-        if isinstance(value, list):
-            outputs[key] = value[1](value[0])
+    for key, data_var in kwargs.items():
+        if isinstance(data_var, xr.DataArray):
+            outputs[key] = data_var.values
     logger(formated_log_msg.format(**outputs))

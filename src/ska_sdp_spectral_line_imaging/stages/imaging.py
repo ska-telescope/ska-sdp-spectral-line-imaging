@@ -193,7 +193,7 @@ def imaging_stage(
                 logger.info,
                 "Estimating cell size using baseline of "
                 "{max_baseline} meters",
-                max_baseline=[max_baseline, float],
+                max_baseline=max_baseline,
             )
         )
 
@@ -205,8 +205,8 @@ def imaging_stage(
     upstream_output.add_compute_tasks(
         delayed_log(
             logger.info,
-            "Using cell size = {cell_size} arcseconds",
-            cell_size=[cell_size, float],
+            "Using cell size = {cell_sizes} arcseconds",
+            cell_sizes=cell_size,
         )
     )
 
@@ -219,7 +219,7 @@ def imaging_stage(
                 logger.info,
                 "Estimating image size using antenna diameter of "
                 "{antenna_diameter} meters",
-                antenna_diameter=[antenna_diameter, float],
+                antenna_diameter=antenna_diameter,
             )
         )
 
@@ -232,7 +232,7 @@ def imaging_stage(
         delayed_log(
             logger.info,
             "Using image size = {image_size} pixels",
-            image_size=[image_size, int],
+            image_size=image_size,
         )
     )
 

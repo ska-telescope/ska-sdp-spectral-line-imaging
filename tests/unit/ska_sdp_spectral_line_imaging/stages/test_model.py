@@ -79,7 +79,7 @@ def test_should_report_peak_channel_value(
     delayed_log_mock.assert_called_once_with(
         logger_mock.info,
         "Peak visibility Channel: {peak_channel} {unit}",
-        peak_channel=[numpy_mock, float],
+        peak_channel=numpy_mock,
         unit="Hz",
     )
 

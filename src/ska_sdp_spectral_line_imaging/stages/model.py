@@ -263,7 +263,7 @@ def cont_sub(
             delayed_log(
                 logger.info,
                 "Peak visibility Channel: {peak_channel} {unit}",
-                peak_channel=[peak_channel, float],
+                peak_channel=peak_channel,
                 unit=unit,
             )
         )
