@@ -14,9 +14,12 @@ from ska_sdp_spectral_line_imaging.util import (
 
 def test_should_export_data_as_zarr():
     image = Mock(name="image")
+    image.copy = Mock(name="copy", return_value=image)
     image.to_zarr = Mock(name="to_zarr", return_value="zarr_task")
     export_task = export_data_as(image, "output_path", export_format="zarr")
 
+    image.copy.assert_called_once()
+    image.attrs.clear.assert_called_once()
     image.to_zarr.assert_called_once_with(
         store="output_path.zarr", compute=False
     )

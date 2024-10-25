@@ -234,7 +234,6 @@ def cont_sub(
 
     if export_residual:
         output_path = os.path.join(_output_dir_, psout_name)
-        cont_sub_ps.VISIBILITY.attrs.clear()
         upstream_output.add_compute_tasks(
             export_data_as(
                 cont_sub_ps.VISIBILITY, output_path, export_format="zarr"

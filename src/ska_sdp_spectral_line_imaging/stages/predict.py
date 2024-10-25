@@ -54,7 +54,6 @@ def predict_stage(
 
     if export_model:
         output_path = os.path.join(_output_dir_, psout_name)
-        ps.VISIBILITY_MODEL.attrs.clear()
         upstream_output.add_compute_tasks(
             export_data_as(
                 ps.VISIBILITY_MODEL, output_path, export_format="zarr"

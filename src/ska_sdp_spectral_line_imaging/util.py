@@ -34,10 +34,16 @@ def export_data_as(data, output_path, export_format="fits"):
     """
 
     if export_format == "fits":
+
         return export_to_fits(data, output_path)
+
     elif export_format == "zarr":
 
-        return data.to_zarr(store=f"{output_path}.zarr", compute=False)
+        data_to_export = data.copy(deep=False)
+        data_to_export.attrs.clear()
+        return data_to_export.to_zarr(
+            store=f"{output_path}.zarr", compute=False
+        )
     else:
         raise ValueError(f"Unsupported format: {export_format}")
 
