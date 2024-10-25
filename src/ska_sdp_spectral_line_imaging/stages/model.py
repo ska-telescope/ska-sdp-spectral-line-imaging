@@ -261,9 +261,8 @@ def cont_sub(
 
         upstream_output.add_compute_tasks(
             delayed_log(
-                logger,
+                logger.info,
                 "Peak visibility Channel: {peak_channel} {unit}",
-                "info",
                 peak_channel=[peak_channel, float],
                 unit=unit,
             )

@@ -77,9 +77,8 @@ def test_should_report_peak_channel_value(
     )
     numpy_mock.idxmax.assert_called_once()
     delayed_log_mock.assert_called_once_with(
-        logger_mock,
+        logger_mock.info,
         "Peak visibility Channel: {peak_channel} {unit}",
-        "info",
         peak_channel=[numpy_mock, float],
         unit="Hz",
     )

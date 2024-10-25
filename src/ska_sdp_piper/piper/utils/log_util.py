@@ -71,9 +71,9 @@ class LogPlugin(WorkerPlugin):
 
 
 @dask.delayed
-def delayed_log(logger, formated_log_msg, _level_="info", **kwargs):
+def delayed_log(logger, formated_log_msg, **kwargs):
     outputs = kwargs.copy()
     for key, value in kwargs.items():
         if isinstance(value, list):
             outputs[key] = value[1](value[0])
-    getattr(logger, _level_)(formated_log_msg.format(**outputs))
+    logger(formated_log_msg.format(**outputs))

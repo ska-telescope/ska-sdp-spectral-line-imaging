@@ -190,10 +190,9 @@ def imaging_stage(
         max_baseline = np.maximum(umax, vmax).round(2)
         upstream_output.add_compute_tasks(
             delayed_log(
-                logger,
+                logger.info,
                 "Estimating cell size using baseline of "
                 "{max_baseline} meters",
-                "info",
                 max_baseline=[max_baseline, float],
             )
         )
@@ -205,9 +204,8 @@ def imaging_stage(
 
     upstream_output.add_compute_tasks(
         delayed_log(
-            logger,
+            logger.info,
             "Using cell size = {cell_size} arcseconds",
-            "info",
             cell_size=[cell_size, float],
         )
     )
@@ -218,10 +216,9 @@ def imaging_stage(
 
         upstream_output.add_compute_tasks(
             delayed_log(
-                logger,
+                logger.info,
                 "Estimating image size using antenna diameter of "
                 "{antenna_diameter} meters",
-                "info",
                 antenna_diameter=[antenna_diameter, float],
             )
         )
@@ -233,9 +230,8 @@ def imaging_stage(
 
     upstream_output.add_compute_tasks(
         delayed_log(
-            logger,
+            logger.info,
             "Using image size = {image_size} pixels",
-            "info",
             image_size=[image_size, int],
         )
     )
