@@ -12,8 +12,6 @@ ifeq ("$(DOCS_TARGET_ARGS)", "clean")
 	@echo "Cleaning api files..."
 	rm -rf docs/src/api
 else
-	@echo "Update stage config..."
-	python scripts/generate_config.py
 	@echo "Generating api files..."
 	make -C docs/ create-doc
 endif
