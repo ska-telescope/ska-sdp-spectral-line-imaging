@@ -6,7 +6,8 @@ authors = ["DHRUVA <DHRUVA-team@SKA>"]
 license = "BSD-3-Clause"
 packages = [
     { include = "ska_sdp_spectral_line_imaging", from = "src" },
-    { include = "ska_sdp_piper", from = "src" }
+    { include = "ska_sdp_piper", from = "src" },
+    { include = "ska_sdp_benchmarker", from = "src"}
 ]
 
 [[tool.poetry.source]]
@@ -72,6 +73,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 piper = "ska_sdp_piper.app.cli:app"
 spectral-line-imaging-pipeline = "ska_sdp_spectral_line_imaging.pipeline:spectral_line_imaging_pipeline"
+benchmark-pipeline = "ska_sdp_benchmarker.benchmark:benchmarker"
 
 [tool.coverage.run]
 branch = true

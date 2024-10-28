@@ -13,3 +13,4 @@ dist/
 /docs/src/api/
 /MANIFEST.skao.int
 /.vscode/
+/benchmarks/
