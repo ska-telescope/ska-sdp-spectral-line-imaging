@@ -1,6 +1,4 @@
 # pylint: disable=no-member
-import asyncio
-
 import pytest
 from mock import mock
 from mock.mock import Mock, call
@@ -152,8 +150,6 @@ def test_should_do_imaging_for_clean_image(
             [True, True, True, True],
             ["model", "psf", "residual", "restored"],
             [
-                "delayed_mock",
-                "delayed_mock",
                 "task_1",
                 "task_2",
                 "task_3",
@@ -165,35 +161,35 @@ def test_should_do_imaging_for_clean_image(
             0,
             [True, True, True, True],
             ["dirty"],
-            ["delayed_mock", "delayed_mock", "task_1"],
+            ["task_1"],
             "dirty_image",
         ),
         (
             1,
             [False, True, True, True],
             ["model", "residual", "restored"],
-            ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
+            ["task_1", "task_2", "task_3"],
             "restored_image",
         ),
         (
             1,
             [True, False, True, True],
             ["psf", "residual", "restored"],
-            ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
+            ["task_1", "task_2", "task_3"],
             "restored_image",
         ),
         (
             1,
             [True, True, False, True],
             ["model", "psf", "restored"],
-            ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
+            ["task_1", "task_2", "task_3"],
             "restored_image",
         ),
         (
             1,
             [True, True, True, False],
             ["model", "psf", "residual"],
-            ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
+            ["task_1", "task_2", "task_3"],
             "restored_image",
         ),
     ],
@@ -208,9 +204,7 @@ def test_should_do_imaging_for_clean_image(
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_data_as")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.delayed_log")
 def test_should_export_clean_artefacts(
-    delayed_log_mock,
     clean_cube_mock,
     cube_imaging_mock,
     export_data_as_mock,
@@ -236,8 +230,6 @@ def test_should_export_clean_artefacts(
         "task_3",
         "task_4",
     ]
-    loop = asyncio.get_event_loop()
-    delayed_log_mock.return_value = "delayed_mock"
 
     ps = Mock(name="ps")
     ps.UVW = "UVW"
@@ -265,13 +257,7 @@ def test_should_export_clean_artefacts(
         "output_dir",
     )
 
-    compute_tasks = []
-    for idx, task in enumerate(upstream_output.compute_tasks):
-        import inspect
-
-        if inspect.iscoroutine(task):
-            task = loop.run_until_complete(upstream_output.compute_tasks[idx])
-        compute_tasks.append(task)
+    compute_tasks = upstream_output.compute_tasks
 
     calls = [
         call(f"{product}_image", f"output_dir/image_name.{product}", "fits")
@@ -306,8 +292,14 @@ def test_should_estimate_image_and_cell_size(
     max_baseline = Mock(name="max_baseline")
     numpy_mock.maximum.return_value = max_baseline
     max_baseline.round.return_value = 3.45
-    estimate_cell_size_mock.return_value = 0.75
-    estimate_image_size_mock.return_value = 500
+
+    cell_size_xdr = Mock(name="cell_size_dataarray")
+    estimate_cell_size_mock.return_value = cell_size_xdr
+    cell_size_xdr.compute.return_value = 0.75
+
+    image_size_xdr = Mock(name="image_size_dataarray")
+    estimate_image_size_mock.return_value = image_size_xdr
+    image_size_xdr.compute.return_value = 500
     cube_imaging_mock.return_value = "dirty image"
 
     ps = Mock(name="ps")

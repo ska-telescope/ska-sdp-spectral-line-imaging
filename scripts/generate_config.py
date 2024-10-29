@@ -104,15 +104,15 @@ image_df.loc[
 image_df.loc[image_df["Param"] == "beam_info.bmaj", "Type"] = "float"
 image_df.loc[
     image_df["Param"] == "beam_info.bmaj", "Description"
-] = "Beam major axis in radian"
+] = "Beam major axis in degrees"
 image_df.loc[image_df["Param"] == "beam_info.bmin", "Type"] = "float"
 image_df.loc[
     image_df["Param"] == "beam_info.bmin", "Description"
-] = "Beam minor axis in radian"
+] = "Beam minor axis in degrees"
 image_df.loc[image_df["Param"] == "beam_info.bpa", "Type"] = "float"
 image_df.loc[
     image_df["Param"] == "beam_info.bpa", "Description"
-] = "Beam position angle in radian"
+] = "Beam position angle in degrees"
 
 dfs["imaging"] = image_df
 

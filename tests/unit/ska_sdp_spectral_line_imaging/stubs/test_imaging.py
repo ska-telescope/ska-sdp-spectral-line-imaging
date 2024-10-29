@@ -66,8 +66,6 @@ def test_should_apply_image_ducc_on_data(xr_mock):
         ),
     )
 
-    # image_vec.__truediv__.assert_called_once_with(ps.WEIGHT)
-
     assert cube_image == "cube_image"
 
 
@@ -121,12 +119,7 @@ def test_should_perform_cube_imaging(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
 )
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.fit_psf",
-    return_value="clean_beam",
-)
 def test_should_perform_major_cyle(
-    fit_psf_mock,
     cube_imaging_mock,
     restore_cube_mock,
     deconvolve_mock,
@@ -189,7 +182,7 @@ def test_should_perform_major_cyle(
         deconvolution_params,
         "polarization_frame",
         "wcs",
-        {"beam": None},
+        "beam_info",
     )
 
     import_image_from_fits_mock.assert_called_once_with(
@@ -216,9 +209,8 @@ def test_should_perform_major_cyle(
         ps.VISIBILITY.attrs
     )
 
-    fit_psf_mock.assert_called_once_with(psf_image)
     restore_cube_mock.assert_called_once_with(
-        model_image, "clean_beam", residual_image
+        model_image, psf_image, residual_image, "beam_info"
     )
 
     ps.assign.assert_called_once_with({"VISIBILITY": predicted_visibilities})
@@ -247,13 +239,8 @@ def test_should_perform_major_cyle(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array.ones_like",
 )
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.fit_psf",
-    return_value="beam_info",
-)
 def test_should_create_psf_if_psf_is_none(
-    fit_psf_mock,
-    np_ones_mock,
+    dask_ones_mock,
     data_array_mock,
     cube_imaging_mock,
     restore_cube_mock,
@@ -268,13 +255,8 @@ def test_should_create_psf_if_psf_is_none(
     ps.VISIBILITY.shape = (1, 1, 2, 2)
     psf_ps = Mock(name="psf_ps")
     ps.assign = Mock(name="assign", return_value=psf_ps)
-    subtract_mock.return_value = psf_ps
-    predicted_visibilities = Mock(name="predicted_visibilities")
-    predict_mock.return_value = predicted_visibilities
-    predicted_visibilities.assign_attrs.return_value = predicted_visibilities
 
     dirty_image1 = Mock(name="dirty_image1")
-    dirty_image2 = Mock(name="dirty_image2")
 
     dirty_image1.pixels.data = np.array([1, 2])
     dirty_image1.image_acc.polarisation_frame = "polarization_frame"
@@ -288,7 +270,7 @@ def test_should_create_psf_if_psf_is_none(
     model_image.coords = []
 
     model_image_iter = Mock(name="model image per iteration")
-    deconvolve_mock.return_value = [model_image_iter, "residual_image"]
+    deconvolve_mock.return_value = (model_image_iter, "residual_image")
 
     gridding_params = {
         "epsilon": 1,
@@ -300,12 +282,11 @@ def test_should_create_psf_if_psf_is_none(
     }
     deconvolution_params = {"param1": 1, "param2": 2}
 
-    psf_image_path = "path_to_psf"
     psf_image = Mock(name="psf_image")
 
-    cube_imaging_mock.side_effect = [psf_image, dirty_image2]
+    cube_imaging_mock.side_effect = [psf_image]
     data_array_mock.return_value = data_array_mock
-    np_ones_mock.return_value = "numpy_ones"
+    dask_ones_mock.return_value = "dask_array_ones"
 
     gridding_params = {
         "epsilon": 0.0001,
@@ -316,6 +297,7 @@ def test_should_create_psf_if_psf_is_none(
         "ny": 1,
     }
     deconvolution_params = {"param1": 1, "param2": 2}
+
     psf_image_path = None
     n_iter_major = 0
 
@@ -328,15 +310,21 @@ def test_should_create_psf_if_psf_is_none(
         deconvolution_params,
         "polarization frame",
         "wcs",
-        {"beam": "beam"},
+        "beam_info",
     )
 
     data_array_mock.assert_called_once_with(
-        "numpy_ones", attrs=ps.VISIBILITY.attrs, coords=ps.VISIBILITY.coords
+        "dask_array_ones",
+        attrs=ps.VISIBILITY.attrs,
+        coords=ps.VISIBILITY.coords,
     )
 
     ps.assign.assert_called_once_with({"VISIBILITY": data_array_mock})
 
     cube_imaging_mock.assert_called_once_with(
         psf_ps, 123, 1, 1, 0.0001, "wcs", "polarization frame"
+    )
+
+    restore_cube_mock.assert_called_once_with(
+        model_image, psf_image, dirty_image1, "beam_info"
     )

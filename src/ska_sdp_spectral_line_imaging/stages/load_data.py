@@ -32,6 +32,7 @@ def load_data(upstream_output, obs_id: int, _cli_args_):
     input_path = _cli_args_["input"]
     ps = read_processing_set(ps_store=input_path)
 
+    # computes
     sel = ps.summary().name[obs_id]
 
     # TODO: There is an issue in either xradio/xarray/dask that causes chunk

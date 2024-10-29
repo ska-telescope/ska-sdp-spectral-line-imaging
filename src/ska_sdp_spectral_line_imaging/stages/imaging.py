@@ -6,7 +6,6 @@ import numpy as np
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
-from ska_sdp_piper.piper.utils import delayed_log
 
 from ..stubs.imaging import clean_cube, cube_imaging
 from ..util import (
@@ -68,9 +67,7 @@ SPEED_OF_LIGHT = 299792458
                 "bmin": None,
                 "bpa": None,
             },
-            description="Beam information. "
-            "If any value is None, "
-            "pipeline calculates beam information using psf image.",
+            description="Clean beam information, each value is in degrees",
         ),
         image_name=ConfigParam(
             str, "spectral_cube", "Output path of the spectral cube"
@@ -138,7 +135,10 @@ def imaging_stage(
         psf_image_path: str
             Path to PSF image
         beam_info: dict
-            Beam information
+            Clean beam e.g. {"bmaj":0.1, "bmin":0.05, "bpa":-60.0}.
+            Units are deg, deg, deg.
+            If any value is None, pipeline calculates beam
+            information using psf image.
         image_name: str
             Prefix name of the exported image
         export_format: str
@@ -172,6 +172,7 @@ def imaging_stage(
     }
 
     if cell_size is None:
+        logger.info("Estimating cell size...")
         scaling_factor = gridding_params.get("scaling_factor", 3.0)
         umax, vmax, _ = np.abs(ps.UVW).max(dim=["time", "baseline_id"])
         # TODO: handle units properly. eg. Hz, MHz etc.
@@ -181,53 +182,29 @@ def imaging_stage(
 
         # Taking maximum of u and v baselines, rounded
         max_baseline = np.maximum(umax, vmax).round(2)
-        upstream_output.add_compute_tasks(
-            delayed_log(
-                logger.info,
-                "Estimating cell size using baseline of "
-                "{max_baseline} meters",
-                max_baseline=max_baseline,
-            )
-        )
 
         cell_size = estimate_cell_size(
             max_baseline, minimum_wavelength, scaling_factor
         )
+        # computes
+        cell_size = float(cell_size.compute(optimize_graph=True))
         gridding_params["cell_size"] = cell_size
 
-    upstream_output.add_compute_tasks(
-        delayed_log(
-            logger.info,
-            "Using cell size = {cell_sizes} arcseconds",
-            cell_sizes=cell_size,
-        )
-    )
+    logger.info(f"Using cell size = {cell_size} arcseconds")
 
     if image_size is None:
+        logger.info("Estimating image size...")
         maximum_wavelength = SPEED_OF_LIGHT / ps.frequency.min()
         antenna_diameter = ps.antenna_xds.DISH_DIAMETER.min().round(2)
-
-        upstream_output.add_compute_tasks(
-            delayed_log(
-                logger.info,
-                "Estimating image size using antenna diameter of "
-                "{antenna_diameter} meters",
-                antenna_diameter=antenna_diameter,
-            )
-        )
 
         image_size = estimate_image_size(
             maximum_wavelength, antenna_diameter, cell_size
         )
+        # computes
+        image_size = float(image_size.compute(optimize_graph=True))
         gridding_params["image_size"] = image_size
 
-    upstream_output.add_compute_tasks(
-        delayed_log(
-            logger.info,
-            "Using image size = {image_size} pixels",
-            image_size=image_size,
-        )
-    )
+    logger.info(f"Using image size = {image_size} pixels")
 
     gridding_params["nx"] = gridding_params["ny"] = image_size
 

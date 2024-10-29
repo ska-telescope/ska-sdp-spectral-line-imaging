@@ -254,6 +254,8 @@ class Pipeline(Command, metaclass=NamedInstance):
         self.config_manager.write_yml(config_output_file)
 
         self.scheduler.schedule(executable_stages)
+        self.logger.info("Scheduling done, now executing the graph...")
+
         executor.execute(self.scheduler.tasks)
 
         self.logger.info("=============== FINISH =====================")

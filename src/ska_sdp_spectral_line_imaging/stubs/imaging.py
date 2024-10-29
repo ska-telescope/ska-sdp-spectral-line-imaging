@@ -8,7 +8,6 @@ import ducc0.wgridder as wgridder
 import numpy as np
 import xarray as xr
 from ska_sdp_datamodels.image import Image, import_image_from_fits
-from ska_sdp_func_python.image.deconvolution import fit_psf
 from ska_sdp_func_python.xradio.visibility.operations import (
     subtract_visibility,
 )
@@ -278,7 +277,8 @@ def clean_cube(
         wcs: WCS
             WCS information
         beam_info:
-            Beam information
+            Clean beam e.g. {"bmaj":0.1, "bmin":0.05, "bpa":-60.0}.
+            Units are deg, deg, deg
 
     Returns
     -------
@@ -321,18 +321,6 @@ def clean_cube(
         polarisation_frame=dirty_image.image_acc.polarisation_frame,
         wcs=dirty_image.image_acc.wcs,
     )
-
-    if any(value is None for value in beam_info.values()):
-        # TODO: Make fit_psf dask compliant to remove psf_image.load()
-        logger.warning(
-            "Calculating beam info. "
-            "This causes entire psf_image to LOAD INTO MEMORY. "
-            "This may slow down the further computations."
-        )
-        psf_image.load()
-        beam_info = fit_psf(psf_image)
-
-    logger.info(f"Beam information: {beam_info}")
 
     residual_image = dirty_image
 
@@ -380,7 +368,10 @@ def clean_cube(
     imaging_products["residual"] = residual_image
 
     imaging_products["restored"] = restore_cube(
-        model_image, beam_info, residual_image
+        model_image,
+        psf_image,
+        residual_image,
+        beam_info,
     )
 
     return imaging_products
