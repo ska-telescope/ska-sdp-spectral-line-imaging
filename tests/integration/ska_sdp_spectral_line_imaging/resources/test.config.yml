@@ -8,6 +8,7 @@ parameters:
     image_name: test_cube
     export_format: fits
     export_image: true
+    n_iter_major: 0
     gridding_params:
       cell_size: 60.0
       epsilon: 0.0001

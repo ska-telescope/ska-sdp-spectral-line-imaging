@@ -50,14 +50,10 @@ SPEED_OF_LIGHT = 299792458
             description="Deconvolution parameters",
         ),
         n_iter_major=ConfigParam(
-            int, 0, description="Number of major cycle iterations"
-        ),
-        do_clean=ConfigParam(
-            bool,
-            False,
-            description="Whether to run clean algorithm. "
-            "If False, only the dirty image is generated. "
-            "If True, the restored image is generated.",
+            int,
+            1,
+            description="Number of major cycle iterations. "
+            " If 0, only dirty image is generated.",
         ),
         psf_image_path=ConfigParam(
             str,
@@ -112,7 +108,6 @@ def imaging_stage(
     upstream_output,
     gridding_params,
     deconvolution_params,
-    do_clean,
     n_iter_major,
     psf_image_path,
     beam_info,
@@ -138,8 +133,6 @@ def imaging_stage(
             Parameters for gridding the visibility
         deconvolution_params: dict
             Deconvolution parameters
-        do_clean: bool
-            Whether to run clean algorithm or not
         n_iter_major: int
             Major cycle iterations
         psf_image_path: str
@@ -253,7 +246,7 @@ def imaging_stage(
 
     output_image = dirty_image
 
-    if do_clean:
+    if n_iter_major > 0:
         imaging_products = clean_cube(
             ps,
             psf_image_path,

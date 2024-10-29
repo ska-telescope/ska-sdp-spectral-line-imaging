@@ -1,6 +1,6 @@
 # pylint: disable=no-member
 import numpy as np
-from mock import Mock, call, mock
+from mock import Mock, mock
 
 from ska_sdp_spectral_line_imaging.stubs.imaging import (
     chunked_imaging,
@@ -144,8 +144,8 @@ def test_should_perform_major_cyle(
     predicted_visibilities.assign_attrs.return_value = predicted_visibilities
 
     dirty_image1 = Mock(name="dirty_image1")
-    dirty_image2 = Mock(name="dirty_image2")
-    cube_imaging_mock.side_effect = [dirty_image2]
+    residual_image = Mock(name="residual_image")
+    cube_imaging_mock.side_effect = [residual_image]
 
     dirty_image1.pixels.data = np.array([1, 2])
     dirty_image1.image_acc.polarisation_frame = "polarization_frame"
@@ -159,7 +159,7 @@ def test_should_perform_major_cyle(
     model_image.coords = []
 
     model_image_iter = Mock(name="model image per iteration")
-    deconvolve_mock.return_value = [model_image_iter, "residual_image"]
+    deconvolve_mock.return_value = [model_image_iter, ""]
 
     gridding_params = {
         "epsilon": 1,
@@ -199,28 +199,15 @@ def test_should_perform_major_cyle(
     # TODO: Add assert for empty image constructor
     # image_mock.constructor.assert_called_once_with()
 
-    deconvolve_mock.assert_has_calls(
-        [
-            call(
-                dirty_image1, psf_image, **gridding_params, param1=1, param2=2
-            ),
-            call(
-                dirty_image2, psf_image, **gridding_params, param1=1, param2=2
-            ),
-        ]
+    deconvolve_mock.assert_called_once_with(
+        dirty_image1, psf_image, **gridding_params, param1=1, param2=2
+    )
+    model_image.assign.assert_called_once_with(
+        {"pixels": model_image.pixels + model_image_iter.pixels}
     )
 
-    model_image.assign.assert_has_calls(
-        [
-            call({"pixels": model_image.pixels + model_image_iter.pixels}),
-            call({"pixels": model_image.pixels + model_image_iter.pixels}),
-        ]
-    )
-
-    cube_imaging_mock.assert_has_calls(
-        [
-            call(residual_ps, 123, 1234, 4567, 1, "wcs", "polarization_frame"),
-        ]
+    cube_imaging_mock.assert_called_once_with(
+        residual_ps, 123, 1234, 4567, 1, "wcs", "polarization_frame"
     )
 
     predict_mock.assert_called_once_with(ps, model_image.pixels, 1, 123)
@@ -231,7 +218,7 @@ def test_should_perform_major_cyle(
 
     fit_psf_mock.assert_called_once_with(psf_image)
     restore_cube_mock.assert_called_once_with(
-        model_image, "clean_beam", "residual_image"
+        model_image, "clean_beam", residual_image
     )
 
     ps.assign.assert_called_once_with({"VISIBILITY": predicted_visibilities})

@@ -36,13 +36,10 @@ def test_should_do_imaging_for_dirty_image(
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = ps
 
-    do_clean = False
-
     imaging_stage.stage_definition(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
-        do_clean,
         0,
         "psf_path",
         {"beam_info": "beam_info"},
@@ -100,13 +97,11 @@ def test_should_do_imaging_for_clean_image(
 
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = ps
-    do_clean = True
 
     imaging_stage.stage_definition(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
-        do_clean,
         15,
         "psf_path",
         {"beam_info": "beam_info"},
@@ -150,10 +145,10 @@ def test_should_do_imaging_for_clean_image(
 
 
 @pytest.mark.parametrize(
-    "do_clean,exports,products,tasks,output",
+    "n_iter_major,exports,products,tasks,output",
     [
         (
-            True,
+            1,
             [True, True, True, True],
             ["model", "psf", "residual", "restored"],
             [
@@ -167,35 +162,35 @@ def test_should_do_imaging_for_clean_image(
             "restored_image",
         ),
         (
-            False,
+            0,
             [True, True, True, True],
             ["dirty"],
             ["delayed_mock", "delayed_mock", "task_1"],
             "dirty_image",
         ),
         (
-            True,
+            1,
             [False, True, True, True],
             ["model", "residual", "restored"],
             ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
             "restored_image",
         ),
         (
-            True,
+            1,
             [True, False, True, True],
             ["psf", "residual", "restored"],
             ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
             "restored_image",
         ),
         (
-            True,
+            1,
             [True, True, False, True],
             ["model", "psf", "restored"],
             ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
             "restored_image",
         ),
         (
-            True,
+            1,
             [True, True, True, False],
             ["model", "psf", "residual"],
             ["delayed_mock", "delayed_mock", "task_1", "task_2", "task_3"],
@@ -221,7 +216,7 @@ def test_should_export_clean_artefacts(
     export_data_as_mock,
     get_wcs_mock,
     get_pol_mock,
-    do_clean,
+    n_iter_major,
     exports,
     products,
     tasks,
@@ -261,8 +256,7 @@ def test_should_export_clean_artefacts(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
-        do_clean,
-        15,
+        n_iter_major,
         "psf_path",
         {"beam_info": "beam_info"},
         "image_name",
@@ -342,7 +336,6 @@ def test_should_estimate_image_and_cell_size(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
-        False,
         0,
         "psf_path",
         {"beam_info": "beam_info"},

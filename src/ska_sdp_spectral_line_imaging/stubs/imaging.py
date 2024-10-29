@@ -334,10 +334,15 @@ def clean_cube(
 
     logger.info(f"Beam information: {beam_info}")
 
+    residual_image = dirty_image
+
     for _ in range(n_iter_major):
 
         model_image_iter, _ = deconvolve(
-            dirty_image, psf_image, **gridding_params, **deconvolution_params
+            residual_image,
+            psf_image,
+            **gridding_params,
+            **deconvolution_params,
         )
 
         model_image = model_image.assign(
@@ -367,17 +372,9 @@ def clean_cube(
         # TODO: Attrs are skipped in v0.5.1 ska-sdp-func-python
         residual_ps = subtract_visibility(ps, model_ps)
 
-        dirty_image = cube_imaging(
+        residual_image = cube_imaging(
             residual_ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
         )
-
-    model_image_last, residual_image = deconvolve(
-        dirty_image, psf_image, **gridding_params, **deconvolution_params
-    )
-
-    model_image = model_image.assign(
-        {"pixels": model_image.pixels + model_image_last.pixels}
-    )
 
     imaging_products["model"] = model_image
     imaging_products["residual"] = residual_image
