@@ -91,8 +91,6 @@ continuum_subtraction
     +---------------------+--------+--------------+----------------------------------------------+
     | Param               | Type   | Default      | Description                                  |
     +=====================+========+==============+==============================================+
-    | report_peak_channel | bool   | True         | Report channel with peak emission/absorption |
-    +---------------------+--------+--------------+----------------------------------------------+
     | export_residual     | bool   | False        | Export the residual visibilities             |
     +---------------------+--------+--------------+----------------------------------------------+
     | psout_name          | str    | vis_residual | Output path of residual data                 |

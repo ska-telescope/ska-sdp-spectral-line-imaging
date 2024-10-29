@@ -192,22 +192,16 @@ def vis_stokes_conversion(upstream_output, output_polarizations):
 @ConfigurableStage(
     "continuum_subtraction",
     configuration=Configuration(
-        report_peak_channel=ConfigParam(
-            bool,
-            True,
-            description="Report channel with peak emission/absorption",
-        ),
         export_residual=ConfigParam(
             bool, False, "Export the residual visibilities"
         ),
         psout_name=ConfigParam(
-            str, "vis_residual", "Output path of residual data"
+            str, "vis_residual", "Output file name prefix of residual data"
         ),
     ),
 )
 def cont_sub(
     upstream_output,
-    report_peak_channel,
     export_residual,
     psout_name,
     _output_dir_,
@@ -219,8 +213,10 @@ def cont_sub(
     ----------
         upstream_output: UpstreamOutput
             Output from the upstream stage
-        report_peak_channel: bool
-            Report channel with peak emission/absorption
+        export_residual: bool
+            Export the residual visibilities
+        psout_name: str
+            Output file name prefix of residual data
 
     Returns
     -------
@@ -249,23 +245,29 @@ def cont_sub(
         }
     )
     upstream_output["ps"] = cont_sub_ps
+    abs_visibility = np.abs(cont_sub_ps.VISIBILITY)
+    max_freq_axis = abs_visibility.max(
+        dim=["time", "baseline_id", "polarization"]
+    )
+    peak_channel = max_freq_axis.argmax()
 
-    if report_peak_channel:
-        peak_channel = (
-            np.abs(cont_sub_ps.VISIBILITY)
-            .max(dim=["time", "baseline_id", "polarization"])
-            .idxmax()
+    peak_frequency = max_freq_axis.idxmax()
+
+    max_visibility = abs_visibility.max()
+
+    unit = cont_sub_ps.frequency.units[0]
+
+    upstream_output.add_compute_tasks(
+        delayed_log(
+            logger.info,
+            "Peak visibility Channel: {peak_channel}."
+            " Frequency: {peak_frequency} {unit}."
+            " Peak Visibility: {max_visibility}",
+            peak_channel=peak_channel,
+            peak_frequency=peak_frequency,
+            max_visibility=max_visibility,
+            unit=unit,
         )
-
-        unit = cont_sub_ps.frequency.units[0]
-
-        upstream_output.add_compute_tasks(
-            delayed_log(
-                logger.info,
-                "Peak visibility Channel: {peak_channel} {unit}",
-                peak_channel=peak_channel,
-                unit=unit,
-            )
-        )
+    )
 
     return upstream_output

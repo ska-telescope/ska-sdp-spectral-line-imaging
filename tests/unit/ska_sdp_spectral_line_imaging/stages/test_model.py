@@ -9,7 +9,10 @@ from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
-def test_should_perform_continuum_subtraction(subtract_visibility_mock):
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.np")
+def test_should_perform_continuum_subtraction(
+    np_mock, subtract_visibility_mock
+):
 
     observation = Mock(name="observation")
     upstream_output = UpstreamOutput()
@@ -17,11 +20,12 @@ def test_should_perform_continuum_subtraction(subtract_visibility_mock):
     observation.assign.return_value = "model"
     subtracted_vis = Mock(name="subtracted_vis")
     subtracted_vis.VISIBILITY.assign_attrs.return_value = "sub_vis_with_attrs"
+    subtracted_vis.frequency = Mock(name="frequency")
+    subtracted_vis.frequency.units = ["Hz"]
+    subtracted_vis.assign.return_value = subtracted_vis
     subtract_visibility_mock.return_value = subtracted_vis
 
-    cont_sub.stage_definition(
-        upstream_output, False, False, "ps_out", "output_path"
-    )
+    cont_sub.stage_definition(upstream_output, False, "ps_out", "output_path")
     observation.assign.assert_called_once_with(
         {"VISIBILITY": observation.VISIBILITY_MODEL}
     )
@@ -29,23 +33,6 @@ def test_should_perform_continuum_subtraction(subtract_visibility_mock):
     subtracted_vis.assign.assert_called_once_with(
         {"VISIBILITY": "sub_vis_with_attrs"}
     )
-
-
-@mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
-@mock.patch("ska_sdp_spectral_line_imaging.stages.model.np")
-def test_should_not_report_peak_channel_value(
-    numpy_mock, subtract_visibility_mock
-):
-
-    observation = Mock(name="observation")
-    upstream_output = UpstreamOutput()
-    upstream_output["ps"] = observation
-
-    cont_sub.stage_definition(
-        upstream_output, False, False, "ps_out", "output_path"
-    )
-
-    numpy_mock.abs.assert_not_called()
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.logger")
@@ -66,20 +53,24 @@ def test_should_report_peak_channel_value(
     numpy_mock.abs = Mock(name="abs", return_value=numpy_mock)
     numpy_mock.max = Mock(name="max", return_value=numpy_mock)
     numpy_mock.idxmax = Mock(name="idxmax", return_value=numpy_mock)
+    numpy_mock.argmax = Mock(name="idxmax", return_value=numpy_mock)
 
-    cont_sub.stage_definition(
-        upstream_output, True, False, "ps_out", "output_path"
-    )
+    cont_sub.stage_definition(upstream_output, False, "ps_out", "output_path")
 
     numpy_mock.abs.assert_called_once_with(observation.VISIBILITY)
-    numpy_mock.max.assert_called_once_with(
-        dim=["time", "baseline_id", "polarization"]
+    numpy_mock.max.assert_has_calls(
+        [mock.call(dim=["time", "baseline_id", "polarization"])]
     )
     numpy_mock.idxmax.assert_called_once()
+    numpy_mock.argmax.assert_called_once()
     delayed_log_mock.assert_called_once_with(
         logger_mock.info,
-        "Peak visibility Channel: {peak_channel} {unit}",
+        "Peak visibility Channel: {peak_channel}."
+        " Frequency: {peak_frequency} {unit}."
+        " Peak Visibility: {max_visibility}",
         peak_channel=numpy_mock,
+        peak_frequency=numpy_mock,
+        max_visibility=numpy_mock,
         unit="Hz",
     )
 

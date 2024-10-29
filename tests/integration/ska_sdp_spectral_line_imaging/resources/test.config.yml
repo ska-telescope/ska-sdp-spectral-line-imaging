@@ -1,7 +1,6 @@
 global_parameters: {}
 parameters:
   continuum_subtraction:
-    report_peak_channel: true
     psout_name: residual
     export_residual: true
   imaging:
