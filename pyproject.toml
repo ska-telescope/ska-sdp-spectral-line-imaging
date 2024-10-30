@@ -6,8 +6,7 @@ authors = ["DHRUVA <DHRUVA-team@SKA>"]
 license = "BSD-3-Clause"
 packages = [
     { include = "ska_sdp_spectral_line_imaging", from = "src" },
-    { include = "ska_sdp_piper", from = "src" },
-    { include = "ska_sdp_benchmarker", from = "src"}
+    { include = "ska_sdp_piper", from = "src" }
 ]
 
 [[tool.poetry.source]]
@@ -30,7 +29,7 @@ nbqa = "^1.8.5"
 numpy = "^1.26.4"
 flake8 = "^7.0.0"
 jsonschema = "^4.22.0"
-typer = "^0.12.3"
+typer = "^0.12.5"
 xradio = {version = "0.0.31", python = "<3.12,>=3.10"}
 xarray = "^2024.6.0"
 ducc0 = "^0.34.0"
@@ -70,10 +69,12 @@ pandas = "^2.2.3"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.setuptools.package-data]
+ska_sdp_piper = ["*.sh"]
+
 [tool.poetry.scripts]
 piper = "ska_sdp_piper.app.cli:app"
 spectral-line-imaging-pipeline = "ska_sdp_spectral_line_imaging.pipeline:spectral_line_imaging_pipeline"
-benchmark-pipeline = "ska_sdp_benchmarker.benchmark:benchmarker"
 
 [tool.coverage.run]
 branch = true
