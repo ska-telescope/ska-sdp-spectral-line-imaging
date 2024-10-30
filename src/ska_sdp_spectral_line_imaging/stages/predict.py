@@ -1,10 +1,16 @@
+import logging
 import os
+
+import numpy as np
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
+from ska_sdp_piper.piper.utils.log_util import delayed_log
 
 from ..stubs.predict import predict_for_channels
 from ..util import export_data_as
+
+logger = logging.getLogger()
 
 
 @ConfigurableStage(
@@ -32,6 +38,8 @@ def predict_stage(
             Floating point accuracy for ducc gridder
         cell_size: float
             Cell size in arcsecond
+        export_model: bool
+            If True, export model.
 
     Returns
     -------
@@ -59,6 +67,28 @@ def predict_stage(
                 ps.VISIBILITY_MODEL, output_path, export_format="zarr"
             )
         )
+
+    peak_flux = np.abs(
+        ps.VISIBILITY_MODEL.mean(dim=["time", "baseline_id"]).max(
+            dim="frequency"
+        )
+    )
+
+    peak_amp = np.abs(
+        ps.VISIBILITY.mean(dim=["time", "baseline_id"])
+        .isel(polarization=0)
+        .max()
+    )
+
+    upstream_output.add_compute_tasks(
+        delayed_log(
+            logger.info,
+            "Peak flux in Model: {peak_flux}."
+            " Peak amplitude of visibilities: {peak_amp}",
+            peak_flux=peak_flux,
+            peak_amp=peak_amp,
+        ),
+    )
 
     upstream_output["ps"] = ps
 
