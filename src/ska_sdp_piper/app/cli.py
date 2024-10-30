@@ -90,10 +90,17 @@ def benchmark(
 
     Parameters
     ----------
-       pipeline_path: str
-           Path to the pipeline to be installed
-       config_install_path: str
-           Path to place the default config.
+        command: str
+            Name of the pipeline to be benchmarked
+        setup: bool
+            Setup dool
+        report_output: str
+            Output folder to store the results
+        capture_interval: int
+            Time interval for capturing benchmarking stats
+        ctx: Context
+            Command context to capture additional args of the command
+
     """
 
     if not setup and command is None:
