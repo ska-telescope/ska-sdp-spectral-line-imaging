@@ -77,7 +77,7 @@ def benchmark(
         help="""Setup dool for benchmarking""",
     ),
     report_output: str = Option(
-        default="./output",
+        default="./benchmark",
         help="""Output folder to store the results.""",
     ),
     capture_interval=Option(
