@@ -152,7 +152,7 @@ def restore_cube(
     )
 
     if residual is not None:
-        restored += residual["pixels"]
+        restored = restored + residual["pixels"]
 
     restored_image = Image.constructor(
         data=restored.data,
