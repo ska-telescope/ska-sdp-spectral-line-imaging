@@ -3,6 +3,8 @@ import logging
 import os
 
 import astropy.io.fits as fits
+import dask
+import dask.delayed
 import numpy as np
 import xarray as xr
 from ska_sdp_func_python.xradio.visibility.operations import (
@@ -189,6 +191,33 @@ def vis_stokes_conversion(upstream_output, output_polarizations):
     return upstream_output
 
 
+def _fit_polynomial_on_visibility(dataarray):
+    """
+    Perform polynomial fit across frequency axis
+
+    Parameters
+    ----------
+    dataarray: xarray.DataArray
+        A dataarray with dimensions ["time", "baseline_id", "polarization",
+        "frequencies"] in any sequence.
+
+    Returns
+    -------
+    dask.delayed.Delayed
+        A dask delayed call to numpy polynomial polyfit function
+    """
+    mean_vis = dataarray.mean(
+        dim=["time", "baseline_id", "polarization"], skipna=True
+    )
+    weights = np.isfinite(mean_vis).astype(np.float32)
+    data = xr.where(np.isnan(mean_vis), 0.0, mean_vis)
+    xaxis = dask.array.arange(data.size)
+
+    return dask.delayed(np.polynomial.polynomial.polyfit)(
+        xaxis, data, w=weights, deg=1
+    )
+
+
 @ConfigurableStage(
     "continuum_subtraction",
     configuration=Configuration(
@@ -198,12 +227,19 @@ def vis_stokes_conversion(upstream_output, output_polarizations):
         psout_name=ConfigParam(
             str, "vis_residual", "Output file name prefix of residual data"
         ),
+        report_poly_fit=ConfigParam(
+            bool,
+            False,
+            "Whether to report extent of continuum subtraction "
+            "by fitting polynomial across channels",
+        ),
     ),
 )
 def cont_sub(
     upstream_output,
     export_residual,
     psout_name,
+    report_poly_fit,
     _output_dir_,
 ):
     """
@@ -245,16 +281,15 @@ def cont_sub(
         }
     )
     upstream_output["ps"] = cont_sub_ps
+
+    # Report peak visibility and corresponding channel
     abs_visibility = np.abs(cont_sub_ps.VISIBILITY)
     max_freq_axis = abs_visibility.max(
         dim=["time", "baseline_id", "polarization"]
     )
     peak_channel = max_freq_axis.argmax()
-
     peak_frequency = max_freq_axis.idxmax()
-
     max_visibility = abs_visibility.max()
-
     unit = cont_sub_ps.frequency.units[0]
 
     upstream_output.add_compute_tasks(
@@ -269,5 +304,36 @@ def cont_sub(
             unit=unit,
         )
     )
+
+    # Report extent of continuum subtraction
+    if report_poly_fit:
+        pols = ps.polarization.values
+        is_fit_possible = len(pols) == 2
+        is_fit_possible = ("XX" in pols and "YY" in pols) or (
+            "RR" in pols and "LL" in pols
+        )
+        if not is_fit_possible:
+            logger.warning("Cannot report extent of continuum subtraction.")
+        else:
+            fit_real = _fit_polynomial_on_visibility(
+                cont_sub_ps.VISIBILITY.real
+            )
+            fit_imag = _fit_polynomial_on_visibility(
+                cont_sub_ps.VISIBILITY.imag
+            )
+            upstream_output.add_compute_tasks(
+                delayed_log(
+                    logger.info,
+                    "Slope of fit on real part {fit}",
+                    fit=fit_real[1],
+                )
+            )
+            upstream_output.add_compute_tasks(
+                delayed_log(
+                    logger.info,
+                    "Slope of fit on imag part {fit}",
+                    fit=fit_imag[1],
+                )
+            )
 
     return upstream_output
