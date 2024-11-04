@@ -14,12 +14,13 @@ from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
-def test_should_do_imaging_for_dirty_image(
-    clean_cube_mock, cube_imaging_mock, get_wcs_mock, get_pol_mock
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_data_as")
+def test_should_do_imaging_for_dirty_image_when_nmajor_iter_is_zero(
+    export_data_as_mock, clean_cube_mock, get_wcs_mock, get_pol_mock
 ):
-    cube_imaging_mock.return_value = "dirty image"
+    clean_cube_mock.return_value = {"dirty": "dirty_image"}
+    export_data_as_mock.return_value = "dirty_export_task"
 
     ps = Mock(name="ps")
     ps.UVW = "UVW"
@@ -34,120 +35,49 @@ def test_should_do_imaging_for_dirty_image(
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = ps
 
-    imaging_stage.stage_definition(
+    upstream_output = imaging_stage.stage_definition(
         upstream_output,
         gridding_params,
         {"deconvolve_params": None},
         0,
         "psf_path",
-        {"beam_info": "beam_info"},
+        {"bmaj": "bmaj"},
         "image_name",
         "fits",
-        False,
-        False,
-        False,
-        False,
+        True,
+        True,
+        True,
         "output_dir",
     )
 
     get_pol_mock.assert_called_once_with(ps)
     get_wcs_mock.assert_called_once_with(ps, 123, 456, 456)
-
-    cube_imaging_mock.assert_called_once_with(
-        ps, 123, 456, 456, 1e-4, "wcs", "polarization_frame"
-    )
-
-    clean_cube_mock.assert_not_called()
-
-    assert upstream_output.ps == ps
-    assert upstream_output.image_cube == "dirty image"
-
-
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
-    return_value="polarization_frame",
-)
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
-)
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
-def test_should_do_imaging_for_clean_image(
-    clean_cube_mock, cube_imaging_mock, get_wcs_mock, get_pol_mock
-):
-    cube_imaging_mock.return_value = "dirty image"
-    clean_cube_mock.return_value = {
-        "residual": "residual_image",
-        "model": "model_image",
-        "psf": "psf_image",
-        "restored": "restored_image",
-    }
-
-    ps = Mock(name="ps")
-    ps.UVW = "UVW"
-    ps.frequency.reference_frequency = {"data": 123.01}
-    gridding_params = {
-        "epsilon": 1e-4,
-        "cell_size": 123,
-        "image_size": 456,
-        "scaling_factor": 2.0,
-    }
-
-    upstream_output = UpstreamOutput()
-    upstream_output["ps"] = ps
-
-    imaging_stage.stage_definition(
-        upstream_output,
-        gridding_params,
-        {"deconvolve_params": None},
-        15,
-        "psf_path",
-        {"beam_info": "beam_info"},
-        "image_name",
-        "fits",
-        False,
-        False,
-        False,
-        False,
-        "output_dir",
-    )
-
-    get_pol_mock.assert_called_once_with(ps)
-    get_wcs_mock.assert_called_once_with(ps, 123, 456, 456)
-
-    cube_imaging_mock.assert_called_once_with(
-        ps, 123, 456, 456, 1e-4, "wcs", "polarization_frame"
-    )
 
     clean_cube_mock.assert_called_once_with(
         ps,
         "psf_path",
-        "dirty image",
-        15,
-        {
-            "epsilon": 1e-4,
-            "cell_size": 123,
-            "image_size": 456,
-            "scaling_factor": 2.0,
-            "nx": 456,
-            "ny": 456,
-        },
+        0,
+        gridding_params,
         {"deconvolve_params": None},
         "polarization_frame",
         "wcs",
-        {"beam_info": "beam_info"},
+        {"bmaj": "bmaj"},
+    )
+
+    export_data_as_mock.assert_called_once_with(
+        "dirty_image", "output_dir/image_name.dirty", "fits"
     )
 
     assert upstream_output.ps == ps
-    assert upstream_output.image_cube == "restored_image"
+    assert upstream_output.compute_tasks == ["dirty_export_task"]
 
 
 @pytest.mark.parametrize(
-    "n_iter_major,exports,products,tasks,output",
+    "n_iter_major,exports,products,tasks",
     [
         (
             1,
-            [True, True, True, True],
+            [True, True, True],
             ["model", "psf", "residual", "restored"],
             [
                 "task_1",
@@ -155,42 +85,24 @@ def test_should_do_imaging_for_clean_image(
                 "task_3",
                 "task_4",
             ],
-            "restored_image",
-        ),
-        (
-            0,
-            [True, True, True, True],
-            ["dirty"],
-            ["task_1"],
-            "dirty_image",
         ),
         (
             1,
-            [False, True, True, True],
-            ["model", "residual", "restored"],
-            ["task_1", "task_2", "task_3"],
-            "restored_image",
-        ),
-        (
-            1,
-            [True, False, True, True],
+            [False, True, True],
             ["psf", "residual", "restored"],
             ["task_1", "task_2", "task_3"],
-            "restored_image",
         ),
         (
             1,
-            [True, True, False, True],
+            [True, False, True],
+            ["model", "residual", "restored"],
+            ["task_1", "task_2", "task_3"],
+        ),
+        (
+            1,
+            [True, True, False],
             ["model", "psf", "restored"],
             ["task_1", "task_2", "task_3"],
-            "restored_image",
-        ),
-        (
-            1,
-            [True, True, True, False],
-            ["model", "psf", "residual"],
-            ["task_1", "task_2", "task_3"],
-            "restored_image",
         ),
     ],
 )
@@ -202,11 +114,9 @@ def test_should_do_imaging_for_clean_image(
     "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
 )
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_data_as")
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
 def test_should_export_clean_artefacts(
     clean_cube_mock,
-    cube_imaging_mock,
     export_data_as_mock,
     get_wcs_mock,
     get_pol_mock,
@@ -214,13 +124,11 @@ def test_should_export_clean_artefacts(
     exports,
     products,
     tasks,
-    output,
 ):
-    cube_imaging_mock.return_value = "dirty_image"
     clean_cube_mock.return_value = {
-        "residual": "residual_image",
         "model": "model_image",
         "psf": "psf_image",
+        "residual": "residual_image",
         "restored": "restored_image",
     }
 
@@ -249,21 +157,33 @@ def test_should_export_clean_artefacts(
         gridding_params,
         {"deconvolve_params": None},
         n_iter_major,
-        "psf_path",
-        {"beam_info": "beam_info"},
+        None,
+        None,
         "image_name",
         "fits",
         *exports,
         "output_dir",
     )
 
-    compute_tasks = upstream_output.compute_tasks
+    get_pol_mock.assert_called_once_with(ps)
+    get_wcs_mock.assert_called_once_with(ps, 123, 456, 456)
 
+    clean_cube_mock.assert_called_once_with(
+        ps,
+        None,
+        n_iter_major,
+        gridding_params,
+        {"deconvolve_params": None},
+        "polarization_frame",
+        "wcs",
+        None,
+    )
+
+    compute_tasks = upstream_output.compute_tasks
     calls = [
         call(f"{product}_image", f"output_dir/image_name.{product}", "fits")
         for product in products
     ]
-
     export_data_as_mock.assert_has_calls(calls)
 
     assert upstream_output.ps == ps
@@ -277,15 +197,15 @@ def test_should_export_clean_artefacts(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.cube_imaging")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_cell_size")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_image_size")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.np")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
 def test_should_estimate_image_and_cell_size(
+    clean_cube_mock,
     numpy_mock,
     estimate_image_size_mock,
     estimate_cell_size_mock,
-    cube_imaging_mock,
     get_wcs_mock,
     get_pol_mock,
 ):
@@ -300,7 +220,6 @@ def test_should_estimate_image_and_cell_size(
     image_size_xdr = Mock(name="image_size_dataarray")
     estimate_image_size_mock.return_value = image_size_xdr
     image_size_xdr.compute.return_value = 500
-    cube_imaging_mock.return_value = "dirty image"
 
     ps = Mock(name="ps")
     ps.UVW = Mock(name="UVW")
@@ -336,7 +255,6 @@ def test_should_estimate_image_and_cell_size(
         False,
         False,
         False,
-        False,
         "output_dir",
     )
 
@@ -358,9 +276,20 @@ def test_should_estimate_image_and_cell_size(
     get_pol_mock.assert_called_once_with(ps)
     get_wcs_mock.assert_called_once_with(ps, 0.75, 500, 500)
 
-    cube_imaging_mock.assert_called_once_with(
-        ps, 0.75, 500, 500, 1e-4, "wcs", "polarization_frame"
+    clean_cube_mock.assert_called_once_with(
+        ps,
+        "psf_path",
+        0,
+        {
+            "epsilon": 1e-4,
+            "cell_size": 0.75,
+            "image_size": 500,
+            "scaling_factor": 2.0,
+            "nx": 500.0,
+            "ny": 500.0,
+        },
+        {"deconvolve_params": None},
+        "polarization_frame",
+        "wcs",
+        {"beam_info": "beam_info"},
     )
-
-    assert upstream_output.ps == ps
-    assert upstream_output.image_cube == "dirty image"

@@ -1,11 +1,12 @@
 # pylint: disable=no-member
 import numpy as np
-from mock import Mock, mock
+from mock import MagicMock, Mock, call, mock
 
 from ska_sdp_spectral_line_imaging.stubs.imaging import (
     chunked_imaging,
     clean_cube,
     cube_imaging,
+    generate_psf_image,
     image_ducc,
 )
 
@@ -102,6 +103,89 @@ def test_should_perform_cube_imaging(
     assert cube_image == "cube_image"
 
 
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.xr",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
+)
+def test_should_generate_psf_image(
+    cube_imaging_mock, xr_mock, dask_array_mock
+):
+    dask_array_mock.ones_like.return_value = "ones_array"
+    xr_mock.DataArray.return_value = "vis_xdr"
+    ps = MagicMock(name="ps")
+    psf_ps = MagicMock(name="psf_ps")
+    ps.assign.return_value = psf_ps
+
+    psf = generate_psf_image(
+        ps, 123, 1, 1, 0.0001, "wcs", "polarization_frame"
+    )
+
+    dask_array_mock.ones_like.assert_called_once_with(ps.VISIBILITY.data)
+    xr_mock.DataArray.assert_called_once_with(
+        "ones_array",
+        attrs=ps.VISIBILITY.attrs,
+        coords=ps.VISIBILITY.coords,
+    )
+    ps.assign.assert_called_once_with({"VISIBILITY": "vis_xdr"})
+    cube_imaging_mock.assert_called_once_with(
+        psf_ps, 123, 1, 1, 0.0001, "wcs", "polarization_frame"
+    )
+    assert psf == cube_imaging_mock.return_value
+
+
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve",
+)
+@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.restore_cube")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
+)
+def test_should_generate_dirty_image_if_niter_major_is_zero(
+    cube_imaging_mock,
+    restore_cube_mock,
+    deconvolve_mock,
+):
+    ps = MagicMock(name="ps")
+    dirty_image = Mock(name="dirty_image")
+    cube_imaging_mock.return_value = dirty_image
+    gridding_params = {
+        "epsilon": 1,
+        "cell_size": 123,
+        "image_size": 1,
+        "scaling_factor": 2.0,
+        "nx": 1234,
+        "ny": 4567,
+    }
+    deconvolution_params = {}
+    psf_image_path = "path_to_psf"
+    n_iter_major = 0
+
+    imaging_products = clean_cube(
+        ps,
+        psf_image_path,
+        n_iter_major,
+        gridding_params,
+        deconvolution_params,
+        "polarization_frame",
+        "wcs",
+        "beam_info",
+    )
+
+    cube_imaging_mock.assert_called_once_with(
+        ps, 123, 1234, 4567, 1, "wcs", "polarization_frame"
+    )
+    deconvolve_mock.assert_not_called()
+
+    restore_cube_mock.assert_not_called()
+
+    assert imaging_products["dirty"] == dirty_image
+
+
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.subtract_visibility")
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.predict_for_channels",
@@ -119,7 +203,11 @@ def test_should_perform_cube_imaging(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
 )
-def test_should_perform_major_cyle(
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array",
+)
+def test_should_generate_restored_image_and_other_imaging_products(
+    dask_array_mock,
     cube_imaging_mock,
     restore_cube_mock,
     deconvolve_mock,
@@ -128,31 +216,46 @@ def test_should_perform_major_cyle(
     predict_mock,
     subtract_mock,
 ):
-    ps = Mock(name="ps")
-    residual_ps = Mock(name="residual_ps")
-    ps.assign = Mock(name="assign", return_value=residual_ps)
-    subtract_mock.return_value = residual_ps
-    predicted_visibilities = Mock(name="predicted_visibilities")
-    predict_mock.return_value = predicted_visibilities
-    predicted_visibilities.assign_attrs.return_value = predicted_visibilities
+    dask_array_mock.zeros_like.return_value = "zeros_array"
 
-    dirty_image1 = Mock(name="dirty_image1")
-    residual_image = Mock(name="residual_image")
-    cube_imaging_mock.side_effect = [residual_image]
+    ps = MagicMock(name="ps")
+    model_ps = MagicMock(name="model_ps")
+    residual_ps = MagicMock(name="residual_ps")
+    ps.copy.return_value = residual_ps
+    residual_ps.assign.return_value = model_ps
+    residual_ps1 = MagicMock(name="residual_ps1")
+    residual_ps1.assign.return_value = model_ps
+    residual_ps2 = MagicMock(name="residual_ps2")
+    subtract_mock.side_effect = [residual_ps1, residual_ps2]
 
-    dirty_image1.pixels.data = np.array([1, 2])
-    dirty_image1.image_acc.polarisation_frame = "polarization_frame"
-    dirty_image1.image_acc.wcs = "wcs"
+    model_visibility = MagicMock(name="model_visibility")
+    predict_mock.return_value = model_visibility
+    model_visibility.assign_attrs.return_value = model_visibility
 
-    model_image = Mock(name="model image")
+    dirty_image = Mock(name="dirty_image")
+    dirty_image.pixels.data = np.array([1])
+    residual_image1 = Mock(name="residual_image1")
+    residual_image2 = Mock(name="residual_image2")
+    cube_imaging_mock.side_effect = [
+        dirty_image,
+        residual_image1,
+        residual_image2,
+    ]
+    model_image = MagicMock(name="model image")
     image_mock.constructor.return_value = model_image
-    model_image.pixels.__add__ = lambda x, y: model_image.pixels
     model_image.assign.return_value = model_image
     # TODO: Remove this once polarization naming issue is fixed
     model_image.coords = []
 
-    model_image_iter = Mock(name="model image per iteration")
-    deconvolve_mock.return_value = [model_image_iter, ""]
+    model_image_iter1 = Mock(name="model image per iteration 1")
+    model_image_iter2 = Mock(name="model image per iteration 2")
+    deconvolve_mock.side_effect = [
+        (model_image_iter1, ""),
+        (model_image_iter2, ""),
+    ]
+
+    restored_image = MagicMock(name="restored image")
+    restore_cube_mock.return_value = restored_image
 
     gridding_params = {
         "epsilon": 1,
@@ -168,15 +271,13 @@ def test_should_perform_major_cyle(
     psf_image = Mock(name="psf_image")
     # TODO: Remove this once psf issue is solved
     psf_image.assign_coords.return_value = psf_image
-
     import_image_from_fits_mock.return_value = psf_image
 
-    n_iter_major = 1
+    n_iter_major = 2
 
-    clean_cube(
+    imaging_products = clean_cube(
         ps,
         psf_image_path,
-        dirty_image1,
         n_iter_major,
         gridding_params,
         deconvolution_params,
@@ -191,29 +292,76 @@ def test_should_perform_major_cyle(
 
     # TODO: Add assert for empty image constructor
     # image_mock.constructor.assert_called_once_with()
-
-    deconvolve_mock.assert_called_once_with(
-        dirty_image1, psf_image, **gridding_params, param1=1, param2=2
-    )
-    model_image.assign.assert_called_once_with(
-        {"pixels": model_image.pixels + model_image_iter.pixels}
-    )
-
-    cube_imaging_mock.assert_called_once_with(
-        residual_ps, 123, 1234, 4567, 1, "wcs", "polarization_frame"
+    dask_array_mock.zeros_like.assert_called_once_with(dirty_image.pixels.data)
+    image_mock.constructor.assert_called_once_with(
+        data="zeros_array",
+        polarisation_frame="polarization_frame",
+        wcs="wcs",
     )
 
-    predict_mock.assert_called_once_with(ps, model_image.pixels, 1, 123)
-    subtract_mock.assert_called_once_with(ps, residual_ps)
-    predicted_visibilities.assign_attrs.assert_called_once_with(
-        ps.VISIBILITY.attrs
+    deconvolve_mock.assert_has_calls(
+        [
+            call(
+                dirty_image, psf_image, **gridding_params, param1=1, param2=2
+            ),
+            call(
+                residual_image1,
+                psf_image,
+                **gridding_params,
+                param1=1,
+                param2=2,
+            ),
+        ]
     )
-
+    model_image.assign.assert_has_calls(
+        [
+            call({"pixels": model_image.pixels + model_image_iter1.pixels}),
+            call({"pixels": model_image.pixels + model_image_iter2.pixels}),
+        ]
+    )
+    cube_imaging_mock.assert_has_calls(
+        [
+            call(ps, 123, 1234, 4567, 1, "wcs", "polarization_frame"),
+            call(
+                residual_ps1, 123, 1234, 4567, 1, "wcs", "polarization_frame"
+            ),
+            call(
+                residual_ps2, 123, 1234, 4567, 1, "wcs", "polarization_frame"
+            ),
+        ]
+    )
+    predict_mock.assert_has_calls(
+        [
+            call(residual_ps, model_image.pixels, 1, 123),
+            call(residual_ps1, model_image.pixels, 1, 123),
+        ]
+    )
+    residual_ps.assign.assert_called_once_with(
+        {"VISIBILITY": model_visibility}
+    )
+    residual_ps1.assign.assert_called_once_with(
+        {"VISIBILITY": model_visibility}
+    )
+    subtract_mock.assert_has_calls(
+        [
+            call(ps, model_ps),
+            call(ps, model_ps),
+        ]
+    )
+    model_visibility.assign_attrs.assert_has_calls(
+        [
+            call(residual_ps.VISIBILITY.attrs),
+            call(residual_ps1.VISIBILITY.attrs),
+        ]
+    )
     restore_cube_mock.assert_called_once_with(
-        model_image, psf_image, residual_image, "beam_info"
+        model_image, psf_image, residual_image2, "beam_info"
     )
 
-    ps.assign.assert_called_once_with({"VISIBILITY": predicted_visibilities})
+    assert imaging_products["model"] == model_image
+    assert imaging_products["psf"] == psf_image
+    assert imaging_products["residual"] == residual_image2
+    assert imaging_products["restored"] == restored_image
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.subtract_visibility")
@@ -237,10 +385,14 @@ def test_should_perform_major_cyle(
     "ska_sdp_spectral_line_imaging.stubs.imaging.xr.DataArray",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array.ones_like",
+    "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stubs.imaging.generate_psf_image",
 )
 def test_should_create_psf_if_psf_is_none(
-    dask_ones_mock,
+    generate_psf_image_mock,
+    dask_array_mock,
     data_array_mock,
     cube_imaging_mock,
     restore_cube_mock,
@@ -250,43 +402,22 @@ def test_should_create_psf_if_psf_is_none(
     predict_mock,
     subtract_mock,
 ):
+    ps = MagicMock(name="ps")
 
-    ps = Mock(name="ps")
-    ps.VISIBILITY.shape = (1, 1, 2, 2)
-    psf_ps = Mock(name="psf_ps")
-    ps.assign = Mock(name="assign", return_value=psf_ps)
+    dirty_image = Mock(name="dirty_image")
+    residual_image = MagicMock(name="residual_image")
+    cube_imaging_mock.side_effect = [dirty_image, residual_image]
 
-    dirty_image1 = Mock(name="dirty_image1")
-
-    dirty_image1.pixels.data = np.array([1, 2])
-    dirty_image1.image_acc.polarisation_frame = "polarization_frame"
-    dirty_image1.image_acc.wcs = "wcs"
-
-    model_image = Mock(name="model image")
+    model_image = MagicMock(name="model image")
     image_mock.constructor.return_value = model_image
-    model_image.pixels.__add__ = lambda x, y: model_image.pixels
     model_image.assign.return_value = model_image
     # TODO: Remove this once polarization naming issue is fixed
     model_image.coords = []
 
-    model_image_iter = Mock(name="model image per iteration")
-    deconvolve_mock.return_value = (model_image_iter, "residual_image")
-
-    gridding_params = {
-        "epsilon": 1,
-        "cell_size": 123,
-        "image_size": 1,
-        "scaling_factor": 2.0,
-        "nx": 1234,
-        "ny": 4567,
-    }
-    deconvolution_params = {"param1": 1, "param2": 2}
-
-    psf_image = Mock(name="psf_image")
-
-    cube_imaging_mock.side_effect = [psf_image]
-    data_array_mock.return_value = data_array_mock
-    dask_ones_mock.return_value = "dask_array_ones"
+    # model_image_iter = Mock(name="model image per iteration")
+    gen_psf_image = MagicMock(name="gen_psf_image")
+    generate_psf_image_mock.return_value = gen_psf_image
+    deconvolve_mock.return_value = (Mock(name="model_image_iter"), "")
 
     gridding_params = {
         "epsilon": 0.0001,
@@ -296,35 +427,35 @@ def test_should_create_psf_if_psf_is_none(
         "nx": 1,
         "ny": 1,
     }
-    deconvolution_params = {"param1": 1, "param2": 2}
-
+    deconvolution_params = {}
     psf_image_path = None
-    n_iter_major = 0
+    n_iter_major = 1
 
     clean_cube(
         ps,
         psf_image_path,
-        dirty_image1,
         n_iter_major,
         gridding_params,
         deconvolution_params,
-        "polarization frame",
+        "polarization_frame",
         "wcs",
         "beam_info",
     )
 
-    data_array_mock.assert_called_once_with(
-        "dask_array_ones",
-        attrs=ps.VISIBILITY.attrs,
-        coords=ps.VISIBILITY.coords,
+    generate_psf_image_mock.assert_called_once_with(
+        ps, 123, 1, 1, 0.0001, "wcs", "polarization_frame"
     )
 
-    ps.assign.assert_called_once_with({"VISIBILITY": data_array_mock})
-
-    cube_imaging_mock.assert_called_once_with(
-        psf_ps, 123, 1, 1, 0.0001, "wcs", "polarization frame"
+    deconvolve_mock.assert_called_once_with(
+        dirty_image,
+        gen_psf_image,
+        **gridding_params,
+        **deconvolution_params,
     )
 
     restore_cube_mock.assert_called_once_with(
-        model_image, psf_image, dirty_image1, "beam_info"
+        model_image,
+        gen_psf_image,
+        residual_image,
+        "beam_info",
     )

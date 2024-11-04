@@ -7,7 +7,7 @@ import numpy as np
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
-from ..stubs.imaging import clean_cube, cube_imaging
+from ..stubs.imaging import clean_cube
 from ..util import (
     estimate_cell_size,
     estimate_image_size,
@@ -38,7 +38,7 @@ SPEED_OF_LIGHT = 299792458
         deconvolution_params=ConfigParam(
             dict,
             {
-                "algorithm": "multiscale",
+                "algorithm": "generic_clean",
                 "gain": 0.7,
                 "threshold": 0.0,
                 "fractional_threshold": 0.01,
@@ -75,29 +75,22 @@ SPEED_OF_LIGHT = 299792458
         export_format=ConfigParam(
             str, "fits", "Data format for the image. Allowed values: fits|zarr"
         ),
-        export_psf_image=ConfigParam(
-            bool,
-            False,
-            description="Whether to export the psf image.",
-        ),
         export_model_image=ConfigParam(
             bool,
             False,
             description="Whether to export the model image "
             "generated as part of clean.",
         ),
+        export_psf_image=ConfigParam(
+            bool,
+            False,
+            description="Whether to export the psf image.",
+        ),
         export_residual_image=ConfigParam(
             bool,
             False,
             description="Whether to export the residual image "
             "generated as part of clean.",
-        ),
-        export_image=ConfigParam(
-            bool,
-            False,
-            description="Whether to export the restored image "
-            "generated as part of clean. If clean is not run then "
-            "export the dirty image",
         ),
     ),
 )
@@ -110,10 +103,9 @@ def imaging_stage(
     beam_info,
     image_name,
     export_format,
-    export_psf_image,
     export_model_image,
+    export_psf_image,
     export_residual_image,
-    export_image,
     _output_dir_,
 ):
     """
@@ -143,14 +135,12 @@ def imaging_stage(
             Prefix name of the exported image
         export_format: str
             "Data format for the image. Allowed values: fits|zarr"
-        export_psf_image: bool
-            Whether to export psf image
         export_model_image: bool
             Whether to export model image
+        export_psf_image: bool
+            Whether to export psf image
         export_residual_image: bool
             Whether to export residual image
-        export_image: bool
-            Whether to export restored/dirty image
         _output_dir_: str
             Output directory created for the run
 
@@ -164,11 +154,12 @@ def imaging_stage(
     image_size = gridding_params.get("image_size", None)
     output_path = os.path.join(_output_dir_, image_name)
 
-    clean_export_flags = {
+    clean_products = {
+        "restored": True,
+        "dirty": True,
         "model": export_model_image,
         "psf": export_psf_image,
         "residual": export_residual_image,
-        "restored": export_image,
     }
 
     if cell_size is None:
@@ -211,54 +202,27 @@ def imaging_stage(
     polarization_frame = get_polarization(ps)
     wcs = get_wcs(ps, cell_size, gridding_params["nx"], gridding_params["ny"])
 
-    dirty_image = cube_imaging(
+    imaging_products = clean_cube(
         ps,
-        cell_size,
-        gridding_params["nx"],
-        gridding_params["ny"],
-        gridding_params["epsilon"],
-        wcs,
+        psf_image_path,
+        n_iter_major,
+        gridding_params,
+        deconvolution_params,
         polarization_frame,
+        wcs,
+        beam_info,
     )
 
-    output_image = dirty_image
-
-    if n_iter_major > 0:
-        imaging_products = clean_cube(
-            ps,
-            psf_image_path,
-            dirty_image,
-            n_iter_major,
-            gridding_params,
-            deconvolution_params,
-            polarization_frame,
-            wcs,
-            beam_info,
-        )
-
-        output_image = imaging_products["restored"]
-
-        upstream_output.add_compute_tasks(
-            *[
-                export_data_as(
-                    imaging_products[artefact_type],
-                    f"{output_path}.{artefact_type}",
-                    export_format,
-                )
-                for artefact_type, export_flag in clean_export_flags.items()
-                if export_flag
-            ]
-        )
-
-    elif export_image:
-        upstream_output.add_compute_tasks(
+    upstream_output.add_compute_tasks(
+        *[
             export_data_as(
-                dirty_image,
-                f"{output_path}.dirty",
+                imaging_products[artefact_type],
+                f"{output_path}.{artefact_type}",
                 export_format,
             )
-        )
-
-    upstream_output["image_cube"] = output_image
+            for artefact_type in imaging_products
+            if clean_products[artefact_type]
+        ]
+    )
 
     return upstream_output

@@ -1,26 +1,26 @@
 global_parameters: {}
 parameters:
   continuum_subtraction:
-    psout_name: residual
     export_residual: true
+    psout_name: residual
   imaging:
     image_name: test_cube
     export_format: fits
-    export_image: true
     n_iter_major: 0
     gridding_params:
       cell_size: 60.0
       epsilon: 0.0001
       image_size: 16
+  load_data:
+    obs_id: 0
   predict_stage:
-    psout_name: model
-    cell_size: 60.0
+    cell_size: 1.0
+    epsilon: 0.0001
     export_model: true
+    psout_name: model
   read_model:
     image: ./tMS-%s-image.fits
     image_type: continuum
-  load_data:
-    obs_id: 0
   vis_stokes_conversion:
     output_polarizations:
     - I
@@ -30,7 +30,7 @@ parameters:
 pipeline:
   continuum_subtraction: true
   imaging: true
+  load_data: true
   predict_stage: true
   read_model: true
-  load_data: true
   vis_stokes_conversion: true

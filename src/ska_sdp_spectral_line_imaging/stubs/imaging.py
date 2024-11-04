@@ -2,7 +2,6 @@
 
 import logging
 
-import dask
 import dask.array
 import ducc0.wgridder as wgridder
 import numpy as np
@@ -14,6 +13,8 @@ from ska_sdp_func_python.xradio.visibility.operations import (
 
 from .deconvolution import deconvolve, restore_cube
 from .predict import predict_for_channels
+
+logger = logging.getLogger()
 
 
 def image_ducc(
@@ -227,7 +228,7 @@ def generate_psf_image(
     psf_ps = ps.assign(
         {
             "VISIBILITY": xr.DataArray(
-                dask.array.ones_like(ps.VISIBILITY),
+                dask.array.ones_like(ps.VISIBILITY.data),
                 attrs=ps.VISIBILITY.attrs,
                 coords=ps.VISIBILITY.coords,
             )
@@ -247,7 +248,6 @@ def generate_psf_image(
 def clean_cube(
     ps,
     psf_image_path,
-    dirty_image,
     n_iter_major,
     gridding_params,
     deconvolution_params,
@@ -264,8 +264,6 @@ def clean_cube(
             Observation
         psf_image_path: str
             File path to psf image stored in FITS format
-        dirty_image: ska_sdp_datamodels.image.image_model.Image
-            The dirty image after continuum subtraction
         n_iter_major: int
             Number of major iterations
         gridding_params: dict
@@ -291,87 +289,108 @@ def clean_cube(
     cell_size = gridding_params.get("cell_size")
     nx = gridding_params.get("nx")
     ny = gridding_params.get("ny")
-    residual_ps = ps
 
-    logger = logging.getLogger()
-
-    imaging_products = {}
-
-    if psf_image_path is None:
-        psf_image = generate_psf_image(
-            ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
-        )
-    else:
-        # TODO: This returns image but frequency axis is not aligned
-        # Also, because of FITS format, image has to be loaded into memory.
-        logger.warning(
-            f"Loading FITS psf image from {psf_image_path} into memory."
-            "This may slow down the further computations."
-        )
-        psf_image = import_image_from_fits(psf_image_path, fixpol=True)
-
-        # TODO: Will be removed once coordinate issue is fixed
-        # The frequency coords have floating point precision issue
-        psf_image = psf_image.assign_coords(dirty_image.coords)
-
-    imaging_products["psf"] = psf_image
-
-    model_image = Image.constructor(
-        data=dask.array.zeros_like(dirty_image.pixels.data),
-        polarisation_frame=dirty_image.image_acc.polarisation_frame,
-        wcs=dirty_image.image_acc.wcs,
+    dirty_image = cube_imaging(
+        ps,
+        cell_size,
+        gridding_params["nx"],
+        gridding_params["ny"],
+        gridding_params["epsilon"],
+        wcs,
+        polarization_frame,
     )
 
-    residual_image = dirty_image
+    imaging_products = {"dirty": dirty_image}
 
-    for _ in range(n_iter_major):
+    if n_iter_major > 0:
+        if psf_image_path is None:
+            psf_image = generate_psf_image(
+                ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
+            )
+        else:
+            # TODO: This returns image but frequency axis is not aligned
+            # Also, because of FITS format, image has to be loaded into memory.
+            logger.warning(
+                f"Loading FITS psf image from {psf_image_path} into memory."
+                "This may slow down the further computations."
+            )
+            psf_image = import_image_from_fits(psf_image_path, fixpol=True)
 
-        model_image_iter, _ = deconvolve(
-            residual_image,
+            # TODO: Will be removed once coordinate issue is fixed
+            # The frequency coords have floating point precision issue
+            psf_image = psf_image.assign_coords(dirty_image.coords)
+
+        model_image = Image.constructor(
+            data=dask.array.zeros_like(dirty_image.pixels.data),
+            polarisation_frame=polarization_frame,
+            wcs=wcs,
+        )
+
+        residual_image = dirty_image
+        residual_ps = ps.copy(deep=False)
+
+        for _ in range(n_iter_major):
+
+            model_image_iter, _ = deconvolve(
+                residual_image,
+                psf_image,
+                **gridding_params,
+                **deconvolution_params,
+            )
+
+            model_image = model_image.assign(
+                {"pixels": model_image.pixels + model_image_iter.pixels}
+            )
+
+            # TODO: Remove once data models are standardized
+            if "polarisation" in model_image.coords:  # pragma: no cover
+                model_image = model_image.rename(
+                    {"polarisation": "polarization"}
+                )
+
+            model_visibility = predict_for_channels(
+                residual_ps,
+                model_image.pixels,
+                epsilon,
+                cell_size,
+            )
+            model_visibility = model_visibility.assign_attrs(
+                residual_ps.VISIBILITY.attrs
+            )
+
+            # TODO: Remove once data models are standardized
+            if "polarization" in model_image.coords:  # pragma: no cover
+                model_image = model_image.rename(
+                    {"polarization": "polarisation"}
+                )
+
+            model_ps = residual_ps.assign({"VISIBILITY": model_visibility})
+
+            # TODO: Attrs are skipped in v0.5.1 ska-sdp-func-python
+            residual_ps = subtract_visibility(ps, model_ps)
+
+            residual_image = cube_imaging(
+                residual_ps,
+                cell_size,
+                nx,
+                ny,
+                epsilon,
+                wcs,
+                polarization_frame,
+            )
+
+        restored_image = restore_cube(
+            model_image,
             psf_image,
-            **gridding_params,
-            **deconvolution_params,
+            residual_image,
+            beam_info,
         )
 
-        model_image = model_image.assign(
-            {"pixels": model_image.pixels + model_image_iter.pixels}
-        )
-
-        # TODO: Remove once data models are standardized
-        if "polarisation" in model_image.coords:  # pragma: no cover
-            model_image = model_image.rename({"polarisation": "polarization"})
-
-        model_visibility = predict_for_channels(
-            residual_ps,
-            model_image.pixels,
-            epsilon,
-            cell_size,
-        )
-        model_visibility = model_visibility.assign_attrs(
-            residual_ps.VISIBILITY.attrs
-        )
-
-        # TODO: Remove once data models are standardized
-        if "polarization" in model_image.coords:  # pragma: no cover
-            model_image = model_image.rename({"polarization": "polarisation"})
-
-        model_ps = residual_ps.assign({"VISIBILITY": model_visibility})
-
-        # TODO: Attrs are skipped in v0.5.1 ska-sdp-func-python
-        residual_ps = subtract_visibility(ps, model_ps)
-
-        residual_image = cube_imaging(
-            residual_ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
-        )
-
-    imaging_products["model"] = model_image
-    imaging_products["residual"] = residual_image
-
-    imaging_products["restored"] = restore_cube(
-        model_image,
-        psf_image,
-        residual_image,
-        beam_info,
-    )
+        return {
+            "model": model_image,
+            "psf": psf_image,
+            "residual": residual_image,
+            "restored": restored_image,
+        }
 
     return imaging_products
