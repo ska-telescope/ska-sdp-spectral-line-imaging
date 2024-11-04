@@ -13,6 +13,11 @@ def test_should_be_able_to_distribute_predict(
 ):
 
     ps = Mock(name="ps")
+    ps.polarization = Mock(name="polarization")
+    ps.polarization.values = ["RR", "LL"]
+
+    ps.assign = Mock(name="assign", return_value=ps)
+
     model = Mock(name="model")
 
     upstream_output = UpstreamOutput()

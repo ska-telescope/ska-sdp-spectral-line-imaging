@@ -68,25 +68,37 @@ def predict_stage(
             )
         )
 
-    peak_flux = np.abs(
-        ps.VISIBILITY_MODEL.mean(dim=["time", "baseline_id"]).max(
-            dim="frequency"
+    peak_flux = {
+        f"flux_{pol}": np.abs(
+            ps.VISIBILITY_MODEL.mean(dim=["time", "baseline_id"])
+            .sel(polarization=pol)
+            .max(dim=["frequency"])
         )
-    )
+        for pol in ps.polarization.values
+    }
 
-    peak_amp = np.abs(
-        ps.VISIBILITY.mean(dim=["time", "baseline_id"])
-        .isel(polarization=0)
-        .max()
-    )
+    peak_amp = {
+        f"amp_{pol}": np.abs(
+            ps.VISIBILITY.mean(dim=["time", "baseline_id"])
+            .sel(polarization=pol)
+            .max(dim="frequency")
+        )
+        for pol in ps.polarization.values
+    }
 
     upstream_output.add_compute_tasks(
         delayed_log(
             logger.info,
-            "Peak flux in Model: {peak_flux}."
-            " Peak amplitude of visibilities: {peak_amp}",
-            peak_flux=peak_flux,
-            peak_amp=peak_amp,
+            "Peak flux in Model: "
+            + ", ".join(
+                pol + " {flux_%s}" % pol for pol in ps.polarization.values
+            )
+            + " | Peak amplitude of visibilities: "
+            + ", ".join(
+                pol + " {amp_%s}" % pol for pol in ps.polarization.values
+            ),
+            **peak_flux,
+            **peak_amp,
         ),
     )
 
