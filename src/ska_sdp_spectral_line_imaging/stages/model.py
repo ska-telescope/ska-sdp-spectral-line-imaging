@@ -210,7 +210,7 @@ def _fit_polynomial_on_visibility(dataarray):
         dim=["time", "baseline_id", "polarization"], skipna=True
     )
     weights = np.isfinite(mean_vis).astype(np.float32)
-    data = xr.where(np.isnan(mean_vis), 0.0, mean_vis)
+    data = xr.where(np.isfinite(mean_vis), mean_vis, 0.0, keep_attrs=True)
     xaxis = dask.array.arange(data.size)
 
     return dask.delayed(np.polynomial.polynomial.polyfit)(
