@@ -94,12 +94,11 @@ def test_should_run_benchmark_on_local_for_the_command(
     os_mock.path.exists.return_value = True
     os_mock.getenv.return_value = "OS_ENV"
     ctx = Mock(name="ctx")
-    ctx.args = ["additional", "params", "--option", "value"]
     benchmark(
         ctx,
-        command="test command",
+        command="test command additional params --option value",
         setup=False,
-        report_output="output",
+        output_path="output",
         capture_interval=1,
     )
 
@@ -107,6 +106,7 @@ def test_should_run_benchmark_on_local_for_the_command(
         [
             "SCRIPT_DIR/run-dool.sh",
             "output",
+            "test",
             "test command additional params --option value",
         ],
         env={
@@ -127,12 +127,11 @@ def test_should_raise_exception_if_dool_is_not_present(
     os_mock.path.exists.return_value = False
     os_mock.getenv.return_value = "OS_ENV"
     ctx = Mock(name="ctx")
-    ctx.args = ["additional", "params", "--option", "value"]
     with pytest.raises(RuntimeError):
         benchmark(
             ctx,
-            command="test command",
+            command="test command additional params --option value",
             setup=False,
-            report_output="output",
+            output_path="output",
             capture_interval=1,
         )

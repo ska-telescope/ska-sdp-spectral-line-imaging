@@ -10,7 +10,7 @@ from .executable_pipeline import ExecutablePipeline
 
 logger = logging.getLogger(__name__)
 
-app = Typer(no_args_is_help=True)
+app = Typer(no_args_is_help=True, add_completion=True)
 
 
 @app.command()
@@ -63,20 +63,21 @@ def uninstall(pipeline_name, pipeline_path):
     logger.info("=============== FINISH UNINSTALL ====================")
 
 
-@app.command(
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
-)
+@app.command()
 def benchmark(
     ctx: Context,
     command: str = Option(
         default=None,
-        help="""Name of the pipeline to be benchmarked""",
+        help="""Command to be benchmarked. If command includes
+            arguments and options, enclose the entire command
+            in double quotes (\")""",
     ),
     setup: bool = Option(
         default=False,
+        is_flag=True,
         help="""Setup dool for benchmarking""",
     ),
-    report_output: str = Option(
+    output_path=Option(
         default="./benchmark",
         help="""Output folder to store the results.""",
     ),
@@ -94,12 +95,12 @@ def benchmark(
             Name of the pipeline to be benchmarked
         setup: bool
             Setup dool
-        report_output: str
-            Output folder to store the results
+        output_path: str
+            Output folder to store the benchmark results
         capture_interval: int
             Time interval for capturing benchmarking stats
         ctx: Context
-            Command context to capture additional args of the command
+            Command context
 
     """
 
@@ -127,8 +128,9 @@ def benchmark(
         subprocess.run(
             [
                 f"{script_path}/run-dool.sh",
-                report_output,
-                f"{command} {' '.join(ctx.args)}",
+                output_path,
+                command.split(" ")[0],
+                command,
             ],
             env={
                 "DOOL_BIN": f"{script_path}/dool/dool",

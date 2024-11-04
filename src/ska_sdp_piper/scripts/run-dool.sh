@@ -2,9 +2,9 @@
 
 output_dir=$1
 mkdir -p $output_dir
-file_prefix="spectral_line_imaging_pipeline_benchmark_"
+file_prefix="${2}"
 timestamp=`date +%Y-%m-%dT%T`
-file_path="${output_dir}/${file_prefix}${timestamp}.csv"
+file_path="${output_dir}/${file_prefix}_${timestamp}.csv"
 
 DELAY_IN_SECONDS=${DELAY_IN_SECONDS:-5}
 
@@ -16,10 +16,10 @@ $DOOL_BIN --time --mem --swap --io --aio \
           --output ${file_path} $DELAY_IN_SECONDS &
 DOOL_PID=$!
 
-echo -e "Running benchmark on: \n ${@:2} \n"
+echo -e "Running benchmark on: \n ${@:3} \n"
 
 sleep 2
-${@:2}
+${@:3}
 sleep 2
 
 kill -9 $DOOL_PID

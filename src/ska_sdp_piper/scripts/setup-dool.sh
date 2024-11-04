@@ -2,5 +2,11 @@
 
 set -e
 
-git clone https://github.com/scottchiefbaker/dool.git $1
+wget https://github.com/scottchiefbaker/dool/archive/refs/tags/v1.3.3.tar.gz -O dool.tar.gz
+
+mkdir -p $1
+
+tar -xvf dool.tar.gz -C $1 --strip-components=1
+
+rm -rf dool.tar.gz
 
