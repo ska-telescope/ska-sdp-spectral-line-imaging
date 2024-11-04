@@ -19,7 +19,7 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 from ska_sdp_piper.piper.utils import delayed_log
 
 from ..upstream_output import UpstreamOutput
-from ..util import export_data_as
+from ..util import export_to_zarr
 
 logger = logging.getLogger()
 
@@ -267,8 +267,8 @@ def cont_sub(
     if export_residual:
         output_path = os.path.join(_output_dir_, psout_name)
         upstream_output.add_compute_tasks(
-            export_data_as(
-                cont_sub_ps.VISIBILITY, output_path, export_format="zarr"
+            export_to_zarr(
+                cont_sub_ps.VISIBILITY, output_path, clear_attrs=True
             )
         )
 

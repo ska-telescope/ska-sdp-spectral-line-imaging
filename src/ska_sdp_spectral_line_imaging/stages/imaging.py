@@ -11,7 +11,7 @@ from ..stubs.imaging import clean_cube
 from ..util import (
     estimate_cell_size,
     estimate_image_size,
-    export_data_as,
+    export_image_as,
     get_polarization,
     get_wcs,
 )
@@ -215,7 +215,7 @@ def imaging_stage(
 
     upstream_output.add_compute_tasks(
         *[
-            export_data_as(
+            export_image_as(
                 imaging_products[artefact_type],
                 f"{output_path}.{artefact_type}",
                 export_format,

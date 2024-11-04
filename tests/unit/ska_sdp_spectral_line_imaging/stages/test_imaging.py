@@ -15,12 +15,12 @@ from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
     "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
 )
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_data_as")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_image_as")
 def test_should_do_imaging_for_dirty_image_when_nmajor_iter_is_zero(
-    export_data_as_mock, clean_cube_mock, get_wcs_mock, get_pol_mock
+    export_image_as_mock, clean_cube_mock, get_wcs_mock, get_pol_mock
 ):
     clean_cube_mock.return_value = {"dirty": "dirty_image"}
-    export_data_as_mock.return_value = "dirty_export_task"
+    export_image_as_mock.return_value = "dirty_export_task"
 
     ps = Mock(name="ps")
     ps.UVW = "UVW"
@@ -64,7 +64,7 @@ def test_should_do_imaging_for_dirty_image_when_nmajor_iter_is_zero(
         {"bmaj": "bmaj"},
     )
 
-    export_data_as_mock.assert_called_once_with(
+    export_image_as_mock.assert_called_once_with(
         "dirty_image", "output_dir/image_name.dirty", "fits"
     )
 
@@ -113,11 +113,11 @@ def test_should_do_imaging_for_dirty_image_when_nmajor_iter_is_zero(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_data_as")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_image_as")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
 def test_should_export_clean_artefacts(
     clean_cube_mock,
-    export_data_as_mock,
+    export_image_as_mock,
     get_wcs_mock,
     get_pol_mock,
     n_iter_major,
@@ -132,7 +132,7 @@ def test_should_export_clean_artefacts(
         "restored": "restored_image",
     }
 
-    export_data_as_mock.side_effect = [
+    export_image_as_mock.side_effect = [
         "task_1",
         "task_2",
         "task_3",
@@ -184,7 +184,7 @@ def test_should_export_clean_artefacts(
         call(f"{product}_image", f"output_dir/image_name.{product}", "fits")
         for product in products
     ]
-    export_data_as_mock.assert_has_calls(calls)
+    export_image_as_mock.assert_has_calls(calls)
 
     assert upstream_output.ps == ps
     assert compute_tasks == tasks

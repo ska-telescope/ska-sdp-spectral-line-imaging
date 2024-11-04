@@ -3,21 +3,20 @@ import numpy as np
 import xarray as xr
 from astropy import units as au
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
 from astropy.wcs import WCS
 from ska_sdp_datamodels.science_data_model.polarisation_model import (
     PolarisationFrame,
 )
 
 
-def export_data_as(data, output_path, export_format="fits"):
+def export_image_as(image, output_path, export_format="fits"):
     """
     Export data in the desired export_format
 
     Parameters
     ----------
-        data: Xarray Data array
-            Data to be exported
+        image: ska_sdp_datamodels.image.image_model.Image
+            Image to be exported
         output_path: str
             Output file name
         export_format: str
@@ -25,7 +24,7 @@ def export_data_as(data, output_path, export_format="fits"):
 
     Returns
     -------
-        dask.Delayed
+        dask.delayed.Delayed
 
     Raises
     ------
@@ -34,40 +33,57 @@ def export_data_as(data, output_path, export_format="fits"):
     """
 
     if export_format == "fits":
-
-        return export_to_fits(data, output_path)
-
+        return export_to_fits(image, output_path)
     elif export_format == "zarr":
-
-        data_to_export = data.copy(deep=False)
-        data_to_export.attrs.clear()
-        return data_to_export.to_zarr(
-            store=f"{output_path}.zarr", compute=False
-        )
+        return export_to_zarr(image, output_path)
     else:
         raise ValueError(f"Unsupported format: {export_format}")
+
+
+def export_to_zarr(data, output_path, clear_attrs=False):
+    """
+    Lazily export xarray dataset/dataarray to zarr file format.
+
+    Parameters
+    ----------
+        data: xarray.DataArray | xarray.Dataset
+            Xarray data to be exported
+        output_path: str
+            Output file path. A ".zarr" is appended to this path.
+        clear_attrs: bool = False
+            Whether to clear attributes of the data before writing to zarr.
+
+    Returns
+    -------
+        dask.delayed.Delayed
+            A dask delayed object which represents the task of writing
+            data to zarr.
+    """
+    data_to_export = data.copy(deep=False)
+    if clear_attrs:
+        data_to_export.attrs.clear()
+    return data_to_export.to_zarr(store=f"{output_path}.zarr", compute=False)
 
 
 @dask.delayed
 def export_to_fits(image, output_path):
     """
-    Export Image to fits
+    Lazily export an image to FITS file format.
 
     Parameters
     ----------
-        image: Image
+        image: ska_sdp_datamodels.image.image_model.Image
             Image image to be exported
         output_path: str
-            Output file name
+            Output file path. A ".fits" is appended to this path.
 
     Returns
     -------
-        None
+        dask.delayed.Delayed
+            A dask delayed object which represents the task of writing
+            image to FITS.
     """
-    new_hdu = fits.PrimaryHDU(
-        data=image.pixels, header=image.image_acc.wcs.to_header()
-    )
-    new_hdu.writeto(f"{output_path}.fits")
+    image.image_acc.export_to_fits(f"{output_path}.fits")
 
 
 def estimate_cell_size(

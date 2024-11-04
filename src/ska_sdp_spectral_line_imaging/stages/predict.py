@@ -8,7 +8,7 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 from ska_sdp_piper.piper.utils.log_util import delayed_log
 
 from ..stubs.predict import predict_for_channels
-from ..util import export_data_as
+from ..util import export_to_zarr
 
 logger = logging.getLogger()
 
@@ -65,9 +65,7 @@ def predict_stage(
     if export_model:
         output_path = os.path.join(_output_dir_, psout_name)
         upstream_output.add_compute_tasks(
-            export_data_as(
-                ps.VISIBILITY_MODEL, output_path, export_format="zarr"
-            )
+            export_to_zarr(ps.VISIBILITY_MODEL, output_path, clear_attrs=True)
         )
 
     peak_model_flux = np.abs(
