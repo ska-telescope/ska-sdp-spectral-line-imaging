@@ -3,6 +3,8 @@ parameters:
   continuum_subtraction:
     export_residual: true
     psout_name: residual
+  flagging_stage:
+    strategy_file: null
   imaging:
     image_name: test_cube
     export_format: fits
@@ -29,6 +31,7 @@ parameters:
     - V
 pipeline:
   continuum_subtraction: true
+  flagging_stage: true
   imaging: true
   load_data: true
   predict_stage: true

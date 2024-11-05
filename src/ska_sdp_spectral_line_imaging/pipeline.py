@@ -27,6 +27,7 @@ from ska_sdp_piper.piper.utils import create_output_dir
 from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
 from .diagnosis.spectral_line_diagnoser import SpectralLineDiagnoser
 from .scheduler import DefaultScheduler
+from .stages.flagging import flagging_stage
 from .stages.imaging import imaging_stage
 from .stages.load_data import load_data
 from .stages.model import cont_sub, read_model, vis_stokes_conversion
@@ -45,6 +46,7 @@ spectral_line_imaging_pipeline = Pipeline(
             read_model,
             predict_stage,
             cont_sub,
+            flagging_stage,
             imaging_stage,
         ]
     ),

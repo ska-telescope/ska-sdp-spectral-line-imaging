@@ -77,7 +77,8 @@ autodoc_mock_imports = [
     "matplotlib",
     "pandas",
     "radler",
-    "distributed"
+    "distributed",
+    "aoflagger"
 ]
 
 

@@ -20,6 +20,7 @@ priority = "supplemental"
 
 [tool.poetry.extras]
 radler = ["radler"]
+aoflagger = ["aoflagger"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -37,6 +38,7 @@ ska-sdp-datamodels = "^0.3.3"
 ska-ser-logging = "^0.4.3"
 ska-sdp-func-python = "0.5.1"
 radler = {version = "^0.0.1", optional = true}
+aoflagger = {version = "^3.4", optional = true}
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.6.4"
@@ -71,6 +73,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.setuptools.package-data]
 ska_sdp_piper = ["*.sh"]
+ska_sdp_spectral_line_imaging = ["*.lua"]
 
 [tool.poetry.scripts]
 piper = "ska_sdp_piper.app.cli:app"
