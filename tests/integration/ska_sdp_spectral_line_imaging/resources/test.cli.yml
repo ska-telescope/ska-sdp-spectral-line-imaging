@@ -1,0 +1,6 @@
+config_path: ./test.config.yml
+dask_scheduler: null
+input: ./gmrt.small.ps
+output_path: ./pipeline_output
+stages: null
+verbose: 0

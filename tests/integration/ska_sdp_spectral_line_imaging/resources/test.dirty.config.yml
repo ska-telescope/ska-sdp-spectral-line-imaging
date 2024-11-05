@@ -1,41 +1,22 @@
 global_parameters: {}
 parameters:
   continuum_subtraction:
-    export_residual: true
+    export_residual: false
     psout_name: residual
-    report_poly_fit: true
   imaging:
-    beam_info:
-      bmaj: null
-      bmin: null
-      bpa: null
-    deconvolution_params:
-      algorithm: msclean
-      fractional_threshold: 0.01
-      gain: 0.7
-      niter: 3
-      scales:
-      - 0
-      - 3
-      threshold: 0.0
-      use_radler: false
+    image_name: test_cube
     export_format: fits
-    export_model_image: true
-    export_psf_image: true
-    export_residual_image: true
+    n_iter_major: 0
     gridding_params:
-      cell_size: null
+      cell_size: 1.0
       epsilon: 0.0001
       image_size: 16
-      scaling_factor: 3.0
-    image_name: test_cube
-    n_iter_major: 1
   load_data:
     obs_id: 0
   predict_stage:
     cell_size: 1.0
     epsilon: 0.0001
-    export_model: true
+    export_model: false
     psout_name: model
   read_model:
     image: ./gmrt-%s-image.fits
