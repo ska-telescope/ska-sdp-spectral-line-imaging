@@ -308,11 +308,8 @@ def cont_sub(
     # Report extent of continuum subtraction
     if report_poly_fit:
         pols = ps.polarization.values
-        is_fit_possible = len(pols) == 2
-        is_fit_possible = ("XX" in pols and "YY" in pols) or (
-            "RR" in pols and "LL" in pols
-        )
-        if not is_fit_possible:
+        valid_sets = [{"XX", "YY"}, {"RR", "LL"}]
+        if not set(pols) in valid_sets:
             logger.warning("Cannot report extent of continuum subtraction.")
         else:
             fit_real = _fit_polynomial_on_visibility(
