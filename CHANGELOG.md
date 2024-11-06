@@ -1,6 +1,7 @@
 # Changelog
 
 ## Latest
+- Add `flagging_stage`.
 - Add `benchmark-pipeline` command to run benchmarks.
 - The `read_model` stage can accept a FITS spectral cube as a model image.
 - The `read_model` and `imaging` stage parameters have changed. Please refer the "Stage Configs" section of the documentation.
