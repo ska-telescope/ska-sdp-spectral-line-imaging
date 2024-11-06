@@ -69,13 +69,11 @@ def predict_stage(
         )
 
     peak_model_flux = np.abs(
-        ps.VISIBILITY_MODEL.mean(dim=["time", "baseline_id"]).max(
-            dim=["frequency"]
-        )
-    )
+        ps.VISIBILITY_MODEL.mean(dim=["time", "baseline_id"])
+    ).max(dim=["frequency"])
 
-    peak_vis_amp = np.abs(
-        ps.VISIBILITY.mean(dim=["time", "baseline_id"]).max(dim="frequency")
+    peak_vis_amp = np.abs(ps.VISIBILITY.mean(dim=["time", "baseline_id"])).max(
+        dim="frequency"
     )
 
     upstream_output.add_compute_tasks(
