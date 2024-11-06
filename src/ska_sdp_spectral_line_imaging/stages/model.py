@@ -191,14 +191,14 @@ def vis_stokes_conversion(upstream_output, output_polarizations):
     return upstream_output
 
 
-def _fit_polynomial_on_visibility(dataarray):
+def _fit_polynomial_on_visibility(data):
     """
-    Perform polynomial fit across frequency axis
+    Perform polynomial fit across frequency axis.
 
     Parameters
     ----------
-    dataarray: xarray.DataArray
-        A dataarray with dimensions ["time", "baseline_id", "polarization",
+    data: xarray.DataArray
+        A DataArray with dimensions ["time", "baseline_id", "polarization",
         "frequencies"] in any sequence.
 
     Returns
@@ -206,15 +206,15 @@ def _fit_polynomial_on_visibility(dataarray):
     dask.delayed.Delayed
         A dask delayed call to numpy polynomial polyfit function
     """
-    mean_vis = dataarray.mean(
+    mean_vis = data.mean(
         dim=["time", "baseline_id", "polarization"], skipna=True
     )
-    weights = np.isfinite(mean_vis).astype(np.float32)
-    data = xr.where(np.isfinite(mean_vis), mean_vis, 0.0, keep_attrs=True)
-    xaxis = dask.array.arange(data.size)
+    weights = np.isfinite(mean_vis)
+    mean_vis_finite = xr.where(weights, mean_vis, 0.0)
+    xaxis = dask.array.arange(mean_vis_finite.size)
 
     return dask.delayed(np.polynomial.polynomial.polyfit)(
-        xaxis, data, w=weights, deg=1
+        xaxis, mean_vis_finite, w=weights, deg=1
     )
 
 
@@ -280,7 +280,8 @@ def cont_sub(
             )
         }
     )
-    upstream_output["ps"] = cont_sub_ps
+    # Sending a copy to avoid issues where attributes get cleared
+    upstream_output["ps"] = cont_sub_ps.copy()
 
     # Report peak visibility and corresponding channel
     abs_visibility = np.abs(cont_sub_ps.VISIBILITY)
@@ -312,12 +313,11 @@ def cont_sub(
         if not set(pols) in valid_sets:
             logger.warning("Cannot report extent of continuum subtraction.")
         else:
-            fit_real = _fit_polynomial_on_visibility(
-                cont_sub_ps.VISIBILITY.real
+            cont_sub_vis = cont_sub_ps.VISIBILITY.where(
+                np.logical_not(cont_sub_ps.FLAG)
             )
-            fit_imag = _fit_polynomial_on_visibility(
-                cont_sub_ps.VISIBILITY.imag
-            )
+            fit_real = _fit_polynomial_on_visibility(cont_sub_vis.real)
+            fit_imag = _fit_polynomial_on_visibility(cont_sub_vis.imag)
             upstream_output.add_compute_tasks(
                 delayed_log(
                     logger.info,

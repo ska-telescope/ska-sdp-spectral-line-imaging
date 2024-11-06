@@ -97,9 +97,10 @@ def test_should_perform_continuum_subtraction(
     subtracted_vis.assign.return_value = subtracted_vis
     subtract_visibility_mock.return_value = subtracted_vis
 
-    cont_sub.stage_definition(
+    output = cont_sub.stage_definition(
         upstream_output, False, "ps_out", False, "output_path"
     )
+
     observation.assign.assert_called_once_with(
         {"VISIBILITY": observation.VISIBILITY_MODEL}
     )
@@ -107,6 +108,7 @@ def test_should_perform_continuum_subtraction(
     subtracted_vis.assign.assert_called_once_with(
         {"VISIBILITY": "sub_vis_with_attrs"}
     )
+    assert output.ps == subtracted_vis.copy()
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.logger")
@@ -171,20 +173,28 @@ def test_should_report_extent_of_continuum_subtraction(
     ]
 
     observation = MagicMock(name="observation")
-    observation.frequency = Mock(name="frequency")
-    observation.frequency.units = ["Hz"]
-    observation.assign.return_value = observation
     observation.polarization.values = ["RR", "LL"]
+    flagged_vis = MagicMock(name="flagged_vis")
+    observation.VISIBILITY.where.return_value = flagged_vis
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = observation
     subtract_visibility_mock.return_value = observation
-    numpy_mock.abs = Mock(name="abs", return_value=numpy_mock)
-    numpy_mock.max = Mock(name="max", return_value=numpy_mock)
-    numpy_mock.idxmax = Mock(name="idxmax", return_value=numpy_mock)
-    numpy_mock.argmax = Mock(name="idxmax", return_value=numpy_mock)
+    observation.assign.return_value = observation
 
     cont_sub.stage_definition(
         upstream_output, False, "ps_out", True, "output_path"
+    )
+
+    # pylint: disable=no-member
+    observation.VISIBILITY.where.assert_called_once_with(
+        numpy_mock.logical_not(observation.FLAG)
+    )
+
+    fit_poly_on_vis_mock.assert_has_calls(
+        [
+            call(flagged_vis.real),
+            call(flagged_vis.imag),
+        ]
     )
 
     delayed_log_mock.assert_has_calls(
@@ -220,17 +230,10 @@ def test_should_not_report_extent_of_continuum_subtraction_for_invalid_pols(
     fit_poly_on_vis_mock.side_effect = ["fit_real", "fit_imag"]
 
     observation = MagicMock(name="observation")
-    observation.frequency = Mock(name="frequency")
-    observation.frequency.units = ["Hz"]
-    observation.assign.return_value = observation
-    observation.polarization.values.return_value = ["RR", "LR"]
+    observation.polarization.values = ["RR", "LR"]
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = observation
     subtract_visibility_mock.return_value = observation
-    numpy_mock.abs = Mock(name="abs", return_value=numpy_mock)
-    numpy_mock.max = Mock(name="max", return_value=numpy_mock)
-    numpy_mock.idxmax = Mock(name="idxmax", return_value=numpy_mock)
-    numpy_mock.argmax = Mock(name="idxmax", return_value=numpy_mock)
 
     cont_sub.stage_definition(
         upstream_output, False, "ps_out", True, "output_path"
