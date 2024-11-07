@@ -10,10 +10,10 @@ class ConfigParam:
 
     Attributes
     ----------
-       _type: str
+       _type: type
            Type of the configurable parameter.
-       default: _type
-           The default value for the configurable parameter.
+       value: _type
+           The value for the configurable parameter.
        description: str
            Description of the configurable parameter.
     """
@@ -24,7 +24,7 @@ class ConfigParam:
 
         Parameters
         ----------
-            _type: str
+            _type: type
                 Type of the configurable parameter.
             default: _type
                 The default value for the configurable parameter.
@@ -32,7 +32,7 @@ class ConfigParam:
                 Description of the configurable parameter.
         """
         self._type = _type
-        self.default = default
+        self.value = default
         self.description = description
 
 
@@ -67,8 +67,32 @@ class Configuration:
            Dictionary of configuration parameters with default values
         """
         return {
-            key: value.default for key, value in self.__config_params.items()
+            key: param.value for key, param in self.__config_params.items()
         }
+
+    def update_config_params(self, **kwargs):
+        """
+        Update the value of the configuration parameter
+
+        Parameters
+        ----------
+            **kwargs: Key word arguments
+
+        Raises
+        ------
+            TypeError:
+               If the update value doesn't match the type of the config param
+
+        """
+        for key, value in kwargs.items():
+            config_param = self.__config_params[key]
+            if value is not None and type(value) is not config_param._type:
+                raise TypeError(
+                    "Parameter type does not match:"
+                    f" {config_param._type} expected, {type(value)} provided"
+                )
+
+            config_param.value = value
 
     def valididate_arguments_for(self, stage):
         """

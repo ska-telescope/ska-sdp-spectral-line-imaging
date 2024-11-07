@@ -287,9 +287,7 @@ def test_should_run_the_pipeline(
 
     default_executor.execute.assert_called_once_with(default_scheduler.tasks)
 
-    stages.update_pipeline_parameters.assert_called_once_with(
-        config_manager_mock.stages_to_run,
-        config_manager_mock.parameters,
+    stages.add_additional_parameters.assert_called_once_with(
         _output_dir_="output_dir",
         _cli_args_={"input": "path", "dask_scheduler": "10.191"},
         _global_parameters_={"a": 10},
@@ -365,6 +363,25 @@ def test_should_instantiate_dask_client(
     executor_factory.get_executor.assert_called_once_with(
         "output_dir",
         dask_scheduler=dask_scheduler_address,
+    )
+
+
+@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
+def test_should_update_the_default_stage_configs_if_external_yaml_is_provided(
+    config_manager_mock, default_scheduler, create_output_mock, stages
+):
+
+    config_manager_mock.return_value = config_manager_mock
+    config_manager_mock.stages_to_run = ["stage1", "stage3"]
+    create_output_mock.return_value = "/path/to/output/timestamp"
+    pipeline = Pipeline(
+        "test_pipeline", stages=stages, scheduler=default_scheduler
+    )
+
+    pipeline.run("/path/to/output", config_path="/path/to/config")
+
+    stages.update_stage_parameters.assert_called_once_with(
+        config_manager_mock.parameters
     )
 
 

@@ -21,7 +21,7 @@ class Stage:
             Argument list of stage definition
         __config: configurations.Configuration
             Configuration for the stage
-        __pipeline_parameters: dict
+        __additional_parameters: dict
             Stores runtime parameters of the pipeline
     """
 
@@ -43,7 +43,7 @@ class Stage:
         self.params = inspect.getfullargspec(stage_definition).args
 
         self.__config = configuration
-        self.__pipeline_parameters = None
+        self.__additional_parameters = None
 
         self.__config.valididate_arguments_for(self)
 
@@ -58,7 +58,17 @@ class Stage:
         """
         return {self.name: self.__config.items}
 
-    def update_pipeline_parameters(self, config, **kwargs):
+    def update_parameters(self, **kwargs):
+        """
+        Update the configuration parameter
+
+        Parameters
+        ----------
+            **kwargs: Key word arguments
+        """
+        self.__config.update_config_params(**kwargs)
+
+    def add_additional_parameters(self, **kwargs):
         """
         Updates stage's pipeline parameters
 
@@ -69,7 +79,7 @@ class Stage:
             **kwargs:
                 Additional keyword arguments from the pipeline
         """
-        self.__pipeline_parameters = dict(config=config, kwargs=kwargs)
+        self.__additional_parameters = kwargs
 
     def __call__(self, upstream_output):
         """
@@ -82,20 +92,18 @@ class Stage:
                 Output from the upstream stage
         """
 
-        if self.__pipeline_parameters is None:
+        if self.__additional_parameters is None:
             raise PipelineMetadataMissingException(
                 f"Pipeline parameters not initialised for {self.name}"
             )
 
         non_positional_arguments = self.params[1:]
-        additional_params = (
-            set(non_positional_arguments)
-            - self.__pipeline_parameters["config"].keys()
-        )
+        config_args = self.__config.items
+        additional_params = set(non_positional_arguments) - config_args.keys()
         stage_args = {
-            **self.__pipeline_parameters["config"],
+            **config_args,
             **{
-                keyword: self.__pipeline_parameters["kwargs"][keyword]
+                keyword: self.__additional_parameters[keyword]
                 for keyword in additional_params
             },
         }
@@ -137,6 +145,20 @@ class Stages:
 
         return self.__stages.__iter__()
 
+    def update_stage_parameters(self, stage_parameters):
+        """
+        Update the configurable parameters of stages
+
+        Parameters
+        ----------
+            stage_parameters: dict(str -> dict)
+                Stage configuration parameters
+
+        """
+        for stage in self.__stages:
+            if stage.name in stage_parameters:
+                stage.update_parameters(**stage_parameters[stage.name])
+
     def validate(self, stage_names):
         """
         Validates the selected stage names with the pipeline definition stages.
@@ -168,25 +190,18 @@ class Stages:
                 f"Stages not found: {non_existing_stages}"
             )
 
-    def update_pipeline_parameters(self, stage_names, stage_configs, **kwargs):
+    def add_additional_parameters(self, **kwargs):
         """
         Update pipeline parameters for the stages
 
         Parameters
         ----------
-            stage_name: list[str]
-                List of stages for which pipeline parametere need to be updated
-            stage_configs: dict
-                Function returning the stage configuration
             **kwargs:
                 Additional keyword arguments
         """
 
         for stage in self.__stages:
-            if stage.name in stage_names:
-                stage.update_pipeline_parameters(
-                    stage_configs.get(stage.name, dict()), **kwargs
-                )
+            stage.add_additional_parameters(**kwargs)
 
     def get_stages(self, stage_names):
         """

@@ -45,6 +45,28 @@ def test_should_raise_exception_if_mandatory_first_argument_is_missing():
         configuration_with_args.valididate_arguments_for(temp_stage1)
 
 
+def test_should_update_default_configuration_values():
+    configurations = Configuration(
+        a=ConfigParam(int, 10),
+        b=ConfigParam(str, "Value"),
+        c=ConfigParam(int, 100),
+    )
+
+    configurations.update_config_params(a=20, b="Updated Value")
+    assert configurations.items == {"a": 20, "b": "Updated Value", "c": 100}
+
+
+def test_should_raise_exception_if_datatype_of_update_does_not_match():
+    configurations = Configuration(
+        a=ConfigParam(int, 10),
+        b=ConfigParam(str, "Value"),
+        c=ConfigParam(int, 100),
+    )
+
+    with pytest.raises(TypeError):
+        configurations.update_config_params(b=100)
+
+
 def test_should_raise_exception_if_function_arguments_are_invalide():
     config = Configuration(stage_arguments=ConfigParam("number", 0))
 

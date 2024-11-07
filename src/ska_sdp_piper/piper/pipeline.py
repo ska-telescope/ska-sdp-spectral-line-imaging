@@ -222,6 +222,9 @@ class Pipeline(Command, metaclass=NamedInstance):
         executor = ExecutorFactory.get_executor(output_dir, **cli_args)
         if config_path:
             self.config_manager.update_config(config_path)
+            self._stages.update_stage_parameters(
+                self.config_manager.parameters
+            )
 
         if stages:
             self.config_manager.update_pipeline(
@@ -230,9 +233,7 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self._stages.validate(self.config_manager.stages_to_run)
 
-        self._stages.update_pipeline_parameters(
-            self.config_manager.stages_to_run,
-            self.config_manager.parameters,
+        self._stages.add_additional_parameters(
             _output_dir_=output_dir,
             _cli_args_=cli_args,
             _global_parameters_=self.config_manager.global_parameters,

@@ -41,23 +41,19 @@ def test_should_validate_stages(mock_stages):
     stages.validate(["stage3", "stage2"])
 
 
-def test_should_update_stage_pipeline_parameters(mock_stages):
+def test_should_update_additional_parameters(mock_stages):
     stage1_mock, stage2_mock, stage3_mock = mock_stages
 
     stages = Stages(mock_stages)
 
-    stage_configs = {"stage1": "STAGE_CONFIG_1", "stage3": "STAGE_CONFIG_3"}
+    stages.add_additional_parameters(arg1="arg1", arg2="arg2")
 
-    stages.update_pipeline_parameters(
-        ["stage1", "stage3"], stage_configs, arg1="arg1", arg2="arg2"
+    stage1_mock.add_additional_parameters.assert_called_once_with(
+        arg1="arg1", arg2="arg2"
     )
 
-    stage1_mock.update_pipeline_parameters.assert_called_once_with(
-        "STAGE_CONFIG_1", arg1="arg1", arg2="arg2"
-    )
-
-    stage3_mock.update_pipeline_parameters.assert_called_once_with(
-        "STAGE_CONFIG_3", arg1="arg1", arg2="arg2"
+    stage3_mock.add_additional_parameters.assert_called_once_with(
+        arg1="arg1", arg2="arg2"
     )
 
     assert stage2_mock.call_count == 0
@@ -80,7 +76,7 @@ def test_should_return_stages_with_name_iterator(mock_stages):
 
 
 @mock.patch("ska_sdp_piper.piper.stage.stages.inspect.getfullargspec")
-def test_should_update_pipeline_params_for_stage_and_return_the_stage_args(
+def test_should_add_additional_pipeline_params_for_stage(
     argspec_mock,
 ):
     test = mock.Mock(name="test")
@@ -93,8 +89,7 @@ def test_should_update_pipeline_params_for_stage_and_return_the_stage_args(
         "test", test, Configuration(config_param=ConfigParam("number", 20))
     )
 
-    stage.update_pipeline_parameters(
-        config={"config_param": 30},
+    stage.add_additional_parameters(
         additional_param_1=40,
         additional_param_2=30,
     )
@@ -102,7 +97,7 @@ def test_should_update_pipeline_params_for_stage_and_return_the_stage_args(
     stage("UPSTREAM_OUTPUT")
 
     test.assert_called_once_with(
-        "UPSTREAM_OUTPUT", config_param=30, additional_param_1=40
+        "UPSTREAM_OUTPUT", config_param=20, additional_param_1=40
     )
 
 
@@ -116,3 +111,37 @@ def test_should_raise_exception_if_pipeline_parameters_is_not_initialised():
 
     with pytest.raises(PipelineMetadataMissingException):
         stage("UPSTREAM_OUTPUT")
+
+
+def test_should_update_stage_parameters():
+    stage1 = Mock(name="stage1")
+    stage1.name = "stage1"
+    stages = Stages([stage1])
+
+    stages.update_stage_parameters(
+        {"stage1": {"a": 10, "b": 20}, "stage2": {"c": 30, "d": 40}}
+    )
+
+    stage1.update_parameters.assert_called_once_with(a=10, b=20)
+
+
+@mock.patch("ska_sdp_piper.piper.stage.stages.inspect.getfullargspec")
+def test_should_update_default_stage_config(argspec_mock):
+    test = mock.Mock(name="test")
+
+    args_mock = mock.Mock(name="args_mock")
+    args_mock.args = ["vis", "param1", "param2", "additional_param_1"]
+    argspec_mock.return_value = args_mock
+
+    stage = Stage(
+        "test",
+        test,
+        Configuration(
+            param1=ConfigParam(int, 20),
+            param2=ConfigParam(str, "Name"),
+        ),
+    )
+
+    stage.update_parameters(param1=10, param2="New Name")
+
+    assert stage.config == {"test": {"param1": 10, "param2": "New Name"}}
