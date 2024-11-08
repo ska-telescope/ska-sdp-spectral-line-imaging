@@ -1,3 +1,4 @@
+import logging
 import os
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
@@ -11,6 +12,8 @@ try:
     import aoflagger  # noqa  # pylint: disable=unused-import
 except ModuleNotFoundError:  # pragma: no cover
     AOFLAGGER_AVAILABLE = False  # pragma: no cover
+
+logger = logging.getLogger()
 
 
 @ConfigurableStage(
@@ -50,6 +53,10 @@ def flagging_stage(
         raise ImportError("Unable to import aoflagger")
 
     if strategy_file is None:
+        logger.info(
+            "Strategy file is not provided. "
+            "Picking up the default strategy file for flagging."
+        )
         strategy_path = os.path.dirname(
             os.path.abspath(flagging_strategies.__file__)
         )
@@ -60,6 +67,7 @@ def flagging_stage(
                 f"The provided strategy file path {strategy_file} "
                 f"does not not exists"
             )
+    logger.info(f"The strategy file picked up for flagging: {strategy_file}")
 
     ps = upstream_output.ps
     ntime = ps.VISIBILITY.time.size
