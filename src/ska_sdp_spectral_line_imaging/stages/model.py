@@ -1,12 +1,15 @@
 # pylint: disable=no-member,import-error
 import logging
 import os
+from typing import Tuple
 
-import astropy.io.fits as fits
 import dask
+import dask.array
 import dask.delayed
 import numpy as np
 import xarray as xr
+from astropy.io import fits
+from astropy.wcs import WCS
 from ska_sdp_func_python.xradio.visibility.operations import (
     subtract_visibility,
 )
@@ -22,6 +25,143 @@ from ..upstream_output import UpstreamOutput
 from ..util import export_to_zarr
 
 logger = logging.getLogger()
+
+fits_codes_to_pol_names = {
+    1: "I",
+    2: "Q",
+    3: "U",
+    4: "V",
+    -1: "RR",
+    -2: "LL",
+    -3: "RL",
+    -4: "LR",
+    -5: "XX",
+    -6: "YY",
+    -7: "XY",
+    -8: "YX",
+}
+
+fits_axis_to_image_dims = {
+    "RA": "x",
+    "DEC": "y",
+    "FREQ": "frequency",
+    "STOKES": "polarization",
+}
+
+
+@dask.delayed
+def read_fits_memmapped_delayed(image_path, hduid=0, data_slice=None):
+    if data_slice is not None:
+        raise NotImplementedError(
+            "Slicing of is not yet supported in read_fits"
+        )
+
+    with fits.open(
+        image_path, mode="denywrite", memmap=True, lazy_load_hdus=True
+    ) as hdul:
+        hdu = hdul[hduid]
+        data = hdu.data
+
+    return data
+
+
+def get_dask_array_from_fits(
+    image_path: str,
+    hduid: int,
+    shape: Tuple,
+    dtype: type,
+    blocksize: Tuple = None,
+):
+    if blocksize:
+        raise NotImplementedError(
+            "Chunking of FITS image is not yet supported"
+        )
+
+    data = dask.array.from_delayed(
+        read_fits_memmapped_delayed(image_path, hduid),
+        shape=shape,
+        dtype=dtype,
+    )
+
+    return data
+
+
+def get_dataarray_from_fits(image_path, hduid=0, chunksizes={}):
+    """
+    Reads FITS image and returns an xarray dataarray with
+    dimensions ["polarization", "frequency", "y", "x"] or
+    only ["y", "x"] if data is 2 dimensionsional.
+
+    Function can also read coordinte values for dimensions "polarization"
+    and "frequency". Spatial coordinates "y" and "x" are linear, and
+    the their coordinate values are not populatedin output dataarray.
+    If needed, those can be populated later.
+    Refer ska_sdp_datamodels.image.Image.constructor.
+
+    The image data is read as a dask array using delayed read calls to
+    astropy.fits.open.
+
+    Parameters
+    ----------
+    image_path: str
+        Path to FITS image
+
+    hduid: int
+        The HDU number in the HDUList read from FITS image.
+
+    chunksizes: dict
+        A dictionary mapping a image dimension to its chunk size.
+        Most like these chunksizes will come from the one of the
+        visibility xarray dataarray.
+        This will be used to read FITS image using slices.
+        **This feature is not implemented yet**.
+
+    Returns
+    -------
+        xarray.DataArray
+
+    Raises
+    ------
+        NotImplementedError
+            If chunksizes are passed as parameter
+    """
+    # opening image only to get metadata
+    with fits.open(image_path, memmap=True) as hdul:
+        hdu = hdul[hduid]
+        shape = hdu.data.shape
+        dtype = hdu.data.dtype
+
+    wcs = WCS(image_path)
+
+    dimensions = [
+        fits_axis_to_image_dims[wcs.axis_type_names[nax]]
+        for nax in range(len(shape) - 1, -1, -1)
+    ]
+
+    coordinates = {}
+    if "frequency" in dimensions:
+        spectral_wcs = wcs.sub(["spectral"])
+        frequency_range = spectral_wcs.wcs_pix2world(
+            range(spectral_wcs.pixel_shape[0]), 0
+        )[0]
+        coordinates["frequency"] = frequency_range
+    if "polarization" in dimensions:
+        pol_wcs = wcs.sub(["stokes"])
+        pol_codes = pol_wcs.wcs_pix2world(range(pol_wcs.pixel_shape[0]), 0)[0]
+        pol_names = [fits_codes_to_pol_names[code] for code in pol_codes]
+        coordinates["polarization"] = pol_names
+
+    if chunksizes:
+        raise NotImplementedError("Chunks for FITS image is not yet supported")
+
+    data = get_dask_array_from_fits(image_path, hduid, shape, dtype)
+
+    return xr.DataArray(
+        data,
+        dims=dimensions,
+        coords=coordinates,
+        name="fits_image_arr",
+    )
 
 
 @ConfigurableStage(
@@ -49,19 +189,11 @@ logger = logging.getLogger()
             """,
             nullable=False,
         ),
-        image_type=ConfigParam(
-            str,
-            "continuum",
-            description="Type of the input images. Available options are "
-            "'spectral' or 'continuum'",
-            allowed_values=["spectral", "continuum"],
-        ),
     ),
 )
 def read_model(
     upstream_output: UpstreamOutput,
     image: str,
-    image_type: str,
 ) -> UpstreamOutput:
     """
     Read model image(s) from FITS file(s).
@@ -97,62 +229,41 @@ def read_model(
     Returns
     -------
         UpstreamOutput
-
-    Raises
-    ------
-        FileNotFoundError
-            If a FITS file for a model image is not found
-
-        AttributeError
-            If the image_type parameter is invalid
     """
-    # TODO: Remove this check once piper can handle enum config params.
-    if image_type not in ["spectral", "continuum"]:
-        raise AttributeError("image_type must be spectral or continuum")
-
     ps = upstream_output.ps
     pols = ps.polarization.values
 
-    for pol in pols:
-        image_path = image % pol
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(
-                f"FITS image {image_path} corresponding to "
-                f"polarization {pol} not found."
-            )
-
     images = []
-    # TODO: Not dask compatible, loaded into memory by master / dask client
     for pol in pols:
         image_path = image % pol
-        with fits.open(image_path) as f:
-            images.append(f[0].data.squeeze())
+        image_xr = get_dataarray_from_fits(image_path)
+        images.append(image_xr)
 
-    if image_type == "spectral":
-        # Dims are assigned as per ska-data-models Image class
-        # Only the "polarization" is different
-        dims = ["polarization", "frequency", "y", "x"]
-        chunks = {k: v for k, v in ps.chunksizes.items() if k in dims}
+    if "polarization" in images[0].dims:
+        model_image = xr.concat(images, dim="polarization")
+    else:
+        # stack the images creating new polarization axis
+        model_image_data = dask.array.stack(images, axis=0)
         model_image = xr.DataArray(
-            np.stack(images, axis=0),
-            dims=dims,
-            coords={
-                # TODO: Frequency range should be read from WCS
-                # For now, copying frequency from ps
-                "frequency": ps.frequency,
-                "polarization": pols,
-            },
-        ).chunk(chunks)
-    else:  # "continuum"
-        dims = ["polarization", "y", "x"]
-        chunks = {k: v for k, v in ps.chunksizes.items() if k in dims}
-        model_image = xr.DataArray(
-            np.stack(images, axis=0),
-            dims=dims,
-            coords={
-                "polarization": pols,
-            },
-        ).chunk(chunks)
+            model_image_data,
+            dims=["polarization", "y", "x"],
+            name="mode_image",
+        )
+        model_image = model_image.assign_coords(images[0].coords)
+        model_image = model_image.assign_coords({"polarization": pols})
+
+    if "frequency" in model_image.dims:
+        if model_image.frequency.size == 1:
+            # continuum image with extra dimension on frequency
+            model_image = model_image.squeeze(dim="frequency")
+        else:
+            # NOTE: overriding frequency coordinates
+            # to avoid misalignment issues
+            model_image = model_image.assign_coords(
+                {"frequency": ps.frequency}
+            )
+            # TODO: Do we have to call chunk() on model_image across frequency,
+            # or will dask handle it ?
 
     upstream_output["model_image"] = model_image
 

@@ -22,7 +22,6 @@ parameters:
     psout_name: model
   read_model:
     image: ./tMS-%s-image.fits
-    image_type: continuum
   vis_stokes_conversion:
     output_polarizations:
     - I
