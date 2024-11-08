@@ -75,6 +75,24 @@ def test_should_update_the_default_config_with_yaml(read_yml, setup):
     assert runtime_config.global_parameters == global_parameters
 
 
+# def test_should_update_the_default_config_with_cli_overrides(setup):
+#     runtime_config = setup
+
+#     runtime_config.update_from_cli_overrides([
+#         ['stage1.stage1_parameter_1', "20"]
+#     ])
+
+#     expected_parameters = {
+#         "stage1": {"stage1_parameter_1": 20},
+#         "stage2": {"stage2_parameter_1": 20},
+#         "stage3": {"stage3_parameter_1": 0},
+#     }
+
+#     assert runtime_config.pipeline == pipeline
+#     assert runtime_config.parameters == expected_parameters
+#     assert runtime_config.global_parameters == global_parameters
+
+
 def test_should_update_pipeline_stages(setup):
 
     pipeline_stages = ["stage3"]
@@ -126,15 +144,17 @@ def test_should_update_key_in_config(setup):
     runtime_config.set("global_parameters", {"env": "some-env-var"})
     runtime_config.set("pipeline.stage1", False)
 
-    assert runtime_config.pipeline == {"stage1": False, "stage2": False, "stage3": True}
-    assert runtime_config.parameters == {
-            "stage1": {"stage1_parameter_1": 10},
-            "stage2": {"stage2_parameter_1": [0, 1, 2]},
-            "stage3": {"stage3_parameter_1": 20},
-        }
-    assert runtime_config.global_parameters == {
-        "env": "some-env-var"
+    assert runtime_config.pipeline == {
+        "stage1": False,
+        "stage2": False,
+        "stage3": True,
     }
+    assert runtime_config.parameters == {
+        "stage1": {"stage1_parameter_1": 10},
+        "stage2": {"stage2_parameter_1": [0, 1, 2]},
+        "stage3": {"stage3_parameter_1": 20},
+    }
+    assert runtime_config.global_parameters == {"env": "some-env-var"}
 
 
 def test_should_throw_error_for_non_existent_path_in_config(setup):

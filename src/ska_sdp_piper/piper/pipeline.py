@@ -72,26 +72,15 @@ class Pipeline(Command, metaclass=NamedInstance):
             help="Installs the default config at --config-install-path",
         )(self._install_config)
 
-    def _pipeline_config(self, selected_stages=None):
+    def _pipeline_config(self):
         """
         Returns the pipeline config as a dictionary of enabled/disabled stages.
-
-        Parameters
-        ----------
-        selected_stages: [str]
-            Enabled stages.
 
         Returns
         -------
         dict
             Dictionary of selected stages
         """
-
-        if selected_stages:
-            return {
-                stage.name: stage.name in selected_stages
-                for stage in self._stages
-            }
 
         return {stage.name: True for stage in self._stages}
 
