@@ -134,8 +134,7 @@ def get_dataarray_from_fits(image_path, hduid=0, chunksizes={}):
     wcs = WCS(image_path)
 
     dimensions = [
-        fits_axis_to_image_dims[wcs.axis_type_names[nax]]
-        for nax in range(len(shape) - 1, -1, -1)
+        fits_axis_to_image_dims[axis] for axis in reversed(wcs.axis_type_names)
     ]
 
     coordinates = {}
@@ -243,11 +242,12 @@ def read_model(
         model_image = xr.concat(images, dim="polarization")
     else:
         # stack the images creating new polarization axis
+        # assuming that all images have same dims and coords
         model_image_data = dask.array.stack(images, axis=0)
         model_image = xr.DataArray(
             model_image_data,
-            dims=["polarization", "y", "x"],
-            name="mode_image",
+            dims=["polarization", *images[0].dims],
+            name="model_image",
         )
         model_image = model_image.assign_coords(images[0].coords)
         model_image = model_image.assign_coords({"polarization": pols})
