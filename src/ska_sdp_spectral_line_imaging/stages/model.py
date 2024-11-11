@@ -163,6 +163,89 @@ def get_dataarray_from_fits(image_path, hduid=0, chunksizes={}):
     )
 
 
+def apply_power_law_scaling(
+    image: xr.DataArray,
+    frequency_range: np.ndarray,
+    reference_frequency: float = None,
+    spectral_index: float = 0.75,
+):
+    """
+    Apply power law scaling on a continuum image and return a scaled cube.
+
+    The "image" must be a xarray dataarray.
+    If "frequency" dimension of size 1 is present in image,
+    then that value is used as reference frequency for scaling.
+    Else, user can pass any reference frequency
+    as "reference_frequency" argument, which takes preference.
+
+    If "data" attribute of image is a dask array, then this will return
+    a dataarray which wraps a new dask array containing operations
+    for power law scaling. This means, the values in returned dataarray
+    are not computed eagerly.
+
+    The formula for power law scaling is given as:
+
+    ..math
+
+        S2 = S1 * ( \\nu2 / \\nu1 ) ^ {-\\alpha}
+
+    Parameters
+    ----------
+        image: xr.DataArray
+            Image data array. The "data" attribute of dataarray can either
+            be a numpy array or a dask array.
+        frequency_range: numpy.ndarray | dask.array
+            Frequency range in hertz over which to scale the data.
+        reference_frequency: float, optional
+            Refernce frequency in hertz. If not passed, function expects that
+            a frequency coordinate is present in the image. If passed, this
+            takes priority over the frequency cordinates of image.
+        spectral_index: float, optional
+            Spectral index (alpha) used in power law scaling.
+            Defaults to 0.75.
+
+    Returns
+    -------
+        xr.DataArray
+            A 3-dimensional scaled spectral cube
+    """
+    _ref_freq = None
+    if "frequency" in image.dims:
+        if image.frequency.size != 1:
+            logger.warn(
+                "Can not apply power law scaling on a spectral cube."
+                "Ignoring passed argument and continuing pipeline"
+            )
+            return image
+
+        _ref_freq = image.frequency.data
+        # Need to remove frequency dimension
+        # for broadcasting to work later
+        image = image.squeeze(dim="frequency", drop=True)
+
+    if reference_frequency:
+        _ref_freq = reference_frequency
+
+    if _ref_freq is None:
+        raise Exception(
+            "reference_frequency is not passed, and "
+            "'frequency' dimension is not present in the input image. "
+            "Can not proceed with power law scaling."
+        )
+
+    channel_multipliers = np.power(
+        (frequency_range / _ref_freq), -spectral_index
+    )
+    channel_multipliers_da = xr.DataArray(
+        channel_multipliers,
+        dims=["frequency"],
+        coords={"frequency": frequency_range},
+    )
+
+    scaled_cube = image * channel_multipliers_da
+    return scaled_cube
+
+
 @ConfigurableStage(
     "read_model",
     configuration=Configuration(
@@ -188,11 +271,24 @@ def get_dataarray_from_fits(image_path, hduid=0, chunksizes={}):
             """,
             nullable=False,
         ),
+        do_power_law_scaling=ConfigParam(
+            bool,
+            False,
+            description="Perform power law scaling to scale model "
+            "image across channels. Only applicable for continuum images.",
+        ),
+        spectral_index=ConfigParam(
+            float,
+            0.75,
+            description="Spectral index to perform power law scaling",
+        ),
     ),
 )
 def read_model(
     upstream_output: UpstreamOutput,
     image: str,
+    do_power_law_scaling: bool,
+    spectral_index: float,
 ) -> UpstreamOutput:
     """
     Read model image(s) from FITS file(s).
@@ -252,18 +348,19 @@ def read_model(
         model_image = model_image.assign_coords(images[0].coords)
         model_image = model_image.assign_coords({"polarization": pols})
 
-    if "frequency" in model_image.dims:
-        if model_image.frequency.size == 1:
-            # continuum image with extra dimension on frequency
-            model_image = model_image.squeeze(dim="frequency")
-        else:
-            # NOTE: overriding frequency coordinates
-            # to avoid misalignment issues
-            model_image = model_image.assign_coords(
-                {"frequency": ps.frequency}
-            )
-            # TODO: Do we have to call chunk() on model_image across frequency,
-            # or will dask handle it ?
+    if do_power_law_scaling:
+        model_image = apply_power_law_scaling(
+            model_image,
+            ps.frequency.data,
+            spectral_index=spectral_index,
+        )
+
+    if "frequency" in model_image.dims and model_image.frequency.size == 1:
+        # continuum image with extra dimension on frequency
+        model_image = model_image.squeeze(dim="frequency", drop=True)
+
+    # TODO: Do we have to call chunk() on model_image across frequency,
+    # or will dask handle it ?
 
     upstream_output["model_image"] = model_image
 

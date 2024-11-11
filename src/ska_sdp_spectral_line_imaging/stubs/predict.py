@@ -126,6 +126,10 @@ def predict_for_channels(ps, model_image, epsilon, cell_size):
 
     cell_size_radian = np.deg2rad(cell_size / 3600)
 
+    # TODO: This has to be removed once "predict"
+    # function can accept any dtypes
+    model_image = model_image.astype(np.float32)
+
     predicted_visibility = predict(
         ps,
         model_image,

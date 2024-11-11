@@ -21,7 +21,7 @@ def fixture_msv4():
     ).astype(complex)
     weight = np.ones(
         shape=(len(time), num_baselines, len(frequency), num_pols)
-    ).astype(np.float_)
+    ).astype(np.float32)
     uvw = np.zeros((num_times, num_baselines, 3))
     flag = np.zeros(
         shape=(len(time), num_baselines, len(frequency), num_pols)

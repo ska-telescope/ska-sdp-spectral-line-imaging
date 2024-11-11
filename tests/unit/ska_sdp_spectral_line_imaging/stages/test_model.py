@@ -1,10 +1,12 @@
 import mock
 import numpy as np
+import pytest
 import xarray as xr
 from mock import MagicMock, Mock, call
 
 from ska_sdp_spectral_line_imaging.stages.model import (
     _fit_polynomial_on_visibility,
+    apply_power_law_scaling,
     cont_sub,
 )
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
@@ -242,3 +244,122 @@ def test_should_not_report_extent_of_continuum_subtraction_for_invalid_pols(
     )
     fit_poly_on_vis_mock.assert_not_called()
     delayed_log_mock.assert_called_once()
+
+
+def test_power_law_scaling():
+    image = xr.DataArray(np.ones((4, 4)), dims=["x", "y"])
+    frequencies = 100e6 + np.arange(10) * 25e6
+    reference_frequency = 100e6
+    spectral_index = 0.75
+
+    expected_scaling = [
+        1.0,
+        0.845897,
+        0.737788,
+        0.657236,
+        0.594604,
+        0.544331,
+        0.502973,
+        0.468274,
+        0.438691,
+        0.413131,
+    ]
+    expected_data = np.ones((4, 4, 10)) * expected_scaling
+    expected_image = xr.DataArray(expected_data, dims=["x", "y", "frequency"])
+
+    actual_image = apply_power_law_scaling(
+        image, frequencies, reference_frequency, spectral_index
+    )
+
+    np.testing.assert_array_almost_equal(actual_image, expected_image)
+
+
+def test_power_law_scaling_throw_exception_when_missing_ref_freq():
+    image = xr.DataArray(np.ones((4, 4)), dims=["x", "y"])
+    frequencies = 100e6 + np.arange(10) * 25e6
+    reference_frequency = None
+    spectral_index = 0.75
+
+    with pytest.raises(Exception):
+        apply_power_law_scaling(
+            image, frequencies, reference_frequency, spectral_index
+        )
+
+
+def test_power_law_scaling_when_image_has_frequency_dim_as_one():
+    image = xr.DataArray(np.ones((4, 4, 1)), dims=["x", "y", "frequency"])
+    frequencies = 100e6 + np.arange(10) * 25e6
+    reference_frequency = 100e6
+    spectral_index = 0.75
+
+    expected_scaling = [
+        1.0,
+        0.845897,
+        0.737788,
+        0.657236,
+        0.594604,
+        0.544331,
+        0.502973,
+        0.468274,
+        0.438691,
+        0.413131,
+    ]
+    expected_data = np.ones((4, 4, 10)) * expected_scaling
+    expected_image = xr.DataArray(expected_data, dims=["x", "y", "frequency"])
+
+    actual_image = apply_power_law_scaling(
+        image, frequencies, reference_frequency, spectral_index
+    )
+
+    np.testing.assert_array_almost_equal(actual_image, expected_image)
+
+
+def test_power_law_scaling_freq_present_ref_freq_not_passed():
+    """
+    Assert power law scaling works when passing continuum image with freq = 1
+    column and reference frequency is not passed
+    """
+    image = xr.DataArray(
+        np.ones((4, 4, 1)),
+        dims=["x", "y", "frequency"],
+        coords=dict(frequency=np.array([100e6])),
+    )
+    frequencies = 100e6 + np.arange(10) * 25e6
+    reference_frequency = None
+    spectral_index = 0.75
+
+    expected_scaling = [
+        1.0,
+        0.845897,
+        0.737788,
+        0.657236,
+        0.594604,
+        0.544331,
+        0.502973,
+        0.468274,
+        0.438691,
+        0.413131,
+    ]
+    expected_data = np.ones((4, 4, 10)) * expected_scaling
+    expected_image = xr.DataArray(expected_data, dims=["x", "y", "frequency"])
+
+    actual_image = apply_power_law_scaling(
+        image, frequencies, reference_frequency, spectral_index
+    )
+
+    np.testing.assert_array_almost_equal(actual_image, expected_image)
+
+
+def test_power_law_scaling_should_not_happen_when_frequency_present():
+    image = xr.DataArray(
+        np.ones((4, 4, 10), dtype=np.float32), dims=["x", "y", "frequency"]
+    )
+    frequencies = 100e6 + np.arange(10) * 25e6
+    reference_frequency = 100e6
+    spectral_index = 0.75
+
+    actual_image = apply_power_law_scaling(
+        image, frequencies, reference_frequency, spectral_index
+    )
+
+    np.testing.assert_array_almost_equal(actual_image, image)

@@ -110,14 +110,16 @@ def test_should_be_able_to_distribute_predict(numpy_mock, predict_mock):
     predicted_vis = Mock(name="predicted_visibility")
     predict_mock.return_value = predicted_vis
     predicted_vis.assign_coords.return_value = "predicted_visibility"
+    model_image_mock = Mock(name="model_image")
+    model_image_mock.astype.return_value = "model_image_converted"
 
     output = predict_for_channels(
-        ps, "model_image", epsilon=1e-4, cell_size=7200
+        ps, model_image_mock, epsilon=1e-4, cell_size=7200
     )
 
     numpy_mock.deg2rad.assert_called_once_with(2)
     predict_mock.assert_called_once_with(
-        ps, "model_image", epsilon=1e-4, cell_size=0.5
+        ps, "model_image_converted", epsilon=1e-4, cell_size=0.5
     )
 
     predicted_vis.assign_coords.assert_called_once_with(ps.VISIBILITY.coords)

@@ -8,7 +8,7 @@ from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 def test_should_run_predict_stage(result_msv4):
     image_sz = 64
     model = xr.DataArray(
-        np.zeros(image_sz * image_sz).reshape((image_sz, image_sz)),
+        np.zeros((image_sz, image_sz), dtype=np.float32),
         dims=["y", "x"],
     )
 

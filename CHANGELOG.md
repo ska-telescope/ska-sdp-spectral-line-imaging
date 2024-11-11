@@ -14,6 +14,7 @@
 - Move export image name and format to imaging stage, with the addition of export flags for image, psf, model, and residual.
 - Remove all export stages. The export happens from the respective stages where the data is generated.
 - Move read processing set logic from piper framework to spectral line imaging pipeline
+- Delay read model fits reads and add power law scaling for modell
 
 ## 0.5.0
 
