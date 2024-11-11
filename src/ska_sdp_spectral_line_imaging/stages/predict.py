@@ -16,12 +16,21 @@ logger = logging.getLogger()
 @ConfigurableStage(
     "predict_stage",
     configuration=Configuration(
-        cell_size=ConfigParam(float, 60.0, "Cell size in arcsecond"),
-        epsilon=ConfigParam(
-            float, 1e-4, "Floating point accuracy for ducc gridder"
+        cell_size=ConfigParam(
+            float, 60.0, description="Cell size in arcsecond"
         ),
-        export_model=ConfigParam(bool, False, "Export the predicted model"),
-        psout_name=ConfigParam(str, "vis_model", "Output path of model data"),
+        epsilon=ConfigParam(
+            float, 1e-4, description="Floating point accuracy for ducc gridder"
+        ),
+        export_model=ConfigParam(
+            bool, False, description="Export the predicted model"
+        ),
+        psout_name=ConfigParam(
+            str,
+            "vis_model",
+            description="Output path of model data",
+            nullable=False,
+        ),
     ),
 )
 def predict_stage(

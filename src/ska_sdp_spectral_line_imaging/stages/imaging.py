@@ -70,10 +70,16 @@ SPEED_OF_LIGHT = 299792458
             description="Clean beam information, each value is in degrees",
         ),
         image_name=ConfigParam(
-            str, "spectral_cube", "Output path of the spectral cube"
+            str,
+            "spectral_cube",
+            description="Output path of the spectral cube",
+            nullable=False,
         ),
         export_format=ConfigParam(
-            str, "fits", "Data format for the image. Allowed values: fits|zarr"
+            str,
+            "fits",
+            description="Data format for the image. Allowed values: fits|zarr",
+            allowed_values=["fits", "zarr"],
         ),
         export_model_image=ConfigParam(
             bool,

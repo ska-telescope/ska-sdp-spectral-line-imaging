@@ -47,12 +47,14 @@ logger = logging.getLogger()
             `README <README.html#regarding-the-model-visibilities>`_
             to understand the requirements of the model image.
             """,
+            nullable=False,
         ),
         image_type=ConfigParam(
             str,
             "continuum",
             description="Type of the input images. Available options are "
             "'spectral' or 'continuum'",
+            allowed_values=["spectral", "continuum"],
         ),
     ),
 )
@@ -222,15 +224,18 @@ def _fit_polynomial_on_visibility(data):
     "continuum_subtraction",
     configuration=Configuration(
         export_residual=ConfigParam(
-            bool, False, "Export the residual visibilities"
+            bool, False, description="Export the residual visibilities"
         ),
         psout_name=ConfigParam(
-            str, "vis_residual", "Output file name prefix of residual data"
+            str,
+            "vis_residual",
+            description="Output file name prefix of residual data",
+            nullable=False,
         ),
         report_poly_fit=ConfigParam(
             bool,
             False,
-            "Whether to report extent of continuum subtraction "
+            description="Whether to report extent of continuum subtraction "
             "by fitting polynomial across channels",
         ),
     ),

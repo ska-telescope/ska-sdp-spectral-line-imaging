@@ -8,7 +8,9 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
     "load_data",
     configuration=Configuration(
         obs_id=ConfigParam(
-            int, 0, "The index of the partition present in processing set"
+            int,
+            0,
+            description="The index of the partition present in processing set",
         ),
     ),
 )
