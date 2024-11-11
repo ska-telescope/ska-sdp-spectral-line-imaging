@@ -4,38 +4,6 @@ from ..exceptions import (
 )
 
 
-class ConfigParam:
-    """
-    Configuration Parameters
-
-    Attributes
-    ----------
-       _type: type
-           Type of the configurable parameter.
-       value: _type
-           The value for the configurable parameter.
-       description: str
-           Description of the configurable parameter.
-    """
-
-    def __init__(self, _type, default, description=None):
-        """
-        Initialise a ConfigParam object
-
-        Parameters
-        ----------
-            _type: type
-                Type of the configurable parameter.
-            default: _type
-                The default value for the configurable parameter.
-            description: str
-                Description of the configurable parameter.
-        """
-        self._type = _type
-        self.value = default
-        self.description = description
-
-
 class Configuration:
     """
     Class containing all the configurations for a stage
@@ -86,12 +54,6 @@ class Configuration:
         """
         for key, value in kwargs.items():
             config_param = self.__config_params[key]
-            if value is not None and type(value) is not config_param._type:
-                raise TypeError(
-                    "Parameter type does not match:"
-                    f" {config_param._type} expected, {type(value)} provided"
-                )
-
             config_param.value = value
 
     def valididate_arguments_for(self, stage):
