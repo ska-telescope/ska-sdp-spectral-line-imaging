@@ -2,6 +2,9 @@ import logging
 
 import numpy as np
 import xarray as xr
+from ska_sdp_func_python.xradio.visibility.polarization import (
+    convert_polarization,
+)
 
 from ska_sdp_piper.piper.executors import ExecutorFactory
 from ska_sdp_piper.piper.utils import read_yml
@@ -68,12 +71,27 @@ class SpectralLineDiagnoser:
 
         self.__read_input_data()
 
+    def __convert_pols(self):
+        reference = self.model if self.model is not None else self.residual
+        if (reference is not None) and (
+            not self.input_ps.polarization.equals(reference.polarization)
+        ):
+            logger.info(
+                f"Polarization of input ps data is being converted to "
+                f"{reference.polarization}"
+            )
+            self.input_ps = convert_polarization(
+                self.input_ps, reference.polarization.values
+            )
+
     def diagnose(self):
         """
         Main method that runs the diagnosis steps.
         """
 
         logger.info("Creating plots...")
+
+        self.__convert_pols()
 
         flagged_vis = xr.where(
             self.input_ps.FLAG, None, self.input_ps.VISIBILITY
