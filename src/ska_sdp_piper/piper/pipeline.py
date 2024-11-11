@@ -1,11 +1,9 @@
 import functools
 import logging
 
-import yaml
-
 from .command import Command
 from .configurations import Configuration
-from .configurations.config_manager import ConfigManager
+from .configurations.runtime_config import RuntimeConfig
 from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
 from .executors import ExecutorFactory
 from .named_instance import NamedInstance
@@ -60,12 +58,6 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self._stages = stages
 
-        self.config_manager = ConfigManager(
-            pipeline=self._pipeline_config(),
-            parameters=self._parameter(),
-            global_parameters=self._global_config.items,
-        )
-
         self.scheduler = scheduler
 
         self.sub_command(
@@ -80,26 +72,15 @@ class Pipeline(Command, metaclass=NamedInstance):
             help="Installs the default config at --config-install-path",
         )(self._install_config)
 
-    def _pipeline_config(self, selected_stages=None):
+    def _pipeline_config(self):
         """
         Returns the pipeline config as a dictionary of enabled/disabled stages.
-
-        Parameters
-        ----------
-        selected_stages: [str]
-            Enabled stages.
 
         Returns
         -------
         dict
             Dictionary of selected stages
         """
-
-        if selected_stages:
-            return {
-                stage.name: stage.name in selected_stages
-                for stage in self._stages
-            }
 
         return {stage.name: True for stage in self._stages}
 
@@ -129,7 +110,11 @@ class Pipeline(Command, metaclass=NamedInstance):
                 - `parameters`
                 - `pipelines`
         """
-        return self.config_manager.config
+        return dict(
+            pipeline=self._pipeline_config(),
+            parameters=self._parameter(),
+            global_parameters=self._global_config.items,
+        )
 
     def _run(self, cli_args):
         """
@@ -149,24 +134,32 @@ class Pipeline(Command, metaclass=NamedInstance):
         )
         output_dir = create_output_dir(output_path, self.name)
 
+        runtime_config = (
+            RuntimeConfig(**self.config)
+            .update_from_yaml(cli_args.config_path)
+            .update_from_cli_overrides(cli_args.override_defaults)
+            .update_from_cli_stages(stages)
+        )
+
+        self._stages.update_stage_parameters(runtime_config.parameters)
+        self._global_config.update_config_params(
+            **runtime_config.global_parameters
+        )
+
         cli_output_file = f"{output_dir}/{self.name}_{timestamp()}.cli.yml"
         self._cli_command_parser.write_yml(cli_output_file)
 
+        config_output_path = (
+            f"{output_dir}/{self.name}_{timestamp()}.config.yml"
+        )
+        runtime_config.write_yml(config_output_path)
+
         self.run(
-            stages=stages,
-            config_path=cli_args.config_path,
+            stages=runtime_config.stages_to_run,
             verbose=(cli_args.verbose != 0),
             output_dir=output_dir,
             cli_args=self._cli_command_parser.cli_args_dict,
         )
-
-    def _update_defaults(self, overide_defaults):
-        params_to_update = yaml.safe_load(
-            "\n".join(f"{a} : {b}" for a, b in overide_defaults)
-        )
-
-        for (path, value) in params_to_update.items():
-            self.config_manager.set(path, value)
 
     def _install_config(self, cli_args):
         """
@@ -177,17 +170,14 @@ class Pipeline(Command, metaclass=NamedInstance):
             cli_args: argparse.Namespace
                 CLI arguments
         """
-        if cli_args.overide_defaults:
-            self._update_defaults(cli_args.overide_defaults)
-        self.config_manager.write_yml(
-            f"{cli_args.config_install_path}/{self.name}.yml"
-        )
+        RuntimeConfig(**self.config).update_from_cli_overrides(
+            cli_args.override_defaults
+        ).write_yml(f"{cli_args.config_install_path}/{self.name}.yml")
 
     def run(
         self,
         output_dir,
-        stages=None,
-        config_path=None,
+        stages,
         verbose=False,
         cli_args=None,
     ):
@@ -200,14 +190,11 @@ class Pipeline(Command, metaclass=NamedInstance):
              Path to output directory
           stages: list[str]
              Names of the stages to be executed
-          config_path: str
-             Configuration yaml file path
           verbose: bool
              Toggle DEBUG log level
           cli_args: dict
              CLI arguments
         """
-        stages = [] if stages is None else stages
         cli_args = {} if cli_args is None else cli_args
         log_file = f"{output_dir}/{self.name}_{timestamp()}.log"
         LogUtil.configure(log_file, verbose=verbose)
@@ -216,43 +203,25 @@ class Pipeline(Command, metaclass=NamedInstance):
         self.logger.info(f"Executing {self.name} pipeline with metadata:")
         self.logger.info(f"Infile Path: {cli_args.get('input')}")
         self.logger.info(f"Stages: {stages}")
-        self.logger.info(f"Configuration Path: {config_path}")
+        self.logger.info(f"Configuration Path: {cli_args.get('config_path')}")
         self.logger.info(f"Current run output path : {output_dir}")
 
         executor = ExecutorFactory.get_executor(output_dir, **cli_args)
-        if config_path:
-            self.config_manager.update_config(config_path)
-            self._stages.update_stage_parameters(
-                self.config_manager.parameters
-            )
-
-        if stages:
-            self.config_manager.update_pipeline(
-                self._pipeline_config(selected_stages=stages),
-            )
-
-        self._stages.validate(self.config_manager.stages_to_run)
+        self._stages.validate(stages)
 
         self._stages.add_additional_parameters(
             _output_dir_=output_dir,
             _cli_args_=cli_args,
-            _global_parameters_=self.config_manager.global_parameters,
+            _global_parameters_=self._global_config.items,
         )
 
-        executable_stages = self._stages.get_stages(
-            self.config_manager.stages_to_run
-        )
+        executable_stages = self._stages.get_stages(stages)
 
         self.logger.info(
             f"""Selected stages to run: {', '.join(
                 stage.name for stage in executable_stages
             )}"""
         )
-
-        config_output_file = (
-            f"{output_dir}/{self.name}_{timestamp()}.config.yml"
-        )
-        self.config_manager.write_yml(config_output_file)
 
         self.scheduler.schedule(executable_stages)
         self.logger.info("Scheduling done, now executing the graph...")

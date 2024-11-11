@@ -116,7 +116,9 @@ def test_should_raise_exception_if_pipeline_parameters_is_not_initialised():
 def test_should_update_stage_parameters():
     stage1 = Mock(name="stage1")
     stage1.name = "stage1"
-    stages = Stages([stage1])
+    stage3 = Mock(name="stage3")
+    stage3.name = "stage3"
+    stages = Stages([stage1, stage3])
 
     stages.update_stage_parameters(
         {"stage1": {"a": 10, "b": 20}, "stage2": {"c": 30, "d": 40}}

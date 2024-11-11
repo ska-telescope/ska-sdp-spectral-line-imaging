@@ -80,7 +80,7 @@ def executor_factory(default_executor):
 @pytest.fixture(scope="function", autouse=True)
 def write_yml_mock():
     with mock.patch(
-        "ska_sdp_piper.piper.pipeline.ConfigManager.write_yml"
+        "ska_sdp_piper.piper.pipeline.RuntimeConfig.write_yml"
     ) as write:
         yield write
 
@@ -160,19 +160,33 @@ def test_should_initialise_the_pipeline_with_additional_cli_args(
     )
 
 
+@mock.patch("ska_sdp_piper.piper.pipeline.RuntimeConfig")
 def test_should_run_the_pipeline_from_cli_command(
+    runtime_config_mock,
     create_output_mock,
     cli_command_parser,
     timestamp_mock,
     stages,
     default_scheduler,
 ):
+    runtime_config_mock.update_from_cli_stages.return_value = (
+        runtime_config_mock
+    )
+    runtime_config_mock.update_from_cli_overrides.return_value = (
+        runtime_config_mock
+    )
+    runtime_config_mock.update_from_yaml.return_value = runtime_config_mock
+    runtime_config_mock.return_value = runtime_config_mock
+    runtime_config_mock.stages_to_run = ["a", "b"]
+
     cli_command_parser.return_value = cli_command_parser
     cli_command_parser.cli_args_dict = {"input": "infile_path"}
+
     args = Mock(name="CLI_args")
     args.input = "infile_path"
     args.dask_scheduler = "10.131"
     args.config_path = "config_path"
+    args.override_defaults = "CLI_OVERRIDES"
     args.verbose = False
     args.output_path = "output_path_from_cli"
     args.stages = [["a", "b"]]
@@ -188,63 +202,40 @@ def test_should_run_the_pipeline_from_cli_command(
 
     pipeline()
 
+    runtime_config_mock.update_from_yaml.assert_called_once_with("config_path")
+    runtime_config_mock.update_from_cli_overrides.assert_called_once_with(
+        "CLI_OVERRIDES"
+    )
+    runtime_config_mock.update_from_cli_stages.assert_called_once_with(
+        ["a", "b"]
+    )
+
     create_output_mock.assert_called_once_with(
         "output_path_from_cli", "test_pipeline"
     )
     cli_command_parser.write_yml.assert_called_once_with(
         "./output/timestamp/test_pipeline_FORMATTED_TIME.cli.yml"
     )
+
+    runtime_config_mock.write_yml.assert_called_once_with(
+        "./output/timestamp/test_pipeline_FORMATTED_TIME.config.yml",
+    )
+
     pipeline_run_mock.assert_called_once_with(
         stages=["a", "b"],
-        config_path="config_path",
         verbose=False,
         output_dir="./output/timestamp",
         cli_args={"input": "infile_path"},
     )
 
 
-def test_should_run_the_pipeline_from_cli_command_with_default_output(
-    create_output_mock,
-    cli_command_parser,
-    timestamp_mock,
-    stages,
-    default_scheduler,
-):
-    cli_command_parser.return_value = cli_command_parser
-    args = Mock(name="CLI_args")
-    args.output_path = None
-    args.stages = None
-    args.verbose = 1
-
-    cli_command_parser.parse_args.return_value = args
-    pipeline_run_mock = Mock(name="pipeline_run_mock")
-
-    pipeline = Pipeline(
-        "test_pipeline", stages=stages, scheduler=default_scheduler
-    )
-    args.sub_command = pipeline._run
-    pipeline.run = pipeline_run_mock
-
-    pipeline()
-
-    create_output_mock.assert_called_once_with("./output", "test_pipeline")
-    cli_command_parser.write_yml.assert_called_once_with(
-        "./output/timestamp/test_pipeline_FORMATTED_TIME.cli.yml"
-    )
-    pipeline_run_mock.assert_called_once_with(
-        stages=[],
-        config_path=args.config_path,
-        verbose=True,
-        output_dir="./output/timestamp",
-        cli_args=cli_command_parser.cli_args_dict,
-    )
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.timestamp")
+@mock.patch("ska_sdp_piper.piper.pipeline.RuntimeConfig")
 @mock.patch("ska_sdp_piper.piper.pipeline.Configuration")
 def test_should_run_the_pipeline(
     configuration_mock,
-    config_manager_mock,
+    runtime_config_mock,
+    timestamp_mock,
     create_output_mock,
     executor_factory,
     default_scheduler,
@@ -252,13 +243,20 @@ def test_should_run_the_pipeline(
     mock_stages,
     stages,
 ):
-    config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.stages_to_run = ["stage1", "stage2"]
-    config_manager_mock.stage_config.side_effect = [
+    timestamp_mock.return_value = "FORMATTED_TIME"
+
+    mock_stage1, mock_stage2, mock_stage3 = mock_stages
+    mock_stage1.config = {"stage1": "stage1_config"}
+    mock_stage2.config = {"stage2": "stage2_config"}
+    mock_stage3.config = {"stage3": "stage3_config"}
+
+    runtime_config_mock.return_value = runtime_config_mock
+    runtime_config_mock.stages_to_run = ["stage1", "stage2"]
+    runtime_config_mock.stage_config.side_effect = [
         "stage_config1",
         "stage_config2",
     ]
-    config_manager_mock.global_parameters = {"a": 10}
+    runtime_config_mock.global_parameters = {"a": 10}
 
     configuration_mock.return_value = configuration_mock
     configuration_mock.items = {"a": 10}
@@ -268,25 +266,23 @@ def test_should_run_the_pipeline(
     )
 
     pipeline.run(
-        "output_dir",
-        [],
+        stages=["stage1", "stage2"],
+        output_dir="output_dir",
         cli_args={"input": "path", "dask_scheduler": "10.191"},
     )
 
-    config_manager_mock.assert_called_once_with(
-        pipeline={"stage1": True, "stage2": True, "stage3": True},
-        parameters={},
-        global_parameters={"a": 10},
-    )
     executor_factory.get_executor.assert_called_once_with(
         "output_dir",
         input="path",
         dask_scheduler="10.191",
     )
+
     default_scheduler.schedule.assert_called_once_with(mock_stages)
 
     default_executor.execute.assert_called_once_with(default_scheduler.tasks)
 
+    stages.validate.assert_called_once_with(["stage1", "stage2"])
+    stages.get_stages.assert_called_once_with(["stage1", "stage2"])
     stages.add_additional_parameters.assert_called_once_with(
         _output_dir_="output_dir",
         _cli_args_={"input": "path", "dask_scheduler": "10.191"},
@@ -314,35 +310,6 @@ def test_should_run_the_pipeline_with_verbose(
 
 
 @mock.patch("ska_sdp_piper.piper.pipeline.timestamp")
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-def test_should_run_the_pipeline_with_selected_stages(
-    config_manager_mock, timestamp_mock, default_scheduler, mock_stages
-):
-    timestamp_mock.return_value = "FORMATTED_TIME"
-    stage1, _, stage3 = mock_stages
-    config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.stages_to_run = ["stage1", "stage3"]
-
-    stages = Stages(mock_stages)
-    pipeline = Pipeline(
-        "test_pipeline", stages=stages, scheduler=default_scheduler
-    )
-    pipeline.run("output_dir", stages=["stage1", "stage3"])
-
-    config_manager_mock.assert_called_once_with(
-        pipeline={"stage1": True, "stage2": True, "stage3": True},
-        parameters={},
-        global_parameters={},
-    )
-
-    config_manager_mock.update_pipeline.assert_called_once_with(
-        {"stage1": True, "stage2": False, "stage3": True}
-    )
-
-    default_scheduler.schedule.assert_called_once_with([stage1, stage3])
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.timestamp")
 def test_should_instantiate_dask_client(
     timestamp_mock, executor_factory, default_scheduler
 ):
@@ -357,7 +324,8 @@ def test_should_instantiate_dask_client(
     )
     dask_scheduler_address = "some_ip"
     pipeline.run(
-        "output_dir",
+        stages=["stage1"],
+        output_dir="output_dir",
         cli_args={"dask_scheduler": dask_scheduler_address},
     )
     executor_factory.get_executor.assert_called_once_with(
@@ -366,115 +334,38 @@ def test_should_instantiate_dask_client(
     )
 
 
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-def test_should_update_the_default_stage_configs_if_external_yaml_is_provided(
-    config_manager_mock, default_scheduler, create_output_mock, stages
-):
-
-    config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.stages_to_run = ["stage1", "stage3"]
-    create_output_mock.return_value = "/path/to/output/timestamp"
-    pipeline = Pipeline(
-        "test_pipeline", stages=stages, scheduler=default_scheduler
-    )
-
-    pipeline.run("/path/to/output", config_path="/path/to/config")
-
-    stages.update_stage_parameters.assert_called_once_with(
-        config_manager_mock.parameters
-    )
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-def test_should_run_the_pipeline_with_selected_stages_from_config(
-    config_manager_mock, default_scheduler, create_output_mock, mock_stages
-):
-    stage1, _, stage3 = mock_stages
-    config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.stages_to_run = ["stage1", "stage3"]
-    create_output_mock.return_value = "/path/to/output/timestamp"
-    stages = Stages(mock_stages)
-    pipeline = Pipeline(
-        "test_pipeline", stages=stages, scheduler=default_scheduler
-    )
-
-    pipeline.run("/path/to/output", config_path="/path/to/config")
-
-    config_manager_mock.update_config.assert_called_once_with(
-        "/path/to/config"
-    )
-
-    default_scheduler.schedule.assert_called_once_with([stage1, stage3])
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-def test_should_run_the_pipeline_with_stages_from_cli_over_config(
-    config_manager_mock, default_scheduler, mock_stages
-):
-    stage1, stage2, _ = mock_stages
-    config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.stages_to_run = ["stage1", "stage2"]
-
-    stages = Stages(mock_stages)
-    pipeline = Pipeline(
-        "test_pipeline", stages=stages, scheduler=default_scheduler
-    )
-
-    pipeline.run(
-        "output_dir",
-        ["stage1", "stage2"],
-        config_path="/path/to/config",
-    )
-
-    config_manager_mock.update_config.assert_called_once_with(
-        "/path/to/config",
-    )
-    config_manager_mock.update_pipeline.assert_called_once_with(
-        {"stage1": True, "stage2": True, "stage3": False},
-    )
-
-    default_scheduler.schedule.assert_called_once_with([stage1, stage2])
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-def test_should_not_update_config_if_config_path_is_not_provided(
-    config_manager_mock, default_scheduler
-):
-    config_manager_mock.return_value = config_manager_mock
-
-    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
-    stage1.name = "stage1"
-
-    stage1.config = {}
-    stages = Stages([stage1])
-
-    pipeline = Pipeline(
-        "test_pipeline", stages=stages, scheduler=default_scheduler
-    )
-
-    pipeline.run("output_dir")
-
-    assert config_manager_mock.update_config.call_count == 0
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
 def test_should_return_pipeline_default_configuration(
-    config_manager_mock, default_scheduler
+    default_scheduler, stages, mock_stages
 ):
-
-    config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.config = {"config": "config"}
+    mock_stage1, mock_stage2, mock_stage3 = mock_stages
+    mock_stage1.config = {"stage1": "stage1_config"}
+    mock_stage2.config = {"stage2": "stage2_config"}
+    mock_stage3.config = {"stage3": "stage3_config"}
 
     pipeline = Pipeline(
-        "test_pipeline", stages=Stages(), scheduler=default_scheduler
+        "test_pipeline", stages=stages, scheduler=default_scheduler
     )
 
-    assert pipeline.config == {"config": "config"}
+    assert pipeline.config == {
+        "global_parameters": {},
+        "parameters": {
+            "stage1": "stage1_config",
+            "stage2": "stage2_config",
+            "stage3": "stage3_config",
+        },
+        "pipeline": {
+            "stage1": True,
+            "stage2": True,
+            "stage3": True,
+        },
+    }
 
 
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-def test_should_install_default_config(config_manager_mock, default_scheduler):
-    config_manager_mock.return_value = config_manager_mock
+@mock.patch("ska_sdp_piper.piper.pipeline.RuntimeConfig")
+def test_should_install_default_config(runtime_config_mock, default_scheduler):
+    runtime_config_mock.return_value = runtime_config_mock
+    runtime_config_mock.update_from_cli_overrides = runtime_config_mock
+
     args_mock = Mock(name="arg_mock")
     args_mock.config_install_path = "/path/to/install"
     args_mock.overide_defaults = None
@@ -483,92 +374,33 @@ def test_should_install_default_config(config_manager_mock, default_scheduler):
     )
     pipeline._install_config(args_mock)
 
-    config_manager_mock.write_yml.assert_called_once_with(
+    runtime_config_mock.write_yml.assert_called_once_with(
         "/path/to/install/test_pipeline.yml"
     )
 
 
-@mock.patch("ska_sdp_piper.piper.pipeline.yaml")
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
+@mock.patch("ska_sdp_piper.piper.pipeline.RuntimeConfig")
 def test_should_override_install_default_config(
-    config_manager_mock, yaml_mock, default_scheduler
+    runtime_config_mock, default_scheduler
 ):
-    config_manager_mock.return_value = config_manager_mock
+    runtime_config_mock.return_value = runtime_config_mock
     args_mock = Mock(name="arg_mock")
     args_mock.config_install_path = "/path/to/install"
-    args_mock.overide_defaults = [
+    args_mock.override_defaults = [
         ["parameters.b", "2"],
         ["parameters.y.z", "[oea, aoe, xyz]"],
     ]
-    yaml_mock.safe_load.return_value = {
-        "parameters.b": 2,
-        "parameters.y.z": ["oea", "aoe", "xyz"],
-    }
 
     pipeline = Pipeline(
         "test_pipeline", stages=Stages(), scheduler=default_scheduler
     )
     pipeline._install_config(args_mock)
 
-    yaml_mock.safe_load.assert_called_once_with(
-        "parameters.b : 2\nparameters.y.z : [oea, aoe, xyz]"
-    )
-
-    config_manager_mock.set.assert_has_calls(
+    runtime_config_mock.update_from_cli_overrides.assert_called_once_with(
         [
-            mock.call("parameters.b", 2),
-            mock.call("parameters.y.z", ["oea", "aoe", "xyz"]),
+            ["parameters.b", "2"],
+            ["parameters.y.z", "[oea, aoe, xyz]"],
         ]
-    )
-
-    config_manager_mock.write_yml.assert_called_once_with(
-        "/path/to/install/test_pipeline.yml"
-    )
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-def test_should_write_config_to_output_yaml_file(
-    config_manager_mock, timestamp_mock, default_scheduler
-):
-    config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.stages_to_run = ["stage1"]
-
-    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
-    stage1.name = "stage1"
-    stage1.config = {"stage1": "stage1_config"}
-
-    pipeline = Pipeline(
-        "test", stages=Stages([stage1]), scheduler=default_scheduler
-    )
-
-    pipeline.run("output_dir")
-
-    config_manager_mock.write_yml.assert_called_once_with(
-        "output_dir/test_FORMATTED_TIME.config.yml"
-    )
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.ConfigManager")
-def test_should_write_config_to_output_yaml_on_failure(
-    config_manager_mock, default_scheduler, default_executor, timestamp_mock
-):
-    config_manager_mock.return_value = config_manager_mock
-    config_manager_mock.stages_to_run = ["stage1"]
-    default_executor.execute.side_effect = Exception("Some Error")
-
-    stage1 = Mock(name="mock_stage_1", return_value="Stage_1 output")
-    stage1.name = "stage1"
-    stage1.config = {"stage1": "stage1_config"}
-
-    pipeline = Pipeline(
-        "test", stages=Stages([stage1]), scheduler=default_scheduler
-    )
-
-    with pytest.raises(Exception):
-        pipeline.run("output_dir")
-
-    config_manager_mock.write_yml.assert_called_once_with(
-        "output_dir/test_FORMATTED_TIME.config.yml"
     )
 
 

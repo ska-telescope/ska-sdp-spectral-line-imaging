@@ -1,7 +1,9 @@
 import os
 import shutil
+import sys
 import tarfile
 
+import mock
 import pytest
 
 from ska_sdp_spectral_line_imaging.pipeline import (
@@ -40,15 +42,27 @@ def test_pipeline(prepare_test_data):
     """
     Given a MSv4 and a model image the pipepile should output a stokes cube
     """
-    output_dir = "./pipeline_output"
-    os.makedirs(output_dir)
+    output_dir = f"{prepare_test_data}/pipeline_output"
 
-    spectral_line_imaging_pipeline.run(
-        output_dir, config_path="./test.config.yml", cli_args={"input": MSIN}
-    )
+    testargs = [
+        "test",
+        "run",
+        "--input",
+        MSIN,
+        "--output",
+        output_dir,
+        "--config",
+        "./test.config.yml",
+    ]
+    with mock.patch.object(sys, "argv", testargs):
+        spectral_line_imaging_pipeline()
 
-    assert len(output_dir) > 0
+    list_dir = os.listdir(output_dir)
 
-    assert os.path.exists(f"./{output_dir}/test_cube.dirty.fits")
-    assert os.path.isdir(f"./{output_dir}/residual.zarr")
-    assert os.path.isdir(f"./{output_dir}/model.zarr")
+    assert len(os.listdir(output_dir)) == 1
+
+    pipeline_output = f"{output_dir}/{list_dir[0]}"
+
+    assert os.path.exists(f"{pipeline_output}/test_cube.dirty.fits")
+    assert os.path.isdir(f"{pipeline_output}/residual.zarr")
+    assert os.path.isdir(f"{pipeline_output}/model.zarr")

@@ -2,6 +2,13 @@ import argparse
 
 from .command.cli_command_parser import CLIArgument
 
+
+class ConfigRoot:
+    PIPELINE = "pipeline"
+    PARAMETERS = "parameters"
+    GLOBAL_PARAMETERS = "global_parameters"
+
+
 CONFIG_CLI_ARGS = [
     CLIArgument(
         "--config-install-path",
@@ -12,7 +19,7 @@ CONFIG_CLI_ARGS = [
     ),
     CLIArgument(
         "--set",
-        dest="overide_defaults",
+        dest="override_defaults",
         action="append",
         nargs=2,
         metavar=("path", "value"),
@@ -58,6 +65,14 @@ DEFAULT_CLI_ARGS = [
             "If specified, any eligible pipeline step will be distributed on "
             "the associated Dask cluster."
         ),
+    ),
+    CLIArgument(
+        "--set",
+        dest="override_defaults",
+        action="append",
+        nargs=2,
+        metavar=("path", "value"),
+        help="Overrides for default config",
     ),
     CLIArgument(
         "--with-report",
