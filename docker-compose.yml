@@ -24,6 +24,4 @@ services:
       - ${DATA}:/data${MOUNT_FLAGS}
     environment:
       - DASK_SCHEDULER_ADDRESS=tcp://scheduler:8786
-    entrypoint: ["/bin/bash"]
-    stdin_open: true # docker run -i
-    tty: true        # docker run -t
+    entrypoint: ["spectral-line-imaging-pipeline", "run", "--input", "${INPUT}", "--config", "${CONFIG}", "--output", "${OUTPUT:-./output}", "--dask-scheduler", "tcp://scheduler:8786"]
