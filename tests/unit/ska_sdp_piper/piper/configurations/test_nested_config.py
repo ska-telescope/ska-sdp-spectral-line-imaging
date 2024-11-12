@@ -66,6 +66,11 @@ def test_should_validate_parameter_updates_for_nested_configuration():
             allowed_values=[1, 2, 3],
         ),
         param2=ConfigParam(str, "param 2", description="Parameter 2"),
+        param3=NestedConfigParam(
+            "param 3",
+            param3_1=ConfigParam(int, 1, allowed_values=[1, 2]),
+            param3_2=ConfigParam(str, "value"),
+        ),
     )
 
     with pytest.raises(TypeError):
@@ -79,3 +84,6 @@ def test_should_validate_parameter_updates_for_nested_configuration():
 
     with pytest.raises(ValueError):
         nested_config_param.value = {"param1": 42}
+
+    with pytest.raises(ValueError):
+        nested_config_param.value = {"param3": {"param3_1": 42}}
