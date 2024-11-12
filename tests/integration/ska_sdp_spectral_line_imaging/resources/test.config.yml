@@ -3,16 +3,36 @@ parameters:
   continuum_subtraction:
     export_residual: true
     psout_name: residual
+    report_poly_fit: true
   flagging:
     strategy_file: null
   imaging:
-    image_name: test_cube
+    beam_info:
+      bmaj: null
+      bmin: null
+      bpa: null
+    deconvolution_params:
+      algorithm: msclean
+      fractional_threshold: 0.01
+      gain: 0.7
+      niter: 3
+      scales:
+      - 0
+      - 3
+      threshold: 0.0
+      use_radler: false
     export_format: fits
-    n_iter_major: 0
+    export_model_image: true
+    export_psf_image: true
+    export_residual_image: true
     gridding_params:
-      cell_size: 60.0
+      cell_size: null
       epsilon: 0.0001
       image_size: 16
+      scaling_factor: 3.0
+    image_name: test_cube
+    n_iter_major: 1
+    psf_image_path: null
   load_data:
     obs_id: 0
   predict_stage:
@@ -21,12 +41,12 @@ parameters:
     export_model: true
     psout_name: model
   read_model:
-    image: ./tMS-%s-image.fits
+    do_power_law_scaling: true
+    image: ./gmrt-%s-image.fits
+    spectral_index: 0.75
   vis_stokes_conversion:
     output_polarizations:
     - I
-    - Q
-    - U
     - V
 pipeline:
   continuum_subtraction: true

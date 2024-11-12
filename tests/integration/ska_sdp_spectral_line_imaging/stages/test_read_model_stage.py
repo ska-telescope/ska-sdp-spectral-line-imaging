@@ -12,7 +12,7 @@ def test_read_model_stage(result_msv4):
 
     read_model.stage_definition(
         upstream_output,
-        f"{RESOURCE_DIR}/tMS-%s-image.fits",
+        f"{RESOURCE_DIR}/gmrt-%s-image.fits",
         do_power_law_scaling=True,
         spectral_index=True,
     )
