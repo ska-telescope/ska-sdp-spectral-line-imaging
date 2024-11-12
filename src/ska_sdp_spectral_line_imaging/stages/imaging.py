@@ -4,7 +4,11 @@ import os
 
 import numpy as np
 
-from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
+from ska_sdp_piper.piper.configurations import (
+    ConfigParam,
+    Configuration,
+    NestedConfigParam,
+)
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
 from ..stubs.imaging import clean_cube
@@ -25,28 +29,53 @@ SPEED_OF_LIGHT = 299792458
 @ConfigurableStage(
     "imaging",
     configuration=Configuration(
-        gridding_params=ConfigParam(
-            dict,
-            {
-                "cell_size": None,
-                "scaling_factor": 3.0,
-                "epsilon": 1e-4,
-                "image_size": 256,
-            },
-            description="Gridding parameters",
+        gridding_params=NestedConfigParam(
+            "Gridding Parameters",
+            cell_size=ConfigParam(
+                float,
+                None,
+                description="Cell Size for gridding. "
+                "Will be calculated if None",
+            ),
+            scaling_factor=ConfigParam(
+                float, 3.0, description="Scalling parameter for gridding"
+            ),
+            epsilon=ConfigParam(float, 1e-4, description="Epsilon"),
+            image_size=ConfigParam(
+                int,
+                256,
+                description="Image Size for gridding."
+                " Will be calculated if None",
+            ),
         ),
-        deconvolution_params=ConfigParam(
-            dict,
-            {
-                "algorithm": "generic_clean",
-                "gain": 0.7,
-                "threshold": 0.0,
-                "fractional_threshold": 0.01,
-                "scales": [0, 3, 10, 30],
-                "niter": 100,
-                "use_radler": True,
-            },
-            description="Deconvolution parameters",
+        deconvolution_params=NestedConfigParam(
+            "Deconvolution parameters",
+            algorithm=ConfigParam(
+                str,
+                "generic_clean",
+                nullable=False,
+                description="Deconvolution algorithm.",
+                allowed_values=[
+                    "multiscale",
+                    "iuwt",
+                    "more_sane",
+                    "generic_clean",
+                    "hogbom",
+                    "msclean",
+                ],
+            ),
+            gain=ConfigParam(float, 0.7, description="Gain"),
+            threshold=ConfigParam(float, 0.0, description="Threshold"),
+            fractional_threshold=ConfigParam(
+                float, 0.01, description="Fractional Threshold"
+            ),
+            scales=ConfigParam(
+                list,
+                [0, 3, 10, 30],
+                description="Scalling Value for multiscale",
+            ),
+            niter=ConfigParam(int, 100, description="Minor cycle iterations."),
+            use_radler=ConfigParam(bool, True, description="Flag for radler"),
         ),
         n_iter_major=ConfigParam(
             int,
