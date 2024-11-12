@@ -50,12 +50,7 @@ fits_axis_to_image_dims = {
 
 
 @dask.delayed
-def read_fits_memmapped_delayed(image_path, hduid=0, data_slice=None):
-    if data_slice is not None:
-        raise NotImplementedError(
-            "Slicing of is not yet supported in read_fits"
-        )
-
+def read_fits_memmapped_delayed(image_path, hduid=0):
     with fits.open(
         image_path, mode="denywrite", memmap=True, lazy_load_hdus=True
     ) as hdul:

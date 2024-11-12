@@ -8,6 +8,7 @@ from ska_sdp_spectral_line_imaging.stages.model import (
     _fit_polynomial_on_visibility,
     apply_power_law_scaling,
     cont_sub,
+    get_dask_array_from_fits,
 )
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
@@ -363,3 +364,8 @@ def test_power_law_scaling_should_not_happen_when_frequency_present():
     )
 
     np.testing.assert_array_almost_equal(actual_image, image)
+
+
+def test_get_dask_array_from_fits():
+    with pytest.raises(NotImplementedError):
+        get_dask_array_from_fits("image_path", 0, (16, 16), np.float32, (4, 4))
