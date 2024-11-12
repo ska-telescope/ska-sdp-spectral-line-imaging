@@ -359,8 +359,11 @@ def read_model(
         # continuum image with extra dimension on frequency
         model_image = model_image.squeeze(dim="frequency", drop=True)
 
-    # TODO: Do we have to call chunk() on model_image across frequency,
-    # or will dask handle it ?
+    model_image = model_image.chunk(
+        dict(
+            polarization=-1,
+        )
+    )
 
     upstream_output["model_image"] = model_image
 
