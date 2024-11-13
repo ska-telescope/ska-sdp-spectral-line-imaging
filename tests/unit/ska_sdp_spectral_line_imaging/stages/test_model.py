@@ -382,7 +382,7 @@ def test_should_read_model_when_fits_only_has_ra_dec_freq(
     upout["ps"] = ps
 
     fits_image = xr.DataArray(
-        data=np.ones((1, 2, 2), dtype=np.float32),
+        data=np.arange(4).reshape((1, 2, 2)).astype(np.float32),
         dims=["frequency", "y", "x"],
         coords={},
         name="cont_fits_image",
@@ -391,7 +391,7 @@ def test_should_read_model_when_fits_only_has_ra_dec_freq(
     get_data_from_fits_mock.return_value = fits_image
 
     expected_dataarray = xr.DataArray(
-        np.ones((2, 2, 2), dtype=np.float32),
+        np.array([[[0, 1], [2, 3]], [[0, 1], [2, 3]]], dtype=np.float32),
         dims=["polarization", "y", "x"],
         coords={"polarization": pols},
     ).chunk()
@@ -430,12 +430,12 @@ def test_should_read_fits_image_when_fits_has_no_freq_pol(
     fits_open_mock.return_value = fits_open_mock
     fits_open_mock.__enter__.return_value = [hud0]
     wcs_mock.return_value = wcs
-    get_dask_array_from_fits_mock.return_value = np.ones(
-        (2, 2), dtype=np.float32
+    get_dask_array_from_fits_mock.return_value = (
+        np.arange(4).reshape((2, 2)).astype(np.float32)
     )
 
     expected_xrda = xr.DataArray(
-        np.ones((2, 2), dtype=np.float32), dims=["y", "x"]
+        np.array([[0, 1], [2, 3]], dtype=np.float32), dims=["y", "x"]
     )
 
     output_xrda = get_dataarray_from_fits("image_path", 0)
