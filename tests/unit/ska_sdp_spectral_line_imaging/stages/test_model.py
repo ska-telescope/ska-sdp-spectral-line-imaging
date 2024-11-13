@@ -8,7 +8,8 @@ from ska_sdp_spectral_line_imaging.stages.model import (
     _fit_polynomial_on_visibility,
     apply_power_law_scaling,
     cont_sub,
-    get_dask_array_from_fits,
+    get_dataarray_from_fits,
+    read_model,
 )
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
@@ -366,6 +367,84 @@ def test_power_law_scaling_should_not_happen_when_frequency_present():
     np.testing.assert_array_almost_equal(actual_image, image)
 
 
-def test_get_dask_array_from_fits():
-    with pytest.raises(NotImplementedError):
-        get_dask_array_from_fits("image_path", 0, (16, 16), np.float32, (4, 4))
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.model.get_dataarray_from_fits"
+)
+def test_should_read_model_when_fits_only_has_ra_dec_freq(
+    get_data_from_fits_mock,
+):
+    ps = MagicMock(name="ps")
+    pols = ["I", "V"]
+    ps.polarization.values = pols
+
+    upout = UpstreamOutput()
+    upout["ps"] = ps
+
+    fits_image = xr.DataArray(
+        data=np.ones((1, 2, 2), dtype=np.float32),
+        dims=["frequency", "y", "x"],
+        coords={},
+        name="cont_fits_image",
+    )
+
+    get_data_from_fits_mock.return_value = fits_image
+
+    expected_dataarray = xr.DataArray(
+        np.ones((2, 2, 2), dtype=np.float32),
+        dims=["polarization", "y", "x"],
+        coords={"polarization": pols},
+    ).chunk()
+
+    output = read_model.stage_definition(
+        upout,
+        "test-%s-image.fits",
+        do_power_law_scaling=False,
+        spectral_index=0.1,
+    )
+
+    get_data_from_fits_mock.assert_has_calls(
+        [mock.call("test-I-image.fits"), mock.call("test-V-image.fits")]
+    )
+
+    xr.testing.assert_allclose(expected_dataarray, output["model_image"])
+
+    assert expected_dataarray.chunks == output["model_image"].chunks
+
+
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.model.get_dask_array_from_fits"
+)
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.fits.open")
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.WCS")
+def test_should_read_fits_image_when_fits_has_no_freq_pol(
+    wcs_mock, fits_open_mock, get_dask_array_from_fits_mock
+):
+    hud0 = MagicMock(name="fits_hud_0")
+    hud0.data.shape = (2, 2)
+    hud0.data.dtype = ">f4"
+
+    wcs = MagicMock(name="wcs")
+    wcs.axis_type_names = ["RA", "DEC"]
+
+    fits_open_mock.return_value = fits_open_mock
+    fits_open_mock.__enter__.return_value = [hud0]
+    wcs_mock.return_value = wcs
+    get_dask_array_from_fits_mock.return_value = np.ones(
+        (2, 2), dtype=np.float32
+    )
+
+    expected_xrda = xr.DataArray(
+        np.ones((2, 2), dtype=np.float32), dims=["y", "x"]
+    )
+
+    output_xrda = get_dataarray_from_fits("image_path", 0)
+
+    fits_open_mock.assert_called_once_with("image_path", memmap=True)
+    wcs_mock.assert_called_once_with("image_path")
+    get_dask_array_from_fits_mock.assert_called_once_with(
+        "image_path", 0, (2, 2), ">f4"
+    )
+
+    xr.testing.assert_allclose(output_xrda, expected_xrda)
+
+    assert output_xrda.chunks is None

@@ -65,13 +65,7 @@ def get_dask_array_from_fits(
     hduid: int,
     shape: Tuple,
     dtype: type,
-    blocksize: Tuple = None,
 ):
-    if blocksize:
-        raise NotImplementedError(
-            "Chunking of FITS image is not yet supported"
-        )
-
     data = dask.array.from_delayed(
         read_fits_memmapped_delayed(image_path, hduid),
         shape=shape,
@@ -81,7 +75,7 @@ def get_dask_array_from_fits(
     return data
 
 
-def get_dataarray_from_fits(image_path, hduid=0, chunksizes={}):
+def get_dataarray_from_fits(image_path, hduid=0):
     """
     Reads FITS image and returns an xarray dataarray with
     dimensions ["polarization", "frequency", "y", "x"] or
@@ -103,13 +97,6 @@ def get_dataarray_from_fits(image_path, hduid=0, chunksizes={}):
 
     hduid: int
         The HDU number in the HDUList read from FITS image.
-
-    chunksizes: dict
-        A dictionary mapping a image dimension to its chunk size.
-        Most like these chunksizes will come from the one of the
-        visibility xarray dataarray.
-        This will be used to read FITS image using slices.
-        **This feature is not implemented yet**.
 
     Returns
     -------
@@ -144,9 +131,6 @@ def get_dataarray_from_fits(image_path, hduid=0, chunksizes={}):
         pol_codes = pol_wcs.wcs_pix2world(range(pol_wcs.pixel_shape[0]), 0)[0]
         pol_names = [fits_codes_to_pol_names[code] for code in pol_codes]
         coordinates["polarization"] = pol_names
-
-    if chunksizes:
-        raise NotImplementedError("Chunks for FITS image is not yet supported")
 
     data = get_dask_array_from_fits(image_path, hduid, shape, dtype)
 
@@ -354,11 +338,7 @@ def read_model(
         # continuum image with extra dimension on frequency
         model_image = model_image.squeeze(dim="frequency", drop=True)
 
-    model_image = model_image.chunk(
-        dict(
-            polarization=-1,
-        )
-    )
+    model_image = model_image.chunk(dict(polarization=-1))
 
     upstream_output["model_image"] = model_image
 
