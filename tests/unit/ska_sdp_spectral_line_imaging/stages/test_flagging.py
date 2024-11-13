@@ -24,9 +24,7 @@ def test_should_raise_exception_if_aoflagger_is_not_installed():
     not AOFLAGGER_AVAILABLE, reason="AOFlagger is required for this test"
 )
 class TestFlagging:
-    @mock.patch(
-        "ska_sdp_spectral_line_imaging.stages.flagging.chunked_flagging"
-    )
+    @mock.patch("ska_sdp_spectral_line_imaging.stages.flagging.flag_cube")
     @mock.patch("ska_sdp_spectral_line_imaging.stages.flagging.os")
     def test_should_raise_file_not_found_error_when_file_is_missing(
         self, os_mock, flagging_mock
@@ -50,60 +48,44 @@ class TestFlagging:
         )
 
     @mock.patch("ska_sdp_spectral_line_imaging.stages.flagging.os")
-    @mock.patch(
-        "ska_sdp_spectral_line_imaging.stages.flagging.chunked_flagging"
-    )
-    def test_should_flag_the_visibilities(self, flagging_mock, os_mock):
-
+    @mock.patch("ska_sdp_spectral_line_imaging.stages.flagging.rechunk")
+    @mock.patch("ska_sdp_spectral_line_imaging.stages.flagging.flag_cube")
+    def test_should_flag_the_visibilities(
+        self, flagging_mock, rechunk_mock, os_mock
+    ):
         ps = Mock(name="ps")
         strategy_file = "strategy_file.lua"
         upstream_output = UpstreamOutput()
         upstream_output["ps"] = ps
-        ps.VISIBILITY = Mock(name="VISIBILITY")
-        ps.FLAG = Mock(name="FLAG")
-        ps.FLAG.dims = ["baseline", "time"]
-        ps.FLAG.chunksizes = 2
-        flagged_cube_mock = Mock(name="flagged cube")
-        flagging_mock.return_value = flagged_cube_mock
-        expand_dims_mock = Mock(return_value=flagged_cube_mock)
-        flagged_cube_mock.expand_dims = expand_dims_mock
-        transpose_mock = Mock(return_value=flagged_cube_mock)
-        flagged_cube_mock.transpose = transpose_mock
-        chunk_mock = Mock(name="chunk mock")
-        flagged_cube_mock.chunk = chunk_mock
-
-        ps.VISIBILITY.time.size = 10
-        ps.VISIBILITY.frequency.size = 10
-        ps.VISIBILITY.polarization.size = 2
         polarization_mock = Mock(name="polarization")
         ps.FLAG.polarization = polarization_mock
-        vis_rechunked = Mock(name="vis rechunked")
-        flag_rechunked = Mock(name="flag rechunked")
+        ps.assign = Mock(name="assign", return_value="NEW_PS")
+        flagging_mock.return_value = "FLAGGED_CUBE"
+        rechunk_mock.return_value = "RECHUNKED_FLAGS"
 
-        ps.VISIBILITY.chunk.return_value = vis_rechunked
-        ps.FLAG.chunk.return_value = flag_rechunked
-        flagging_stage.stage_definition(upstream_output, strategy_file)
-
-        flagging_mock.assert_called_once_with(
-            vis_rechunked, flag_rechunked, 10, 10, 2, strategy_file
+        output = flagging_stage.stage_definition(
+            upstream_output, strategy_file
         )
-        expand_dims_mock.assert_called_once_with(
-            dim={"polarization": polarization_mock}
-        )
-        chunk_mock.assert_called_once_with(2)
 
-        transpose_mock.assert_called_once_with(*ps.FLAG.dims)
+        assert output["ps"] == "NEW_PS"
+
+        flagging_mock.assert_called_once_with(ps, strategy_file)
+
+        rechunk_mock.assert_called_once_with(
+            "FLAGGED_CUBE", ps.FLAG, dim={"polarization": ps.FLAG.polarization}
+        )
+
+        ps.assign.assert_called_once_with({"FLAG": "RECHUNKED_FLAGS"})
 
     @mock.patch("ska_sdp_spectral_line_imaging.stages.flagging.os")
     @mock.patch(
         "ska_sdp_spectral_line_imaging.stages.flagging.flagging_strategies."
         "__file__"
     )
-    @mock.patch(
-        "ska_sdp_spectral_line_imaging.stages.flagging.chunked_flagging"
-    )
+    @mock.patch("ska_sdp_spectral_line_imaging.stages.flagging.rechunk")
+    @mock.patch("ska_sdp_spectral_line_imaging.stages.flagging.flag_cube")
     def test_should_take_default_strategy_file_when_not_provided(
-        self, flagging_mock, flagging_strategies_mock, os_mock
+        self, flagging_mock, rechunk_mock, flagging_strategies_mock, os_mock
     ):
 
         ps = Mock(name="ps")
@@ -113,20 +95,10 @@ class TestFlagging:
         upstream_output["ps"] = ps
         ps.VISIBILITY = Mock(name="VISIBILITY")
         ps.FLAG = Mock(name="FLAG")
-        ps.FLAG.dims = ["baseline", "time"]
-        ps.VISIBILITY.time.size = 10
-        ps.VISIBILITY.frequency.size = 10
-        ps.VISIBILITY.polarization.size = 2
-        ps.VISIBILITY.chunk.return_value = "vis_rechunked"
-        ps.FLAG.chunk.return_value = "flag_rechunked"
         flagging_stage.stage_definition(upstream_output, None)
 
         flagging_mock.assert_called_once_with(
-            "vis_rechunked",
-            "flag_rechunked",
-            10,
-            10,
-            2,
+            ps,
             "path/to/dir/generic-default.lua",
         )
 

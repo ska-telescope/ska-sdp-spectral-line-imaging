@@ -3,9 +3,10 @@ import os
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
-from ska_sdp_spectral_line_imaging.stubs.flagging import chunked_flagging
 
 from .. import flagging_strategies
+from ..stubs.flagging import flag_cube
+from ..util import rechunk
 
 AOFLAGGER_AVAILABLE = True
 try:
@@ -70,22 +71,11 @@ def flagging_stage(
     logger.info(f"The strategy file picked up for flagging: {strategy_file}")
 
     ps = upstream_output.ps
-    ntime = ps.VISIBILITY.time.size
-    nchan = ps.VISIBILITY.frequency.size
-    npol = ps.VISIBILITY.polarization.size
 
-    visibility_rechunked = ps.VISIBILITY.chunk(
-        ({"baseline_id": 1, "frequency": nchan})
-    )
-    flag_rechunked = ps.FLAG.chunk(({"baseline_id": 1, "frequency": nchan}))
-    flagged_cube = chunked_flagging(
-        visibility_rechunked, flag_rechunked, ntime, nchan, npol, strategy_file
-    )
+    flagged_cube = flag_cube(ps, strategy_file)
 
-    flagged_values = (
-        flagged_cube.expand_dims(dim={"polarization": ps.FLAG.polarization})
-        .transpose(*ps.FLAG.dims)
-        .chunk(ps.FLAG.chunksizes)
+    flagged_values = rechunk(
+        flagged_cube, ps.FLAG, dim={"polarization": ps.FLAG.polarization}
     )
 
     ps = ps.assign({"FLAG": flagged_values})

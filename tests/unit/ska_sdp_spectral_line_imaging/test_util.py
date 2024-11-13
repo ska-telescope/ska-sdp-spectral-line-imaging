@@ -2,6 +2,7 @@ import asyncio
 
 import numpy as np
 import pytest
+import xarray as xr
 from mock import MagicMock, Mock, patch
 
 from ska_sdp_spectral_line_imaging.util import (
@@ -10,7 +11,30 @@ from ska_sdp_spectral_line_imaging.util import (
     export_image_as,
     export_to_fits,
     export_to_zarr,
+    rechunk,
 )
+
+
+def test_should_rechunk_data_array():
+    data_array = Mock(name="data_array", spec=xr.DataArray)
+    data_array.expand_dims.return_value = data_array
+    data_array.transpose.return_value = data_array
+    data_array.chunk.return_value = "RECHUNKED_DATA_ARRAY"
+
+    ref = Mock(name="reference_data_array", spec=xr.DataArray)
+    ref.dims = ["coord_1", "coord_2"]
+    ref.chunksizes = 2
+
+    output = rechunk(data_array, ref, {"coord": "value_for_coord"})
+
+    data_array.expand_dims.assert_called_once_with(
+        dim={"coord": "value_for_coord"}
+    )
+
+    data_array.transpose.assert_called_once_with("coord_1", "coord_2")
+    data_array.chunk.assert_called_once_with(2)
+
+    assert output == "RECHUNKED_DATA_ARRAY"
 
 
 @patch("ska_sdp_spectral_line_imaging.util.export_to_zarr")

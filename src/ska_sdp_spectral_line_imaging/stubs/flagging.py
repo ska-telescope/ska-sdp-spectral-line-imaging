@@ -7,6 +7,36 @@ except ModuleNotFoundError:  # pragma: no cover
     AOFLAGGER_AVAILABLE = False  # pragma: no cover
 
 
+def flag_cube(ps, strategy_file):
+    """
+    Perform distributed flagging on a processing set based on a strategy
+
+    Parameters
+    ----------
+        ps: xr.Dataset
+            Processing set
+        strategy_file: str
+            Path to strategy file for flagging
+
+    Returns
+    -------
+        xr.DataArray
+    """
+
+    ntime = ps.VISIBILITY.time.size
+    nchan = ps.VISIBILITY.frequency.size
+    npol = ps.VISIBILITY.polarization.size
+
+    visibility_rechunked = ps.VISIBILITY.chunk(
+        ({"baseline_id": 1, "frequency": nchan})
+    )
+
+    flag_rechunked = ps.FLAG.chunk(({"baseline_id": 1, "frequency": nchan}))
+    return chunked_flagging(
+        visibility_rechunked, flag_rechunked, ntime, nchan, npol, strategy_file
+    )
+
+
 def flag_baseline(visibility, flags, ntime, nchan, npol, strategy_file):
     """
     Perform flagging using AOFlagger

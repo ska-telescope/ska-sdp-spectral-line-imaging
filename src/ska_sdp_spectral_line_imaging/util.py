@@ -9,6 +9,28 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
 )
 
 
+def rechunk(target, ref, dim):
+    """
+    Rechunk a target DataArray based on a ref DataArray
+
+    Parameters
+    ----------
+        target: xr.DataArray
+            DataArray to be rechunked
+        ref: xr.DataArray
+            Reference DataArray
+        dim: dict
+            Dimensions to be expanded along
+
+    Returns
+    -------
+        xr.DataArray
+    """
+    return (
+        target.expand_dims(dim=dim).transpose(*ref.dims).chunk(ref.chunksizes)
+    )
+
+
 def export_image_as(image, output_path, export_format="fits"):
     """
     Export data in the desired export_format
