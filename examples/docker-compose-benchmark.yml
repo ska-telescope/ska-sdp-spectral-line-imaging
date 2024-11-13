@@ -14,7 +14,15 @@ services:
       - ${DATA}:/data${MOUNT_FLAGS}
     deploy:
       replicas: ${REPLICAS}
-    entrypoint: ["piper", "benchmark", "--command", "dask worker tcp://scheduler:8786", "--output-path", "/data/benchmark", "--setup"]
+    environment:
+      REPLICA: "{{.Task.Slot}}"
+    entrypoint: [
+    "/bin/sh",
+    "-c",
+    "piper benchmark --command \"dask worker tcp://scheduler:8786\" \
+     --output-path /data/benchmark --setup \
+     --output-file-prefix $${HOSTNAME}"
+    ]
 
   client:
     image: ${SLIP}

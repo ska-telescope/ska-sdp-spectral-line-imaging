@@ -68,7 +68,7 @@ dask_worker_command="dask worker $DASK_SCHEDULER_ADDR --name $node \
 
 for node in "${NODES[@]}"; do
     logfile=$DASK_LOGS_DIR/worker_$node.log
-    ssh $node "$SETUP ; piper benchmark --command '${dask_worker_command}'\
+    ssh $node "$SETUP ; piper benchmark --command '${dask_worker_command}' --output-file-prefix=node_${node}\
         >$logfile" 2>&1 &
     echo "Started benchmarked dask worker on $node"
 done

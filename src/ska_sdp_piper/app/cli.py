@@ -85,6 +85,10 @@ def benchmark(
         default=5,
         help="""Time interval for catpuring benchmarking stats""",
     ),
+    output_file_prefix=Option(
+        default=None,
+        help="""Output file name prefix""",
+    ),
 ):
     """
     Pipeline framework command to install pipelines
@@ -99,6 +103,8 @@ def benchmark(
             Output folder to store the benchmark results
         capture_interval: int
             Time interval for capturing benchmarking stats
+        output_file_prefix: str
+            Output File prefix name
         ctx: Context
             Command context
 
@@ -109,6 +115,9 @@ def benchmark(
         return
 
     script_path = os.path.dirname(os.path.abspath(scripts.__file__))
+    output_prefix = (
+        "" if output_file_prefix is None else f"{output_file_prefix}_"
+    )
 
     if setup:
         if not os.path.exists(f"{script_path}/dool"):
@@ -129,7 +138,7 @@ def benchmark(
             [
                 f"{script_path}/run-dool.sh",
                 output_path,
-                command.split(" ")[0],
+                f'{output_prefix}{command.split(" ")[0]}',
                 command,
             ],
             env={

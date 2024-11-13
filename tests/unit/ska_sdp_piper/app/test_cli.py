@@ -99,6 +99,7 @@ def test_should_run_benchmark_on_local_for_the_command(
         command="test command additional params --option value",
         setup=False,
         output_path="output",
+        output_file_prefix=None,
         capture_interval=1,
     )
 
@@ -107,6 +108,40 @@ def test_should_run_benchmark_on_local_for_the_command(
             "SCRIPT_DIR/run-dool.sh",
             "output",
             "test",
+            "test command additional params --option value",
+        ],
+        env={
+            "DOOL_BIN": "SCRIPT_DIR/dool/dool",
+            "PATH": "OS_ENV",
+            "DELAY_IN_SECONDS": 1,
+        },
+    )
+
+
+@mock.patch("ska_sdp_piper.app.cli.os")
+@mock.patch("ska_sdp_piper.app.cli.subprocess")
+def test_should_run_benchmark_on_local_for_the_command_with_file_prefix(
+    subprocess_mock, os_mock
+):
+
+    os_mock.path.dirname.return_value = "SCRIPT_DIR"
+    os_mock.path.exists.return_value = True
+    os_mock.getenv.return_value = "OS_ENV"
+    ctx = Mock(name="ctx")
+    benchmark(
+        ctx,
+        command="test command additional params --option value",
+        setup=False,
+        output_path="output",
+        output_file_prefix="run_1",
+        capture_interval=1,
+    )
+
+    subprocess_mock.run.assert_called_once_with(
+        [
+            "SCRIPT_DIR/run-dool.sh",
+            "output",
+            "run_1_test",
             "test command additional params --option value",
         ],
         env={
