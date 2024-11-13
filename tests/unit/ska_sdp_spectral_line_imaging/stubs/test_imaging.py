@@ -11,21 +11,79 @@ from ska_sdp_spectral_line_imaging.stubs.imaging import (
 )
 
 
+@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.wgridder")
+def test_should_be_able_to_grid_visibilities(wgridder_mock):
+    vis = Mock(spec=np.array(()), name="vis.np.array")
+    vis.reshape.return_value = vis
+    vis.astype.return_value = "RESHAPED_VIS_COMP64"
+    flag = Mock(spec=np.array(()), name="flag.np.array")
+    flag.reshape.return_value = "RESHAPED_FLAG"
+    uvw = Mock(spec=np.array(()), name="uvw.np.array")
+    uvw.reshape.return_value = "RESHAPED_UVW"
+    freq = Mock(spec=np.array(()), name="freq.np.array")
+    freq.reshape.return_value = "RESHAPED_FREQ"
+    weight = Mock(spec=np.array(()), name="weight.np.array")
+    weight.reshape.return_value = weight
+    weight.astype.return_value = "RESHAPED_WEIGHT_FLT32"
+
+    wgridder_mock.ms2dirty.return_value = "dirty_image"
+
+    cell_size = 0.001
+    nchan = 1
+    ntime = 10
+    nbaseline = 6
+    epsilon = 1e-4
+    nx = 256
+    ny = 256
+
+    output = image_ducc(
+        weight,
+        flag,
+        uvw,
+        freq,
+        vis,
+        cell_size,
+        nx,
+        ny,
+        epsilon,
+        nchan,
+        ntime,
+        nbaseline,
+    )
+
+    vis.reshape.assert_called_once_with(60, 1)
+    vis.astype.assert_called_once_with(np.complex64)
+    uvw.reshape.assert_called_once_with(60, 3)
+    weight.reshape.assert_called_once_with(60, 1)
+    weight.astype.assert_called_once_with(np.float32)
+    freq.reshape.assert_called_once_with(1)
+    wgridder_mock.ms2dirty.assert_called_once_with(
+        "RESHAPED_UVW",
+        "RESHAPED_FREQ",
+        "RESHAPED_VIS_COMP64",
+        "RESHAPED_WEIGHT_FLT32",
+        256,
+        256,
+        0.001,
+        0.001,
+        0,
+        0,
+        1e-4,
+        nthreads=1,
+    )
+    assert output == "dirty_image"
+
+
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.xr")
 def test_should_apply_image_ducc_on_data(xr_mock):
-    image_vec = Mock(name="image_vec")
-    image_vec.data = Mock(name="data")
+    image_vec = MagicMock(name="image_vec")
     xr_mock.apply_ufunc.return_value = image_vec
-    image_vec.__truediv__ = lambda x, y: "cube_image"
+    image_vec.__truediv__.return_value = "cube_image"
 
-    ps = Mock(name="ps")
-    ps.WEIGHT = Mock(name="weights")
-    ps.UVW = Mock(name="uvw")
-    ps.FLAG = Mock(name="flag")
-    ps.frequency = Mock(name="frequency")
-    ps.VISIBILITY = Mock(name="VISIBILITY")
+    ps = MagicMock(name="ps")
     ps.time.size = 10
     ps.baseline_id.size = 10
+    ps.WEIGHT.sum.return_value = "sum_of_weights"
 
     cell_size = 16
     nx = 256
@@ -66,7 +124,8 @@ def test_should_apply_image_ducc_on_data(xr_mock):
             ny=256,
         ),
     )
-
+    ps.WEIGHT.sum.assert_called_once_with(dim=["time", "baseline_id"])
+    image_vec.__truediv__.assert_called_once_with("sum_of_weights")
     assert cube_image == "cube_image"
 
 

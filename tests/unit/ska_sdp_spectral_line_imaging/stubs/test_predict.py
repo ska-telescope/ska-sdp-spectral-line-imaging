@@ -10,7 +10,7 @@ from ska_sdp_spectral_line_imaging.stubs.predict import (
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.ducc0.wgridder")
-def test_should_be_able_to_grid_data(wgridder_mock):
+def test_should_be_able_to_degrid_image(wgridder_mock):
     weight = Mock(spec=np.array(()), name="weight.np.array")
     weight.reshape.return_value = "RESHAPED_WEIGHT"
     flag = Mock(spec=np.array(()), name="flag.np.array")
@@ -21,21 +21,21 @@ def test_should_be_able_to_grid_data(wgridder_mock):
     freq.reshape.return_value = "RESHAPED_FREQ"
 
     ducc_return_mock = Mock(spec=np.array(()), name="ducc_return.np.array")
+    ducc_return_mock.reshape.return_value = "reshaped_model"
     wgridder_mock.dirty2ms.return_value = ducc_return_mock
 
-    model_image = Mock(name="model_image")
     cell_size = 0.001
     nchan = 1
     ntime = 10
     nbaseline = 6
     epsilon = 1e-4
 
-    predict_ducc(
+    output = predict_ducc(
         weight,
         flag,
         uvw,
         freq,
-        model_image,
+        "model_image",
         cell_size,
         epsilon,
         nchan,
@@ -49,16 +49,17 @@ def test_should_be_able_to_grid_data(wgridder_mock):
     wgridder_mock.dirty2ms.assert_called_once_with(
         "RESHAPED_UVW",
         "RESHAPED_FREQ",
-        model_image,
+        "model_image",
         "RESHAPED_WEIGHT",
-        cell_size,
-        cell_size,
+        0.001,
+        0.001,
         0,
         0,
-        epsilon,
+        1e-4,
         nthreads=1,
     )
     ducc_return_mock.reshape.assert_called_once_with(10, 6)
+    assert output == "reshaped_model"
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.xr")

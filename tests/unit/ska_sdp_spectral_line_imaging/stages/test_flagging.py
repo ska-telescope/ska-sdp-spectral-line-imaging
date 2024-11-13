@@ -1,3 +1,4 @@
+# pylint: disable=import-error,import-outside-toplevel,no-member
 import pytest
 from mock import Mock, mock
 
@@ -7,8 +8,6 @@ from ska_sdp_spectral_line_imaging.stages.flagging import (
     flagging_stage,
 )
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
-
-# pylint: disable=import-error,import-outside-toplevel
 
 
 def test_should_raise_exception_if_aoflagger_is_not_installed():
