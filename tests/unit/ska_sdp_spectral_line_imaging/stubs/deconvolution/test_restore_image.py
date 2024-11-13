@@ -258,7 +258,9 @@ def test_should_convert_clean_beam_to_pixels():
 
     beam_pixels = convert_clean_beam_to_pixels(cellsize, clean_beam)
 
-    np.allclose(beam_pixels, [0.00222352, 0.00444704, 0.00087266])
+    np.testing.assert_allclose(
+        beam_pixels, [0.00222352, 0.00444704, 0.00087266], atol=1e-8
+    )
 
 
 def test_should_generate_beam_pixels_by_fitting_psf():
@@ -266,7 +268,29 @@ def test_should_generate_beam_pixels_by_fitting_psf():
 
     beam_pixels = fit_psf(psf)
 
-    np.allclose(beam_pixels, [25.93199291, 24.74372649, 34.59370391])
+    np.testing.assert_allclose(
+        beam_pixels, [25.93199291, 24.74372649, 34.59370391]
+    )
+
+
+@patch(
+    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image"
+    ".fitting"
+)
+def test_should_return_default_beam_pixels_if_stddev_is_negative(fitting_mock):
+    psf = np.random.uniform(0, 1, (15, 15))
+
+    fit_p_mock = MagicMock(name="LevMarLSQFitter mock")
+    fitting_mock.LevMarLSQFitter.return_value = fit_p_mock
+
+    fit = MagicMock(name="fit")
+    fit.x_stddev = 0.1
+    fit.y_stddev = -0.1
+    fit_p_mock.return_value = fit
+
+    output = fit_psf(psf)
+
+    np.testing.assert_allclose(output, np.array((1.0, 1.0, 0.0)))
 
 
 @patch(

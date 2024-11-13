@@ -180,7 +180,7 @@ def get_polarization(observation: xr.Dataset) -> PolarisationFrame:
     return polarization_frame
 
 
-# TODO: get_image_metadata is untested function.
+# TODO: get_wcs is untested function.
 # Once stubbed imager is replaced by a proper imager
 # we expect that the imager will give the image class instance
 # with wcs information already populated.
