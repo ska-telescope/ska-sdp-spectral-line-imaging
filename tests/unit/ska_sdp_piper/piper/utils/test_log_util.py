@@ -1,8 +1,9 @@
 import logging
 
+import xarray as xr
 from mock import mock
 
-from ska_sdp_piper.piper.utils.log_util import LogPlugin, LogUtil
+from ska_sdp_piper.piper.utils.log_util import LogPlugin, LogUtil, delayed_log
 
 
 @mock.patch("ska_sdp_piper.piper.utils.log_util.configure_logging")
@@ -48,3 +49,14 @@ def test_setup_worker_plugins(log_util_mock):
 
     log_plugin.setup("mock_worker")
     log_util_mock.configure.assert_called_once_with("path/to/log_file", True)
+
+
+def test_should_log_with_formated_values():
+    logger = mock.Mock(name="logger")
+    data_array = xr.DataArray([1, 2, 3])
+
+    delayed_log(
+        logger, "{var_1} and {var_2}", var_1=10, var_2=data_array
+    ).compute()
+
+    logger.assert_called_once_with("10 and [1 2 3]")

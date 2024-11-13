@@ -7,6 +7,7 @@ from mock import Mock, mock
 
 from ska_sdp_spectral_line_imaging.diagnosis.spectral_line_diagnoser import (
     SpectralLineDiagnoser,
+    get_uv_dist,
 )
 
 
@@ -901,3 +902,14 @@ def test_should_not_conver_input_when_input_and_model_are_in_same_polarization(
 
     assert zarr_mock.call_count == 2
     assert convert_polarization_mock.call_count == 0
+
+
+def test_should_get_uv_dist():
+    mock_uvw = Mock(name="UVW", spec=xarray.DataArray)
+    mock_uvw.transpose.return_value = [3, 4]
+    uv_dist = get_uv_dist(mock_uvw)
+
+    mock_uvw.transpose.assert_called_once_with(
+        "uvw_label", "time", "baseline_id"
+    )
+    assert uv_dist == 5.0
