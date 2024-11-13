@@ -10,6 +10,10 @@ from ska_sdp_piper.piper.utils.io_utils import timestamp
 from ska_sdp_spectral_line_imaging.pipeline import (
     spectral_line_imaging_pipeline,
 )
+from ska_sdp_spectral_line_imaging.stages.flagging import AOFLAGGER_AVAILABLE
+from ska_sdp_spectral_line_imaging.stubs.deconvolution.radler import (
+    RADLER_AVAILABLE,
+)
 
 MSIN = "./gmrt.ps"
 OUTPUT_POLS = ["I", "V"]
@@ -129,6 +133,97 @@ def test_should_generate_dirty_image_when_niter_major_is_zero(
         # TODO: model and residual exports can be turned off
         # for other tests as it is already convered once
         "test_cube.dirty.fits",
+        f"spectral_line_imaging_pipeline_{timestamp()}.log",
+        f"spectral_line_imaging_pipeline_{timestamp()}.config.yml",
+        f"spectral_line_imaging_pipeline_{timestamp()}.cli.yml",
+    ]
+    actual_products = os.listdir(pipeline_output_path)
+    expected_products.sort()
+    actual_products.sort()
+    assert expected_products == actual_products
+
+
+@pytest.mark.skipif(
+    not RADLER_AVAILABLE, reason="Radler is required for this test"
+)
+def test_should_run_pipeline_with_radler(prepare_test_data):
+    """
+    Given a processing set, a config file, and model FITS images
+    in desired output polarization, when the pipeline is run by
+    providing valid cli arguments,
+    then it should generate desired output products.
+    """
+    time_stamp = timestamp()
+    shutil.copy(f"{RESOURCE_DIR}/test.config.radler.yml", ".")
+    output_dir = f"{prepare_test_data}/pipeline_output"
+
+    testargs = [
+        "test",
+        "run",
+        "--input",
+        MSIN,
+        "--output",
+        output_dir,
+        "--config",
+        "./test.config.radler.yml",
+    ]
+    with mock.patch.object(sys, "argv", testargs):
+        spectral_line_imaging_pipeline()
+
+    pipeline_output_path = (
+        f"{output_dir}/spectral_line_imaging_pipeline_{time_stamp}"
+    )
+    assert os.path.exists(pipeline_output_path)
+
+    expected_products = [
+        "test_cube.restored.fits",
+        f"spectral_line_imaging_pipeline_{timestamp()}.log",
+        f"spectral_line_imaging_pipeline_{timestamp()}.config.yml",
+        f"spectral_line_imaging_pipeline_{timestamp()}.cli.yml",
+    ]
+    actual_products = os.listdir(pipeline_output_path)
+    expected_products.sort()
+    actual_products.sort()
+    assert expected_products == actual_products
+
+
+@pytest.mark.skipif(
+    not AOFLAGGER_AVAILABLE, reason="AOFlagger is required for this test"
+)
+def test_should_run_pipeline_with_flagging_enabled(prepare_test_data):
+    """
+    Given a processing set, a config file, and model FITS images
+    in desired output polarization, when the pipeline is run by
+    providing valid cli arguments,
+    then it should generate desired output products.
+    """
+    time_stamp = timestamp()
+    shutil.copy(f"{RESOURCE_DIR}/test.config.radler.yml", ".")
+    output_dir = f"{prepare_test_data}/pipeline_output"
+
+    testargs = [
+        "test",
+        "run",
+        "--input",
+        MSIN,
+        "--output",
+        output_dir,
+        "--config",
+        "./test.config.radler.yml",
+        "--set",
+        "pipeline.flagging",
+        "true",
+    ]
+    with mock.patch.object(sys, "argv", testargs):
+        spectral_line_imaging_pipeline()
+
+    pipeline_output_path = (
+        f"{output_dir}/spectral_line_imaging_pipeline_{time_stamp}"
+    )
+    assert os.path.exists(pipeline_output_path)
+
+    expected_products = [
+        "test_cube.restored.fits",
         f"spectral_line_imaging_pipeline_{timestamp()}.log",
         f"spectral_line_imaging_pipeline_{timestamp()}.config.yml",
         f"spectral_line_imaging_pipeline_{timestamp()}.cli.yml",

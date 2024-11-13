@@ -1,9 +1,9 @@
 global_parameters: {}
 parameters:
   continuum_subtraction:
-    export_residual: true
+    export_residual: false
     psout_name: residual
-    report_poly_fit: true
+    report_poly_fit: false
   flagging:
     strategy_file: null
   imaging:
@@ -12,7 +12,7 @@ parameters:
       bmin: null
       bpa: null
     deconvolution_params:
-      algorithm: msclean
+      algorithm: generic_clean
       fractional_threshold: 0.01
       gain: 0.7
       niter: 1
@@ -20,13 +20,13 @@ parameters:
       - 0
       - 3
       threshold: 0.0
-      use_radler: false
+      use_radler: true
     export_format: fits
-    export_model_image: true
-    export_psf_image: true
-    export_residual_image: true
+    export_model_image: false
+    export_psf_image: false
+    export_residual_image: false
     gridding_params:
-      cell_size: null
+      cell_size: 0.65
       epsilon: 0.0001
       image_size: 16
       scaling_factor: 3.0
@@ -38,10 +38,10 @@ parameters:
   predict_stage:
     cell_size: 1.0
     epsilon: 0.0001
-    export_model: true
+    export_model: false
     psout_name: model
   read_model:
-    do_power_law_scaling: true
+    do_power_law_scaling: false
     image: ./gmrt-%s-image.fits
     spectral_index: 0.75
   vis_stokes_conversion:
