@@ -170,7 +170,72 @@ def test_should_not_report_extent_of_continuum_subtraction_for_invalid_pols(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.model.get_dataarray_from_fits"
 )
-def test_should_read_model_when_fits_only_has_ra_dec_freq(
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.model.apply_power_law_scaling"
+)
+def test_read_model_continuum_fits_with_pol_wcs_axis_with_power_law(
+    apply_power_law_scaling_mock,
+    get_data_from_fits_mock,
+):
+    ps = MagicMock(name="ps")
+    pols = ["RR", "LL"]
+    ps.polarization.values = pols
+    ps.frequency.data = np.array([10, 20])
+
+    upout = UpstreamOutput()
+    upout["ps"] = ps
+
+    fits_image1 = xr.DataArray(
+        data=np.arange(4).reshape((1, 1, 2, 2)).astype(np.float32),
+        dims=["polarization", "frequency", "y", "x"],
+        coords={"polarization": [pols[0]]},
+        name="cont_fits_image",
+    )
+    fits_image2 = xr.DataArray(
+        data=np.arange(4).reshape((1, 1, 2, 2)).astype(np.float32),
+        dims=["polarization", "frequency", "y", "x"],
+        coords={"polarization": [pols[1]]},
+        name="cont_fits_image",
+    )
+    get_data_from_fits_mock.side_effect = [fits_image1, fits_image2]
+
+    expected_input_to_power_law = xr.DataArray(
+        np.array([[[[0, 1], [2, 3]]], [[[0, 1], [2, 3]]]], dtype=np.float32),
+        dims=["polarization", "frequency", "y", "x"],
+        coords={"polarization": pols},
+    )
+    scaled_cube = MagicMock(name="scaled_cube")
+    scaled_cube.chunk.return_value = "rechunked_scaled_cube"
+    apply_power_law_scaling_mock.return_value = scaled_cube
+
+    output = read_model.stage_definition(
+        upout,
+        "test-%s-image.fits",
+        do_power_law_scaling=True,
+        spectral_index=0.1,
+    )
+
+    get_data_from_fits_mock.assert_has_calls(
+        [mock.call("test-RR-image.fits"), mock.call("test-LL-image.fits")]
+    )
+
+    xr.testing.assert_allclose(
+        apply_power_law_scaling_mock.call_args.args[0],
+        expected_input_to_power_law,
+    )
+    np.allclose(
+        apply_power_law_scaling_mock.call_args.args[1], np.array([10, 20])
+    )
+    assert (
+        apply_power_law_scaling_mock.call_args.kwargs["spectral_index"] == 0.1
+    )
+    assert output["model_image"] == "rechunked_scaled_cube"
+
+
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.model.get_dataarray_from_fits"
+)
+def test_should_read_model_from_continuum_fits_without_pol_axis(
     get_data_from_fits_mock,
 ):
     ps = MagicMock(name="ps")
@@ -205,7 +270,6 @@ def test_should_read_model_when_fits_only_has_ra_dec_freq(
     get_data_from_fits_mock.assert_has_calls(
         [mock.call("test-I-image.fits"), mock.call("test-V-image.fits")]
     )
-
     xr.testing.assert_allclose(expected_dataarray, output["model_image"])
 
     assert expected_dataarray.chunks == output["model_image"].chunks
