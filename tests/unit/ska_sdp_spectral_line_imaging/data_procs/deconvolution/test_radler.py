@@ -2,8 +2,10 @@ import numpy as np
 import pytest
 from mock import Mock, call, patch
 
-import ska_sdp_spectral_line_imaging.stubs.deconvolution.radler as radler_dec
-from ska_sdp_spectral_line_imaging.stubs.deconvolution.radler import (
+from ska_sdp_spectral_line_imaging.data_procs.deconvolution import (
+    radler as radler_dec,
+)
+from ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler import (
     RADLER_AVAILABLE,
     radler_deconvolve_channel,
     radler_deconvolve_cube,
@@ -28,9 +30,11 @@ def test_should_raise_exception_if_radler_not_installed():
     not RADLER_AVAILABLE, reason="Radler is required for this test"
 )
 class TestRadler:
-    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.Image")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler."
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.Image"
+    )
+    @patch(
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
         "xr.apply_ufunc"
     )
     def test_should_do_convolution_using_radler(
@@ -83,13 +87,17 @@ class TestRadler:
             ]
         )
 
-    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.Image")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Radler"
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.Image"
     )
-    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.np")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
+        "rd.Radler"
+    )
+    @patch("ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.np")
+    @patch(
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
+        "rd.Settings"
     )
     def test_should_set_scales_in_setting_for_radler(
         self, settings_mock, numpy_mock, radler_mock, image_mock
@@ -118,13 +126,17 @@ class TestRadler:
             "generic_clean",
         ],
     )
-    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.Image")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Radler"
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.Image"
     )
-    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.np")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
+        "rd.Radler"
+    )
+    @patch("ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.np")
+    @patch(
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
+        "rd.Settings"
     )
     def test_should_do_set_appropriate_algorithm_type_for_radler(
         self,
@@ -159,13 +171,17 @@ class TestRadler:
 
         assert settings_mock.algorithm_type == algorithm_type
 
-    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.Image")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Radler"
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.Image"
     )
-    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.np")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
+        "rd.Radler"
+    )
+    @patch("ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.np")
+    @patch(
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
+        "rd.Settings"
     )
     def test_should_throw_exception_for_unknown_algorithm_type_for_radler(
         self, settings_mock, numpy_mock, radler_mock, image_mock
@@ -190,11 +206,13 @@ class TestRadler:
             )
 
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Radler"
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
+        "rd.Radler"
     )
-    @patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.np")
+    @patch("ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.np")
     @patch(
-        "ska_sdp_spectral_line_imaging.stubs.deconvolution.radler.rd.Settings"
+        "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler."
+        "rd.Settings"
     )
     def test_should_perform_deconvolution_per_channel_using_radler(
         self, settings_mock, numpy_mock, radler_mock

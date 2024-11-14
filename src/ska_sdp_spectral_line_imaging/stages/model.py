@@ -17,7 +17,7 @@ from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 from ska_sdp_piper.piper.utils import delayed_log
 
-from ..stubs.model import (
+from ..data_procs.model import (
     apply_power_law_scaling,
     fit_polynomial_on_visibility,
     get_dataarray_from_fits,

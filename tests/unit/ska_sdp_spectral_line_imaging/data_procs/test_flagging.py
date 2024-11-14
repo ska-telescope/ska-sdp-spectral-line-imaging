@@ -1,8 +1,8 @@
 import pytest
 from mock import Mock, mock
 
-import ska_sdp_spectral_line_imaging.stubs.flagging as flag_dec
-from ska_sdp_spectral_line_imaging.stubs.flagging import (
+import ska_sdp_spectral_line_imaging.data_procs.flagging as flag_dec
+from ska_sdp_spectral_line_imaging.data_procs.flagging import (
     AOFLAGGER_AVAILABLE,
     chunked_flagging,
     flag_baseline,
@@ -27,7 +27,7 @@ def test_should_raise_exception_if_aoflagger_is_not_installed():
 )
 class TestAOFlagger:
     @mock.patch(
-        "ska_sdp_spectral_line_imaging.stubs.flagging.chunked_flagging",
+        "ska_sdp_spectral_line_imaging.data_procs.flagging.chunked_flagging",
         return_value="VISIBILITY_FLAGS",
     )
     def test_should_flag_the_visibilities(self, flagging_mock):
@@ -66,7 +66,9 @@ class TestAOFlagger:
 
         assert output == "VISIBILITY_FLAGS"
 
-    @mock.patch("ska_sdp_spectral_line_imaging.stubs.flagging.xr.apply_ufunc")
+    @mock.patch(
+        "ska_sdp_spectral_line_imaging.data_procs.flagging.xr.apply_ufunc"
+    )
     def test_should_apply_flagging(self, apply_ufunc_mock):
 
         visibility_mock = "visibility"
@@ -96,7 +98,7 @@ class TestAOFlagger:
         )
 
     @mock.patch(
-        "ska_sdp_spectral_line_imaging.stubs.flagging.aoflagger.AOFlagger"
+        "ska_sdp_spectral_line_imaging.data_procs.flagging.aoflagger.AOFlagger"
     )
     def test_should_do_flagging_on_chunked_visibilities(self, aoflagger_mock):
         flagger_mock = Mock(name="flagger")

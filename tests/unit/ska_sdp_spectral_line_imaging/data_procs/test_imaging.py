@@ -2,7 +2,7 @@
 import numpy as np
 from mock import MagicMock, Mock, call, mock
 
-from ska_sdp_spectral_line_imaging.stubs.imaging import (
+from ska_sdp_spectral_line_imaging.data_procs.imaging import (
     chunked_imaging,
     clean_cube,
     cube_imaging,
@@ -11,7 +11,7 @@ from ska_sdp_spectral_line_imaging.stubs.imaging import (
 )
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.wgridder")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.wgridder")
 def test_should_be_able_to_grid_visibilities(wgridder_mock):
     vis = Mock(spec=np.array(()), name="vis.np.array")
     vis.reshape.return_value = vis
@@ -74,7 +74,7 @@ def test_should_be_able_to_grid_visibilities(wgridder_mock):
     assert output == "dirty_image"
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.xr")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.xr")
 def test_should_apply_image_ducc_on_data(xr_mock):
     image_vec = MagicMock(name="image_vec")
     xr_mock.apply_ufunc.return_value = image_vec
@@ -129,9 +129,9 @@ def test_should_apply_image_ducc_on_data(xr_mock):
     assert cube_image == "cube_image"
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.np")
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.Image")
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.chunked_imaging")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.np")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.Image")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.chunked_imaging")
 def test_should_perform_cube_imaging(
     mock_chunked_imaging, mock_image, mock_numpy
 ):
@@ -163,13 +163,13 @@ def test_should_perform_cube_imaging(
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.dask.array",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.xr",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.xr",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.cube_imaging",
 )
 def test_should_generate_psf_image(
     cube_imaging_mock, xr_mock, dask_array_mock
@@ -198,11 +198,11 @@ def test_should_generate_psf_image(
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.deconvolve",
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.restore_cube")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.restore_cube")
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.cube_imaging",
 )
 def test_should_generate_dirty_image_if_niter_major_is_zero(
     cube_imaging_mock,
@@ -245,25 +245,27 @@ def test_should_generate_dirty_image_if_niter_major_is_zero(
     assert imaging_products["dirty"] == dirty_image
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.subtract_visibility")
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.predict_for_channels",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.subtract_visibility"
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.import_image_from_fits"
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.predict_for_channels",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.Image",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.import_image_from_fits"
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve",
-)
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.restore_cube")
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.Image",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.deconvolve",
+)
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.restore_cube")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.cube_imaging",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.dask.array",
 )
 def test_should_generate_restored_image_and_other_imaging_products(
     dask_array_mock,
@@ -423,31 +425,33 @@ def test_should_generate_restored_image_and_other_imaging_products(
     assert imaging_products["restored"] == restored_image
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.subtract_visibility")
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.predict_for_channels",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.subtract_visibility"
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.import_image_from_fits"
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.predict_for_channels",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.Image",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.import_image_from_fits"
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.deconvolve",
-)
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.imaging.restore_cube")
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.cube_imaging",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.Image",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.xr.DataArray",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.deconvolve",
+)
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.restore_cube")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.cube_imaging",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.dask.array",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.xr.DataArray",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.imaging.generate_psf_image",
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.dask.array",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.generate_psf_image",
 )
 def test_should_create_psf_if_psf_is_none(
     generate_psf_image_mock,

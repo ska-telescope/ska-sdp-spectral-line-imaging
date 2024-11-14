@@ -7,13 +7,13 @@ import mock
 import pytest
 
 from ska_sdp_piper.piper.utils.io_utils import timestamp
+from ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler import (
+    RADLER_AVAILABLE,
+)
 from ska_sdp_spectral_line_imaging.pipeline import (
     spectral_line_imaging_pipeline,
 )
 from ska_sdp_spectral_line_imaging.stages.flagging import AOFLAGGER_AVAILABLE
-from ska_sdp_spectral_line_imaging.stubs.deconvolution.radler import (
-    RADLER_AVAILABLE,
-)
 
 MSIN = "./gmrt.ps"
 OUTPUT_POLS = ["I", "V"]

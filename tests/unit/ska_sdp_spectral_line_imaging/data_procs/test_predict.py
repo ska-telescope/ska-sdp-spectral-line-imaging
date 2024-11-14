@@ -2,14 +2,14 @@
 import numpy as np
 from mock import Mock, mock
 
-from ska_sdp_spectral_line_imaging.stubs.predict import (
+from ska_sdp_spectral_line_imaging.data_procs.predict import (
     predict,
     predict_ducc,
     predict_for_channels,
 )
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.ducc0.wgridder")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.predict.ducc0.wgridder")
 def test_should_be_able_to_degrid_image(wgridder_mock):
     weight = Mock(spec=np.array(()), name="weight.np.array")
     weight.reshape.return_value = "RESHAPED_WEIGHT"
@@ -62,7 +62,7 @@ def test_should_be_able_to_degrid_image(wgridder_mock):
     assert output == "reshaped_model"
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.xr")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.predict.xr")
 def test_should_able_to_apply_prediction_on_all_chan(xarray_mock):
     ps = Mock(name="ps")
     ps.WEIGHT = Mock(name="weights")
@@ -103,8 +103,8 @@ def test_should_able_to_apply_prediction_on_all_chan(xarray_mock):
     )
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.predict")
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.predict.np")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.predict.predict")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.predict.np")
 def test_should_be_able_to_distribute_predict(numpy_mock, predict_mock):
     numpy_mock.deg2rad.return_value = 0.5
     ps = Mock(name="ps")

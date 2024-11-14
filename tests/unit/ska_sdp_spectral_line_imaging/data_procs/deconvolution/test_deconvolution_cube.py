@@ -2,21 +2,19 @@ import pytest
 from mock import Mock, patch
 from ska_sdp_func_python.image.cleaners import hogbom, msclean
 
-from ska_sdp_spectral_line_imaging.stubs.deconvolution.deconvolver import (
-    deconvolve_cube,
-)
+from ska_sdp_spectral_line_imaging.data_procs.deconvolution import deconvolver
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.deconvolver."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.deconvolver."
     "common_arguments"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.deconvolver."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.deconvolver."
     "Image.constructor"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.deconvolver."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.deconvolver."
     "clean_with"
 )
 def test_should_deconvolve_cube_using_hogbom(
@@ -48,7 +46,7 @@ def test_should_deconvolve_cube_using_hogbom(
         "threshold": "thresh",
     }
 
-    component_image, residual_image = deconvolve_cube(
+    component_image, residual_image = deconvolver.deconvolve_cube(
         input_image, psf_image, **deconvolution_params
     )
 
@@ -78,11 +76,11 @@ def test_should_deconvolve_cube_using_hogbom(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.deconvolver."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.deconvolver."
     "Image.constructor"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.deconvolver."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.deconvolver."
     "clean_with"
 )
 def test_should_deconvolve_cube_using_msclean_with_default_common_arguments(
@@ -100,7 +98,7 @@ def test_should_deconvolve_cube_using_msclean_with_default_common_arguments(
         "algorithm": "msclean",
     }
 
-    component_image, residual_image = deconvolve_cube(
+    component_image, residual_image = deconvolver.deconvolve_cube(
         input_image, psf_image, **deconvolution_params
     )
 
@@ -131,4 +129,6 @@ def test_should_throw_exceptions_for_non_suported_algorithms():
     }
 
     with pytest.raises(ValueError):
-        deconvolve_cube(input_image, psf_image, **deconvolution_params)
+        deconvolver.deconvolve_cube(
+            input_image, psf_image, **deconvolution_params
+        )

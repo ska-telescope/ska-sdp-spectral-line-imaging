@@ -4,7 +4,7 @@ import pytest
 import xarray as xr
 from mock import MagicMock
 
-from ska_sdp_spectral_line_imaging.stubs.model import (
+from ska_sdp_spectral_line_imaging.data_procs.model import (
     apply_power_law_scaling,
     fit_polynomial_on_visibility,
     get_dataarray_from_fits,
@@ -12,7 +12,7 @@ from ska_sdp_spectral_line_imaging.stubs.model import (
 )
 
 
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.model.logger")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.logger")
 def test_should_report_peak_channel_value(logger_mock):
 
     visibility = xr.DataArray(
@@ -31,10 +31,10 @@ def test_should_report_peak_channel_value(logger_mock):
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.model."
+    "ska_sdp_spectral_line_imaging.data_procs.model."
     "np.polynomial.polynomial.polyfit"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.model.dask.delayed")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.dask.delayed")
 def test_should_fit_polynomial_on_visibility(dask_delayed_mock, polyfit_mock):
     data = np.arange(24).reshape(2, 2, 2, 3).astype(np.float32)
     data[0, 1, 0, 2] = np.nan
@@ -67,10 +67,10 @@ def test_should_fit_polynomial_on_visibility(dask_delayed_mock, polyfit_mock):
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.model."
+    "ska_sdp_spectral_line_imaging.data_procs.model."
     "np.polynomial.polynomial.polyfit"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.model.dask.delayed")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.dask.delayed")
 def test_should_filter_channel_when_all_values_are_nan(
     dask_delayed_mock, polyfit_mock
 ):
@@ -99,10 +99,10 @@ def test_should_filter_channel_when_all_values_are_nan(
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stubs.model.get_dask_array_from_fits"
+    "ska_sdp_spectral_line_imaging.data_procs.model.get_dask_array_from_fits"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.model.fits.open")
-@mock.patch("ska_sdp_spectral_line_imaging.stubs.model.WCS")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.fits.open")
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.WCS")
 def test_should_read_fits_image_when_fits_has_no_freq_pol(
     wcs_mock, fits_open_mock, get_dask_array_from_fits_mock
 ):

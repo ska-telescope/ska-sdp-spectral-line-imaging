@@ -1,9 +1,11 @@
 from mock import patch
 
-from ska_sdp_spectral_line_imaging.stubs.deconvolution import deconvolve
+from ska_sdp_spectral_line_imaging.data_procs.deconvolution import deconvolve
 
 
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.deconvolve_cube")
+@patch(
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.deconvolve_cube"
+)
 def test_should_run_deconvolve_cube_when_use_radler_is_false(
     deconvolve_cube_mock,
 ):
@@ -14,7 +16,7 @@ def test_should_run_deconvolve_cube_when_use_radler_is_false(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution."
     "radler_deconvolve_cube"
 )
 def test_should_run_radler_deconvolve_cube_when_use_radler_is_false(

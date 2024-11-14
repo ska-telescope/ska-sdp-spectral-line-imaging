@@ -1,14 +1,15 @@
 import numpy as np
 from mock import Mock, patch
 
-from ska_sdp_spectral_line_imaging.stubs.deconvolution.cleaners import (
+from ska_sdp_spectral_line_imaging.data_procs.deconvolution.cleaners import (
     apply_cleaner_with_sensitivity_only,
     clean_with,
 )
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.cleaners.xr.apply_ufunc"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.cleaners."
+    "xr.apply_ufunc"
 )
 def test_should_apply_cleaners_when_window_and_sensitivity_are_none(
     apply_ufunc_mock,
@@ -40,7 +41,8 @@ def test_should_apply_cleaners_when_window_and_sensitivity_are_none(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.cleaners.xr.apply_ufunc"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.cleaners."
+    "xr.apply_ufunc"
 )
 def test_should_apply_cleaners_when_only_sensitivity_is_none(
     apply_ufunc_mock,
@@ -74,7 +76,8 @@ def test_should_apply_cleaners_when_only_sensitivity_is_none(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.cleaners.xr.apply_ufunc"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.cleaners."
+    "xr.apply_ufunc"
 )
 def test_should_apply_cleaners_when_wndw_and_senstvty_are_none_without_include(
     apply_ufunc_mock,
@@ -113,7 +116,8 @@ def test_should_apply_cleaners_when_wndw_and_senstvty_are_none_without_include(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.cleaners.xr.apply_ufunc"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.cleaners."
+    "xr.apply_ufunc"
 )
 def test_should_apply_cleaners_when_only_sensitivity_is_none_without_includes(
     apply_ufunc_mock,
@@ -154,7 +158,8 @@ def test_should_apply_cleaners_when_only_sensitivity_is_none_without_includes(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.cleaners.xr.apply_ufunc"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.cleaners."
+    "xr.apply_ufunc"
 )
 def test_should_apply_cleaners_when_only_window_is_none(
     apply_ufunc_mock,
@@ -195,7 +200,8 @@ def test_should_apply_cleaners_when_only_window_is_none(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.cleaners.xr.apply_ufunc"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.cleaners."
+    "xr.apply_ufunc"
 )
 def test_should_apply_cleaners_when_window_and_sensitivity_are_not_none(
     apply_ufunc_mock,

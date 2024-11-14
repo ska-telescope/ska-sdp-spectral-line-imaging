@@ -7,7 +7,7 @@ from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 from ska_sdp_piper.piper.utils.log_util import delayed_log
 
-from ..stubs.predict import predict_for_channels
+from ..data_procs.predict import predict_for_channels
 from ..util import export_to_zarr
 
 logger = logging.getLogger()

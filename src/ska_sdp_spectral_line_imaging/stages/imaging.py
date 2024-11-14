@@ -11,7 +11,7 @@ from ska_sdp_piper.piper.configurations import (
 )
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
-from ..stubs.imaging import clean_cube
+from ..data_procs.imaging import clean_cube
 from ..util import (
     estimate_cell_size,
     estimate_image_size,

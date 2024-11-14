@@ -1,29 +1,29 @@
 import numpy as np
 from mock import MagicMock, Mock, call, patch
 
-from ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image import (
-    convert_clean_beam_to_pixels,
-    fit_psf,
-    restore_channel,
-    restore_cube,
+from ska_sdp_spectral_line_imaging.data_procs.deconvolution import (
+    restore_image,
 )
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "Image.constructor"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "restore_channel"
 )
-@patch("ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image." "xr")
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
+    "xr"
+)
+@patch(
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "Gaussian2DKernel"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image"
     ".convert_clean_beam_to_pixels"
 )
 def test_should_restore_cube(
@@ -58,7 +58,7 @@ def test_should_restore_cube(
 
     image_mock.attrs.__setitem__ = Mock(name="set_item")
 
-    restored_image = restore_cube(
+    restored_image = restore_image.restore_cube(
         model_image, psf_image, residual_image, {"bmaj": 0.1}
     )
 
@@ -104,19 +104,19 @@ def test_should_restore_cube(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "Image.constructor"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "xr.apply_ufunc"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "Gaussian2DKernel"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image"
     ".convert_clean_beam_to_pixels"
 )
 def test_should_restore_cube_without_adding_residual(
@@ -142,7 +142,9 @@ def test_should_restore_cube_without_adding_residual(
 
     image_mock.attrs.__setitem__ = Mock(name="set_item")
 
-    restored_image = restore_cube(model_image, psf_image, None, {"bmaj": 10})
+    restored_image = restore_image.restore_cube(
+        model_image, psf_image, None, {"bmaj": 10}
+    )
 
     xr_restored.__add__.assert_not_called()
 
@@ -155,27 +157,27 @@ def test_should_restore_cube_without_adding_residual(
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "Image.constructor"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "restore_channel"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "xr.apply_ufunc"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image."
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image."
     "Gaussian2DKernel"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image"
     ".convert_clean_beam_to_pixels"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image"
     ".fit_psf"
 )
 def test_should_restore_cube_when_beam_info_is_none(
@@ -204,7 +206,9 @@ def test_should_restore_cube_when_beam_info_is_none(
 
     image_mock.attrs.__setitem__ = Mock(name="set_item")
 
-    restored_image = restore_cube(model_image, psf_image, None, {"bmaj": None})
+    restored_image = restore_image.restore_cube(
+        model_image, psf_image, None, {"bmaj": None}
+    )
 
     assert restored_image == image_mock
 
@@ -256,7 +260,9 @@ def test_should_convert_clean_beam_to_pixels():
     cellsize = 1
     clean_beam = {"bmin": 0.3, "bmaj": 0.6, "bpa": 0.05}
 
-    beam_pixels = convert_clean_beam_to_pixels(cellsize, clean_beam)
+    beam_pixels = restore_image.convert_clean_beam_to_pixels(
+        cellsize, clean_beam
+    )
 
     np.testing.assert_allclose(
         beam_pixels, [0.00222352, 0.00444704, 0.00087266], atol=1e-8
@@ -266,7 +272,7 @@ def test_should_convert_clean_beam_to_pixels():
 def test_should_generate_beam_pixels_by_fitting_psf():
     psf = np.arange(64 * 64).reshape(64, 64)
 
-    beam_pixels = fit_psf(psf)
+    beam_pixels = restore_image.fit_psf(psf)
 
     np.testing.assert_allclose(
         beam_pixels, [25.93199291, 24.74372649, 34.59370391]
@@ -274,7 +280,7 @@ def test_should_generate_beam_pixels_by_fitting_psf():
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image"
     ".fitting"
 )
 def test_should_return_default_beam_pixels_if_stddev_is_negative(fitting_mock):
@@ -288,17 +294,17 @@ def test_should_return_default_beam_pixels_if_stddev_is_negative(fitting_mock):
     fit.y_stddev = -0.1
     fit_p_mock.return_value = fit
 
-    output = fit_psf(psf)
+    output = restore_image.fit_psf(psf)
 
     np.testing.assert_allclose(output, np.array((1.0, 1.0, 0.0)))
 
 
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image"
     ".Gaussian2DKernel"
 )
 @patch(
-    "ska_sdp_spectral_line_imaging.stubs.deconvolution.restore_image"
+    "ska_sdp_spectral_line_imaging.data_procs.deconvolution.restore_image"
     ".convolve_fft"
 )
 def test_should_restore_channel(convolve_fft_mock, gauss_kern_mock):
@@ -309,7 +315,7 @@ def test_should_restore_channel(convolve_fft_mock, gauss_kern_mock):
     gauss_kern_mock.return_value = kernel
     convolve_fft_mock.return_value = "convolved_array"
 
-    output = restore_channel(model, beam_pixels)
+    output = restore_image.restore_channel(model, beam_pixels)
 
     gauss_kern_mock.assert_called_once_with(
         x_stddev=10,

@@ -5,7 +5,7 @@ from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
 from .. import flagging_strategies
-from ..stubs.flagging import flag_cube
+from ..data_procs.flagging import flag_cube
 from ..util import rechunk
 
 AOFLAGGER_AVAILABLE = True
