@@ -1,9 +1,13 @@
+# pylint: disable=no-member
 import asyncio
 
 import numpy as np
 import pytest
 import xarray as xr
 from mock import MagicMock, Mock, patch
+from ska_sdp_datamodels.science_data_model.polarisation_model import (
+    PolarisationFrame,
+)
 
 from ska_sdp_spectral_line_imaging.util import (
     estimate_cell_size,
@@ -11,6 +15,8 @@ from ska_sdp_spectral_line_imaging.util import (
     export_image_as,
     export_to_fits,
     export_to_zarr,
+    get_polarization,
+    get_wcs,
     rechunk,
 )
 
@@ -141,10 +147,85 @@ def test_should_export_to_zarr_with_attrs():
     assert task == "zarr_task"
 
 
-# TODO
-# def test_get_wcs():
-#
+# NOTE: Not mocking PolarizationFrame
+def test_should_get_polarization_frame_from_observation():
+    obs = MagicMock(name="observation")
+    obs.polarization.data = ["I", "Q", "U", "V"]
 
-# TODO
-# def test_pol_frame():
-#     mock_pol_frame.assert_called_once_with("linearnp")
+    expected_pol_frame = PolarisationFrame("stokesIQUV")
+
+    actual_pol_frame = get_polarization(obs)
+
+    assert actual_pol_frame == expected_pol_frame
+
+
+# NOTE: Not mocking "get_polarization" and "PolarisationFrame"
+# as "get_wcs" function covers more functionality of PolarisationFrame
+# which is not covered in any other unit test
+@patch("ska_sdp_spectral_line_imaging.util.SkyCoord")
+@patch("ska_sdp_spectral_line_imaging.util.au")
+@patch("ska_sdp_spectral_line_imaging.util.WCS")
+def test_should_get_wcs_from_observation_for_single_pol(
+    wcs_mock, astro_unit_mock, sky_coord_mock
+):
+    obs = MagicMock(name="observation")
+
+    field_and_source_xds = obs.VISIBILITY.field_and_source_xds
+    field_and_source_xds.FIELD_PHASE_CENTER.units = ["rad", "rad"]
+    field_and_source_xds.FIELD_PHASE_CENTER.frame = "fk5"
+    field_and_source_xds.FIELD_PHASE_CENTER.to_numpy.return_value = np.array(
+        [-5.0, 5.0]
+    )
+
+    obs.frequency.channel_width = {"data": 65000}
+    obs.frequency.reference_frequency = {"data": 10000}
+    obs.frequency.units = ["Hz"]
+    obs.frequency.frame = "TOPO"
+    obs.polarization.size = 1
+    obs.polarization.data = ["I"]
+
+    sky_coord = MagicMock(name="sky coordinate")
+    sky_coord.ra.deg = 60.0
+    sky_coord.dec.deg = 70.0
+
+    sky_coord_mock.return_value = sky_coord
+    # setting "rad" unit to random value
+    astro_unit_mock.rad = 2.0
+
+    actual_wcs = get_wcs(obs, 3600.0, 256, 256)
+
+    sky_coord_mock.assert_called_once_with(ra=-10.0, dec=10.0, frame="fk5")
+    wcs_mock.assert_called_once_with(naxis=4)
+    assert actual_wcs.wcs.crpix == [128, 128, 1, 1]
+    assert actual_wcs.wcs.cunit == ["deg", "deg", "", "Hz"]
+    np.testing.assert_allclose(
+        actual_wcs.wcs.cdelt, np.array([-1.0, 1.0, 1, 65000])
+    )
+    assert actual_wcs.wcs.crval == [60.0, 70.0, 1, 10000]
+    assert actual_wcs.wcs.specsys == "TOPO"
+    # constant asserts which may change in future
+    assert actual_wcs.wcs.ctype == ["RA---SIN", "DEC--SIN", "STOKES", "FREQ"]
+    assert actual_wcs.wcs.radesys == "ICRS"
+    assert actual_wcs.wcs.equinox == 2000.0
+
+
+@patch("ska_sdp_spectral_line_imaging.util.SkyCoord")
+@patch("ska_sdp_spectral_line_imaging.util.au")
+@patch("ska_sdp_spectral_line_imaging.util.WCS")
+def test_should_get_wcs_from_observation_when_pol_is_more_than_one(
+    wcs_mock, astro_unit_mock, sky_coord_mock
+):
+    obs = MagicMock(name="observation")
+    # needed to make assertion pass
+    obs.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units = [
+        "rad",
+        "rad",
+    ]
+
+    obs.polarization.size = 4
+    obs.polarization.data = ["XX", "XY", "YX", "YY"]
+
+    actual_wcs = get_wcs(obs, 3600.0, 256, 256)
+
+    assert actual_wcs.wcs.cdelt[2] == -1
+    assert actual_wcs.wcs.crval[2] == -5

@@ -241,11 +241,11 @@ def get_wcs(observation, cell_size, nx, ny) -> WCS:
     cell_size_degree = cell_size / 3600
     freq_channel_width = observation.frequency.channel_width["data"]
     ref_freq = observation.frequency.reference_frequency["data"]
+    freq_unit = observation.frequency.units[0]
 
     polarization_frame = get_polarization(observation)
-
     pol = PolarisationFrame.fits_codes[polarization_frame.type]
-    npol = len(observation.polarization)
+    npol = observation.polarization.size
     if npol > 1:
         dpol = pol[1] - pol[0]
     else:
@@ -262,12 +262,17 @@ def get_wcs(observation, cell_size, nx, ny) -> WCS:
 
     new_wcs = WCS(naxis=4)
 
+    # Since Image dimensions are: ["frequency", "polarisation", "y", "x"]
+    # WCS / FITS dimensions must be: ["RA", "DEC", "STOKES", "FREQ"]
     new_wcs.wcs.crpix = [nx // 2, ny // 2, 1, 1]
-    new_wcs.wcs.cunit = ["deg", "deg", "", observation.frequency.units[0]]
+    new_wcs.wcs.cunit = ["deg", "deg", "", freq_unit]
     # computes immediately
-    new_wcs.wcs.cdelt = np.array(
-        [-cell_size_degree, cell_size_degree, dpol, freq_channel_width]
-    )
+    new_wcs.wcs.cdelt = [
+        -cell_size_degree,
+        cell_size_degree,
+        dpol,
+        freq_channel_width,
+    ]
     new_wcs.wcs.crval = [coord.ra.deg, coord.dec.deg, pol[0], ref_freq]
     new_wcs.wcs.ctype = ["RA---SIN", "DEC--SIN", "STOKES", "FREQ"]
 
