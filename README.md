@@ -108,7 +108,7 @@ In order to run the pipeline on a custom MSv2 dataset, you have to convert it to
 
 1. Follow the instructions on [xradio github](https://github.com/casangi/xradio/tree/main?tab=readme-ov-file#installing) to install xradio package.
 
-1. Have a look at the [example jupyter notebooks](https://github.com/casangi/xradio/blob/main/doc/meerkat_conversion.ipynb) present in the xradio github to know how to convert the data from MSv2 to a xradio processing set.
+1. Have a look at the [example jupyter notebooks](https://github.com/casangi/xradio/blob/main/demo/demo.ipynb) present in the xradio github to know how to convert the data from MSv2 to a xradio processing set.
 
 ### Regarding the model visibilities and model images
 

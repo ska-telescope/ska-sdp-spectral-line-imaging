@@ -639,16 +639,6 @@ urllib3 = {version = ">=1.25.4,<2.2.0 || >2.2.0,<3", markers = "python_version >
 crt = ["awscrt (==0.20.11)"]
 
 [[package]]
-name = "casadata"
-version = "2024.5.22"
-description = "casa data repository"
-optional = false
-python-versions = "*"
-files = [
-    {file = "casadata-2024.5.22-py3-none-any.whl", hash = "sha256:302fd97ca18597f7300722bd1a5b0b05909436de2604ce47756e878e62a37da8"},
-]
-
-[[package]]
 name = "cerberus"
 version = "1.3.5"
 description = "Lightweight, extensible schema and data validation tool for Pythondictionaries."
@@ -3863,18 +3853,18 @@ tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
 
 [[package]]
 name = "python-casacore"
-version = "3.5.2"
+version = "3.6.1"
 description = "A wrapper around CASACORE, the radio astronomy library"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "python-casacore-3.5.2.tar.gz", hash = "sha256:ad70c8e08893eec928b3e38c099bda8863f5aa9d099fd00694ad2b0d48eba08f"},
-    {file = "python_casacore-3.5.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e58723013dd1f4b456ca3cc9485df8a7949bd20cc81050835458fb03fdfac47d"},
-    {file = "python_casacore-3.5.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ed08d7f009149b383b8cb99ee8515a7affde1bc6db1b4cab2994636504d3e07b"},
-    {file = "python_casacore-3.5.2-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c62b08e01af9d93829a771869bf1d0e42c5e44c2abc1217e3485714ed7b321f4"},
-    {file = "python_casacore-3.5.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ff9251e0cac9cf69db27d4b3ccaa2aacf38005856b704cf4806e2c3e44eeed66"},
-    {file = "python_casacore-3.5.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:702dade7a21069158839a74d9bbb770cb95bd1c1d9f4d54a79db1e4a71d01b5a"},
-    {file = "python_casacore-3.5.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:69adea36329d913c350d7e9c8e0cb78fafbefed044c188081d7d1bcdda072425"},
+    {file = "python_casacore-3.6.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:353e0c6246b06264751621e06954b92c94e8b35db6bdaede7046cef9eae17c2c"},
+    {file = "python_casacore-3.6.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5ea13a01c21a2a6685eba632b8a5ebb9bebbda833eb60adb0bd9006b7d6a4088"},
+    {file = "python_casacore-3.6.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:58bcfaa3db8dc53c7457b9aaa779ee37ba5eb22eb0d0526a0e72c851a20be4b0"},
+    {file = "python_casacore-3.6.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9cb3527e1bc1e8f2609acb8552e61bc9a4d71c5e3b0ee4e49c986c1f5755a657"},
+    {file = "python_casacore-3.6.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:42e069414af7ada6ff07d34fe755a2e87bdf3d7f1be93fc5b782623cd23fc0a8"},
+    {file = "python_casacore-3.6.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:217a7ebad5bc3b269abbcd8e49f5b67367fb8557b6fc15e22096ac83fff7e3e6"},
+    {file = "python_casacore-3.6.1.tar.gz", hash = "sha256:ddc1ac186b6ea2636ac6a271568de52f485ebf6f21d9d00a4216fc3a1651bb81"},
 ]
 
 [package.dependencies]
@@ -5058,6 +5048,40 @@ files = [
 ]
 
 [[package]]
+name = "toolviper"
+version = "0.0.2"
+description = ""
+optional = false
+python-versions = "<3.13,>=3.9"
+files = [
+    {file = "toolviper-0.0.2-py3-none-any.whl", hash = "sha256:ab28a0563ff2e5ebf62377cd72e7ff814811c3e6a0b435b50cf39c494a546898"},
+    {file = "toolviper-0.0.2.tar.gz", hash = "sha256:1978436b49e4b1b4c8eb228f8b52ca9cf1ab7cc831dc0f39231653a1dd4649a4"},
+]
+
+[package.dependencies]
+bokeh = "*"
+cerberus = "*"
+dask = "*"
+dask-jobqueue = "*"
+distributed = "*"
+graphviz = "*"
+ipywidgets = "*"
+jupyterlab = "*"
+numba = ">=0.57.0"
+numpy = "*"
+psutil = "*"
+pyarrow = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-html = "*"
+rich = "*"
+tqdm = "*"
+zarr = "*"
+
+[package.extras]
+docs = ["ipykernel", "ipympl", "ipython", "jupyter-client", "nbsphinx", "pandoc", "recommonmark", "scanpydoc", "sphinx-autoapi", "sphinx-autosummary-accessors", "sphinx-rtd-theme", "twine"]
+
+[[package]]
 name = "toolz"
 version = "0.12.1"
 description = "List processing tools and functional utilities"
@@ -5391,32 +5415,32 @@ viz = ["matplotlib", "nc-time-axis", "seaborn"]
 
 [[package]]
 name = "xradio"
-version = "0.0.31"
+version = "0.0.40"
 description = "Xarray Radio Astronomy Data IO"
 optional = false
-python-versions = "<3.12,>=3.9"
+python-versions = "<3.13,>=3.9"
 files = [
-    {file = "xradio-0.0.31-py3-none-any.whl", hash = "sha256:53807f1429de813702f974e5326279832ac944f568caf3cae2f35d5b8e8b636d"},
-    {file = "xradio-0.0.31.tar.gz", hash = "sha256:e30de0dc296ae772d6ae5e67f74d9ce57de209f116c1479b9c3eeb1834a77c2a"},
+    {file = "xradio-0.0.40-py3-none-any.whl", hash = "sha256:a65ed1233e8bd96a6fd392b30c04a2c0dcd27b0ae5ac9fc19f045ee6946765d1"},
+    {file = "xradio-0.0.40.tar.gz", hash = "sha256:61724cdfb4940cd754a49a0c28310a7a6ab3bc2887832844923f4c4e71404478"},
 ]
 
 [package.dependencies]
 astropy = "*"
-casadata = "*"
 dask = "*"
 distributed = "*"
 graphviper = "*"
 matplotlib = "*"
 numba = ">=0.57.0"
-numpy = "<2.0.0"
+numpy = "*"
 prettytable = "*"
 pyarrow = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-html = "*"
-python-casacore = {version = ">=3.5.2", markers = "sys_platform != \"darwin\""}
+python-casacore = {version = ">=3.6.1", markers = "sys_platform != \"darwin\""}
 s3fs = "*"
 scipy = "*"
+toolviper = "*"
 tqdm = "*"
 typeguard = "*"
 xarray = "*"
@@ -5593,4 +5617,4 @@ radler = ["radler"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f63cec731360b0d48a7d64155063174c74c40e70fee7af49c79adb984ca3c86f"
+content-hash = "9db42c4252aa11647264f9d4e9c37c464dc175ceb637eda24207a7ea389bb24b"

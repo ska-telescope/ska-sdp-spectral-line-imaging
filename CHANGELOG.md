@@ -15,6 +15,7 @@
 - Remove all export stages. The export happens from the respective stages where the data is generated.
 - Move read processing set logic from piper framework to spectral line imaging pipeline
 - Delay read model fits reads and add power law scaling for modell
+- Update xradio version to 0.0.40
 
 ## 0.5.0
 
