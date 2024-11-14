@@ -4,8 +4,28 @@ import numpy as np
 import xarray as xr
 from mock import MagicMock, Mock, call
 
-from ska_sdp_spectral_line_imaging.stages.model import cont_sub, read_model
+from ska_sdp_spectral_line_imaging.stages.model import (
+    cont_sub,
+    read_model,
+    vis_stokes_conversion,
+)
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
+
+
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.convert_polarization")
+def test_should_convert_polarization_of_observation_data(
+    convert_polarization_mock,
+):
+    upout = UpstreamOutput()
+    upout["ps"] = "observation_data"
+    convert_polarization_mock.return_value = "converted_obs_data"
+
+    output = vis_stokes_conversion.stage_definition(upout, ["I", "Q", "V"])
+
+    convert_polarization_mock.assert_called_once_with(
+        "observation_data", ["I", "Q", "V"]
+    )
+    assert output.ps == "converted_obs_data"
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
