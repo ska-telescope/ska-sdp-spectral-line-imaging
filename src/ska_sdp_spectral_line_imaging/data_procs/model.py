@@ -9,6 +9,8 @@ import xarray as xr
 from astropy.io import fits
 from astropy.wcs import WCS
 
+from ska_sdp_piper.piper.utils import delayed_log
+
 logger = logging.getLogger()
 
 fits_codes_to_pol_names = {
@@ -45,7 +47,6 @@ def read_fits_memmapped_delayed(image_path, hduid=0):
     return data
 
 
-@dask.delayed
 def report_peak_visibility(visibility, unit):
     abs_visibility = np.abs(visibility)
     max_freq_axis = abs_visibility.max(
@@ -55,15 +56,15 @@ def report_peak_visibility(visibility, unit):
     peak_frequency = max_freq_axis.idxmax()
     max_visibility = abs_visibility.max()
 
-    logger.info(
+    return delayed_log(
+        logger.info,
         "Peak visibility Channel: {peak_channel}."
         " Frequency: {peak_frequency} {unit}."
-        " Peak Visibility: {max_visibility}".format(
-            peak_channel=peak_channel.values,
-            peak_frequency=peak_frequency.values,
-            max_visibility=max_visibility.values,
-            unit=unit,
-        )
+        " Peak Visibility: {max_visibility}",
+        peak_channel=peak_channel,
+        peak_frequency=peak_frequency,
+        max_visibility=max_visibility,
+        unit=unit,
     )
 
 

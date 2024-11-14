@@ -9,9 +9,12 @@ from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.model.report_peak_visibility"
+)
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.np")
 def test_should_perform_continuum_subtraction(
-    np_mock, subtract_visibility_mock
+    np_mock, report_peak_mock, subtract_visibility_mock
 ):
 
     observation = Mock(name="observation")
@@ -36,12 +39,17 @@ def test_should_perform_continuum_subtraction(
     subtracted_vis.assign.assert_called_once_with(
         {"VISIBILITY": "sub_vis_with_attrs"}
     )
+
+    report_peak_mock.assert_called_once_with(subtracted_vis.VISIBILITY, "Hz")
     assert output.ps == subtracted_vis.copy()
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.logger")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.delayed_log")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.model.report_peak_visibility"
+)
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.np")
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.model.fit_polynomial_on_visibility"
@@ -49,6 +57,7 @@ def test_should_perform_continuum_subtraction(
 def test_should_report_extent_of_continuum_subtraction(
     fit_poly_on_vis_mock,
     numpy_mock,
+    report_peak_mock,
     subtract_visibility_mock,
     delayed_log_mock,
     logger_mock,
