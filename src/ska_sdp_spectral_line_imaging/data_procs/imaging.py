@@ -131,7 +131,7 @@ def chunked_imaging(ps, cell_size, nx, ny, epsilon=1e-4):
         vectorize=True,
         keep_attrs=True,
         dask="parallelized",
-        # TODO: this shouuld be parameterized
+        # TODO: parameterize dtype
         output_dtypes=[np.float32],
         dask_gufunc_kwargs={
             "output_sizes": {"y": ny, "x": nx},
@@ -284,7 +284,6 @@ def clean_cube(
            str -> ska_sdp_datamodels.image.image_model.Image
         )
     """
-    # TODO: Gridding parameters should have units documented somewhere
     epsilon = gridding_params.get("epsilon")
     cell_size = gridding_params.get("cell_size")
     nx = gridding_params.get("nx")
@@ -308,15 +307,15 @@ def clean_cube(
                 ps, cell_size, nx, ny, epsilon, wcs, polarization_frame
             )
         else:
-            # TODO: This returns image but frequency axis is not aligned
-            # Also, because of FITS format, image has to be loaded into memory.
             logger.warning(
-                f"Loading FITS psf image from {psf_image_path} into memory."
-                "This may slow down the further computations."
+                f"Will load FITS psf image from {psf_image_path}"
+                "into memory of one worker."
+                "This may slow down the computations."
             )
+            # TODO: Replace this with "get_dataarray_from_fits"
             psf_image = import_image_from_fits(psf_image_path, fixpol=True)
 
-            # TODO: Will be removed once coordinate issue is fixed
+            # TODO: Remove once coordinate issue is fixed
             # The frequency coords have floating point precision issue
             psf_image = psf_image.assign_coords(dirty_image.coords)
 

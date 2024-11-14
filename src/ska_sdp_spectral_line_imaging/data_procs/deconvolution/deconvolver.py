@@ -63,24 +63,13 @@ def deconvolve_cube(dirty: Image, psf: Image, **kwargs) -> Tuple[Image, Image]:
         :py:func:`ska_sdp_func_python.image.cleaners.msmfsclean`
 
     """
-    # TODO: port later once window_shape is passed from config
-    # window_shape = kwargs.get("window_shape", None)
-    # window = find_window_list(
-    #     dirty_list, prefix, window_shape=window_shape
-    # )
-
-    # TODO: Pass these from caller function
+    # TODO: Support missing parameters
+    # Refer to ska-sdp-func-python's deconvolve_cube
+    # and implement if required.
     sensitivity = None  # must be an Image instance
     window = None  # must be an Image instance
 
     fracthresh, gain, niter, thresh, scales = common_arguments(**kwargs)
-
-    # TODO: port later once psf_support is is passed from config
-    # psf_support = kwargs.get("psf_support", None)
-    # psf_list = bound_psf_list(
-    #     dirty_list, prefix, psf_list, psf_support=psf_support
-    # )
-
     algorithm = kwargs.get("algorithm", "hogbom")
 
     # TODO: Port other algorithms

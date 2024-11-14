@@ -174,7 +174,6 @@ def estimate_image_size(
     return np.ceil(image_size / 100) * 100
 
 
-# TODO: Untested function
 def get_polarization(observation: xr.Dataset) -> PolarisationFrame:
     """
     Reads an observation from the xradio processing set,
@@ -202,12 +201,7 @@ def get_polarization(observation: xr.Dataset) -> PolarisationFrame:
     return polarization_frame
 
 
-# TODO: get_wcs is untested function.
-# Once stubbed imager is replaced by a proper imager
-# we expect that the imager will give the image class instance
-# with wcs information already populated.
-
-# TODO: This does not handle MOMENT images, only FREQ
+# NOTE: This does not handle MOMENT images, only FREQ
 def get_wcs(observation, cell_size, nx, ny) -> WCS:
     """
     Reads an observation from the xradio processing set,
@@ -255,7 +249,7 @@ def get_wcs(observation, cell_size, nx, ny) -> WCS:
     # computes immediately
     fp_center = field_and_source_xds.FIELD_PHASE_CENTER.to_numpy()
 
-    # TODO: Is the fp_frame equal to frame?
+    # TODO: Verify: Is the fp_frame equal to frame?
     coord = SkyCoord(
         ra=fp_center[0] * au.rad, dec=fp_center[1] * au.rad, frame=fp_frame
     )
@@ -276,15 +270,15 @@ def get_wcs(observation, cell_size, nx, ny) -> WCS:
     new_wcs.wcs.crval = [coord.ra.deg, coord.dec.deg, pol[0], ref_freq]
     new_wcs.wcs.ctype = ["RA---SIN", "DEC--SIN", "STOKES", "FREQ"]
 
-    # TODO: "ICRS" since sdp-datamodels also have fixed radesys
+    # NOTE: "ICRS" since sdp-datamodels also have fixed radesys
     new_wcs.wcs.radesys = "ICRS"
     # new_wcs.wcs.radesys = coord.frame.name.upper()
 
-    # TODO: "2000.0" since sdp-datamodels also have fixed equinox
+    # NOTE: "2000.0" since sdp-datamodels also have fixed equinox
     new_wcs.wcs.equinox = 2000.0
     # new_wcs.wcs.equinox = coord.frame.equinox.jyear
 
-    # TODO: Verify this assignment is correct
+    # NOTE: Verify this assignment is correct
     new_wcs.wcs.specsys = observation.frequency.frame
 
     return new_wcs

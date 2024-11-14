@@ -108,7 +108,7 @@ def predict(ps, model_image, **kwargs):
         vectorize=True,
         keep_attrs=True,
         dask="parallelized",
-        # TODO: this shouuld be parameterized
+        # TODO: parameterize dtype
         output_dtypes=[np.complex64],
         kwargs=dict(
             nchan=1,
@@ -126,8 +126,7 @@ def predict_for_channels(ps, model_image, epsilon, cell_size):
 
     cell_size_radian = np.deg2rad(cell_size / 3600)
 
-    # TODO: This has to be removed once "predict"
-    # function can accept any dtypes
+    # TODO: Remove once "predict" function can accept any dtypes
     model_image = model_image.astype(np.float32)
 
     predicted_visibility = predict(
