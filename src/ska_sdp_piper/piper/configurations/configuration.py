@@ -4,29 +4,20 @@ from ..exceptions import (
     ArgumentMismatchException,
     PipelineMetadataMissingException,
 )
+from .config_groups import ConfigGroups
+
+logger = logging.getLogger()
 
 
-class Configuration:
+class Configuration(ConfigGroups):
     """
     Class containing all the configurations for a stage
 
     Attributes
     ----------
-        __config_params: dict(str -> ConfigParam)
+        _config_params: dict(str -> ConfigParam)
             Configuration parameters for the stage
     """
-
-    def __init__(self, **kwargs):
-        """
-        Initialise a Configuration object.
-
-        Parameters
-        ----------
-           kwargs:
-               ConfigParam objects
-        """
-        self.__config_params = kwargs
-        self.__logger = logging.getLogger()
 
     @property
     def items(self):
@@ -37,35 +28,7 @@ class Configuration:
         -------
            Dictionary of configuration parameters with default values
         """
-        return {
-            key: param.value for key, param in self.__config_params.items()
-        }
-
-    def update_config_params(self, **kwargs):
-        """
-        Update the value of the configuration parameter
-
-        Parameters
-        ----------
-            **kwargs: Key word arguments
-
-        Raises
-        ------
-            TypeError:
-               If the update value doesn't match the type of the config param
-
-        """
-        properties = self.__config_params.keys()
-        for key, value in kwargs.items():
-            if key in properties:
-                config_param = self.__config_params[key]
-                config_param.value = value
-            else:
-                self.__logger.warning(
-                    f'Property "{key}" is invalid. Valid properties are '
-                    f"{', '.join(properties)}. Ignoring and "
-                    "continuing the pipeline."
-                )
+        return {key: param.value for key, param in self._config_params.items()}
 
     def valididate_arguments_for(self, stage):
         """
@@ -88,7 +51,7 @@ class Configuration:
         """
 
         stage_arguments = stage.params
-        configuration_keys = set(self.__config_params.keys())
+        configuration_keys = set(self._config_params.keys())
 
         if (
             len(stage_arguments) == 0

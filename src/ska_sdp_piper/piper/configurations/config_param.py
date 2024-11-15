@@ -77,6 +77,9 @@ class ConfigParam:
             )
 
         if self.allowed_values and new_value not in self.allowed_values:
-            raise ValueError(f"Allowed values are {self.allowed_values}.")
+            raise ValueError(
+                f"Allowed values are {self.allowed_values}. {new_value} "
+                "provided."
+            )
 
         self.__value = new_value

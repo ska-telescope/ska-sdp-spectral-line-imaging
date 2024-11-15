@@ -1,7 +1,12 @@
+import logging
+
+from .config_groups import ConfigGroups
 from .config_param import ConfigParam
 
+logger = logging.getLogger()
 
-class NestedConfigParam(ConfigParam):
+
+class NestedConfigParam(ConfigGroups, ConfigParam):
     """
     Nested Configuration Parameters
 
@@ -26,18 +31,18 @@ class NestedConfigParam(ConfigParam):
 
         """
 
-        self.__config_params = config_params
+        super(NestedConfigParam, self).__init__(**config_params)
         self.description = description
         self._type = NestedConfigParam
 
     def __getitem__(self, param):
-        return self.__config_params[param].value
+        return self._config_params[param].value
 
     def get(self, param, default=None):
         """
         Get config params or defaults
         """
-        config_param = self.__config_params.get(param)
+        config_param = self._config_params.get(param)
         return default if config_param is None else config_param.value
 
     @property
@@ -46,7 +51,7 @@ class NestedConfigParam(ConfigParam):
         Value property
         """
         return {
-            key: config.value for key, config in self.__config_params.items()
+            key: config.value for key, config in self._config_params.items()
         }
 
     @value.setter
@@ -71,6 +76,4 @@ class NestedConfigParam(ConfigParam):
                 "Trying to set primitive value to a nested config parameter"
             )
 
-        for key, value in new_value.items():
-            config_param = self.__config_params[key]
-            config_param.value = value
+        self.update_config_params(**new_value)
