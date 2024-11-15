@@ -28,40 +28,51 @@ def test_should_convert_polarization_of_observation_data(
     assert output.ps == "converted_obs_data"
 
 
+@mock.patch("ska_sdp_spectral_line_imaging.stages.model.export_to_zarr")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.subtract_visibility")
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.model.report_peak_visibility"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stages.model.np")
-def test_should_perform_continuum_subtraction(
-    np_mock, report_peak_mock, subtract_visibility_mock
+def test_should_perform_continuum_subtraction_and_export_residual(
+    report_peak_mock, subtract_visibility_mock, export_to_zarr_mock
 ):
 
     observation = Mock(name="observation")
     upstream_output = UpstreamOutput()
     upstream_output["ps"] = observation
     observation.assign.return_value = "model"
-    subtracted_vis = Mock(name="subtracted_vis")
-    subtracted_vis.VISIBILITY.assign_attrs.return_value = "sub_vis_with_attrs"
-    subtracted_vis.frequency = Mock(name="frequency")
-    subtracted_vis.frequency.units = ["Hz"]
-    subtracted_vis.assign.return_value = subtracted_vis
-    subtract_visibility_mock.return_value = subtracted_vis
+    cont_sub_observation = Mock(name="cont_sub_observation")
+    cont_sub_observation.VISIBILITY.assign_attrs.return_value = (
+        "sub_vis_with_attrs"
+    )
+    cont_sub_observation.frequency.units = ["Hz"]
+    cont_sub_observation.assign.return_value = cont_sub_observation
+    subtract_visibility_mock.return_value = cont_sub_observation
 
     output = cont_sub.stage_definition(
-        upstream_output, False, "ps_out", False, "output_path"
+        upstream_output, True, "residual_visibility", False, "output_path"
     )
 
     observation.assign.assert_called_once_with(
         {"VISIBILITY": observation.VISIBILITY_MODEL}
     )
     subtract_visibility_mock.assert_called_once_with(observation, "model")
-    subtracted_vis.assign.assert_called_once_with(
+    export_to_zarr_mock.assert_called_once_with(
+        cont_sub_observation.VISIBILITY,
+        "output_path/residual_visibility",
+        clear_attrs=True,
+    )
+    cont_sub_observation.assign.assert_called_once_with(
         {"VISIBILITY": "sub_vis_with_attrs"}
     )
-
-    report_peak_mock.assert_called_once_with(subtracted_vis.VISIBILITY, "Hz")
-    assert output.ps == subtracted_vis.copy()
+    report_peak_mock.assert_called_once_with(
+        cont_sub_observation.VISIBILITY, "Hz"
+    )
+    assert output.ps == cont_sub_observation.copy()
+    assert output.compute_tasks == [
+        export_to_zarr_mock.return_value,
+        report_peak_mock.return_value,
+    ]
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.stages.model.logger")
