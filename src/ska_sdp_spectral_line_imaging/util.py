@@ -258,9 +258,11 @@ def get_wcs(observation, cell_size, nx, ny) -> WCS:
 
     # Since Image dimensions are: ["frequency", "polarisation", "y", "x"]
     # WCS / FITS dimensions must be: ["RA", "DEC", "STOKES", "FREQ"]
+
+    # computes nx and ny if those are dask arrays
     new_wcs.wcs.crpix = [nx // 2, ny // 2, 1, 1]
     new_wcs.wcs.cunit = ["deg", "deg", "", freq_unit]
-    # computes immediately
+    # computes cell_size_degree if its a dask array
     new_wcs.wcs.cdelt = [
         -cell_size_degree,
         cell_size_degree,

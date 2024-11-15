@@ -34,7 +34,7 @@ SPEED_OF_LIGHT = 299792458
             cell_size=ConfigParam(
                 float,
                 None,
-                description="Cell Size for gridding in arcseconds."
+                description="Cell Size for gridding in arcseconds. "
                 "Will be calculated if None.",
             ),
             scaling_factor=ConfigParam(

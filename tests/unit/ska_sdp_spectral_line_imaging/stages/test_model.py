@@ -180,7 +180,7 @@ def test_read_model_continuum_fits_with_pol_wcs_axis_with_power_law(
     ps = MagicMock(name="ps")
     pols = ["RR", "LL"]
     ps.polarization.values = pols
-    ps.frequency.data = np.array([10, 20])
+    ps.frequency.data = "frequency_data"
 
     upout = UpstreamOutput()
     upout["ps"] = ps
@@ -219,17 +219,19 @@ def test_read_model_continuum_fits_with_pol_wcs_axis_with_power_law(
         [mock.call("test-RR-image.fits"), mock.call("test-LL-image.fits")]
     )
 
+    actual_input_to_power_law = apply_power_law_scaling_mock.call_args.args[0]
     xr.testing.assert_allclose(
-        apply_power_law_scaling_mock.call_args.args[0],
+        actual_input_to_power_law,
         expected_input_to_power_law,
     )
-    np.allclose(
-        apply_power_law_scaling_mock.call_args.args[1], np.array([10, 20])
+    assert (
+        actual_input_to_power_law.chunks == expected_input_to_power_law.chunks
     )
+    assert apply_power_law_scaling_mock.call_args.args[1] == "frequency_data"
     assert (
         apply_power_law_scaling_mock.call_args.kwargs["spectral_index"] == 0.1
     )
-    scaled_cube.chunk.assert_called_once_with(dict(polarization=-1))
+    scaled_cube.chunk.assert_called_once_with({"polarization": -1})
     assert output["model_image"] == "rechunked_scaled_cube"
 
 

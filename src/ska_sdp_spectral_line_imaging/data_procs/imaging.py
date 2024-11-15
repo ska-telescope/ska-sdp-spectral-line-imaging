@@ -308,8 +308,8 @@ def clean_cube(
             )
         else:
             logger.warning(
-                f"Will load FITS psf image from {psf_image_path}"
-                "into memory of one worker."
+                f"Will load FITS psf image from {psf_image_path} "
+                "into the memory of the client node. "
                 "This may slow down the computations."
             )
             # TODO: Replace this with "get_dataarray_from_fits"

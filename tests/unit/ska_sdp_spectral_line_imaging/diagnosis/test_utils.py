@@ -59,7 +59,7 @@ def test_should_plot_amp_vs_channel_plot(numpy_mock, create_plot_mock):
 @mock.patch("ska_sdp_spectral_line_imaging.diagnosis.utils.pd")
 @mock.patch("ska_sdp_spectral_line_imaging.diagnosis.utils.np")
 def test_should_store_spectral_csv(np_mock, pd_mock):
-    pandas_df = MagicMock(name="to_csv")
+    pandas_df = MagicMock(name="pandas_df")
     pd_mock.DataFrame.return_value = pandas_df
     np_mock.abs.return_value = "abs_vis"
 

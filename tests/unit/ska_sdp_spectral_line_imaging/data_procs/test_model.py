@@ -1,4 +1,6 @@
 # pylint: disable=no-member
+import asyncio
+
 import mock
 import numpy as np
 import pytest
@@ -37,6 +39,9 @@ def test_should_read_data_from_fits_delayed(fits_open_mock):
 @mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.dask.array")
 def test_should_get_dask_array_from_fits(dask_array_mock, read_fits_mem_mock):
     dask_array_mock.from_delayed.return_value = "dask_array"
+    read_fits_mem_mock.return_value = "fits_data"
+
+    loop = asyncio.get_event_loop()
 
     output = get_dask_array_from_fits(
         "/path/image",
@@ -46,7 +51,13 @@ def test_should_get_dask_array_from_fits(dask_array_mock, read_fits_mem_mock):
     )
 
     read_fits_mem_mock.assert_called_once_with("/path/image", 1)
-    dask_array_mock.from_delayed.assert_called_once()
+
+    read_fits_delayed_task = dask_array_mock.from_delayed.call_args.args[0]
+    task_output = loop.run_until_complete(read_fits_delayed_task)
+    assert task_output == "fits_data"
+    assert dask_array_mock.from_delayed.call_args.kwargs["shape"] == (16, 16)
+    assert dask_array_mock.from_delayed.call_args.kwargs["dtype"] == ">f8"
+
     assert output == "dask_array"
 
 
@@ -136,9 +147,7 @@ def test_should_read_fits_image_when_fits_has_no_freq_pol(
     get_dask_array_from_fits_mock.assert_called_once_with(
         "image_path", 0, (2, 2), ">f4"
     )
-
     xr.testing.assert_allclose(output_xrda, expected_xrda)
-
     assert output_xrda.chunks is None
 
 

@@ -198,9 +198,7 @@ def test_should_get_wcs_from_observation_for_single_pol(
     wcs_mock.assert_called_once_with(naxis=4)
     assert actual_wcs.wcs.crpix == [128, 128, 1, 1]
     assert actual_wcs.wcs.cunit == ["deg", "deg", "", "Hz"]
-    np.testing.assert_allclose(
-        actual_wcs.wcs.cdelt, np.array([-1.0, 1.0, 1, 65000])
-    )
+    assert actual_wcs.wcs.cdelt == [-1.0, 1.0, 1, 65000]
     assert actual_wcs.wcs.crval == [60.0, 70.0, 1, 10000]
     assert actual_wcs.wcs.specsys == "TOPO"
     # constant asserts which may change in future
