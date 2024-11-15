@@ -134,6 +134,9 @@ class Pipeline(Command, metaclass=NamedInstance):
         )
         output_dir = create_output_dir(output_path, self.name)
 
+        log_file = f"{output_dir}/{self.name}_{timestamp()}.log"
+        LogUtil.configure(log_file, verbose=(cli_args.verbose != 0))
+
         runtime_config = (
             RuntimeConfig(**self.config)
             .update_from_yaml(cli_args.config_path)
@@ -156,7 +159,6 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self.run(
             stages=runtime_config.stages_to_run,
-            verbose=(cli_args.verbose != 0),
             output_dir=output_dir,
             cli_args=self._cli_command_parser.cli_args_dict,
         )
@@ -178,7 +180,6 @@ class Pipeline(Command, metaclass=NamedInstance):
         self,
         output_dir,
         stages,
-        verbose=False,
         cli_args=None,
     ):
         """
@@ -196,8 +197,6 @@ class Pipeline(Command, metaclass=NamedInstance):
              CLI arguments
         """
         cli_args = {} if cli_args is None else cli_args
-        log_file = f"{output_dir}/{self.name}_{timestamp()}.log"
-        LogUtil.configure(log_file, verbose=verbose)
 
         self.logger.info("=============== START =====================")
         self.logger.info(f"Executing {self.name} pipeline with metadata:")

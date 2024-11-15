@@ -1,3 +1,5 @@
+import logging
+
 from ..exceptions import (
     ArgumentMismatchException,
     PipelineMetadataMissingException,
@@ -24,6 +26,7 @@ class Configuration:
                ConfigParam objects
         """
         self.__config_params = kwargs
+        self.__logger = logging.getLogger()
 
     @property
     def items(self):
@@ -52,9 +55,17 @@ class Configuration:
                If the update value doesn't match the type of the config param
 
         """
+        properties = self.__config_params.keys()
         for key, value in kwargs.items():
-            config_param = self.__config_params[key]
-            config_param.value = value
+            if key in properties:
+                config_param = self.__config_params[key]
+                config_param.value = value
+            else:
+                self.__logger.warning(
+                    f'Property "{key}" is invalid. Valid properties are '
+                    f"{', '.join(properties)}. Ignoring and "
+                    "continuing the pipeline."
+                )
 
     def valididate_arguments_for(self, stage):
         """

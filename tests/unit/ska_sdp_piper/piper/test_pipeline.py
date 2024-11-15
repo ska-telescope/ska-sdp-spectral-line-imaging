@@ -166,6 +166,7 @@ def test_should_run_the_pipeline_from_cli_command(
     create_output_mock,
     cli_command_parser,
     timestamp_mock,
+    log_util,
     stages,
     default_scheduler,
 ):
@@ -213,6 +214,16 @@ def test_should_run_the_pipeline_from_cli_command(
     create_output_mock.assert_called_once_with(
         "output_path_from_cli", "test_pipeline"
     )
+
+    log_util.configure.assert_has_calls(
+        [
+            mock.call(
+                "./output/timestamp/test_pipeline_FORMATTED_TIME.log",
+                verbose=False,
+            ),
+        ]
+    )
+
     cli_command_parser.write_yml.assert_called_once_with(
         "./output/timestamp/test_pipeline_FORMATTED_TIME.cli.yml"
     )
@@ -223,7 +234,6 @@ def test_should_run_the_pipeline_from_cli_command(
 
     pipeline_run_mock.assert_called_once_with(
         stages=["a", "b"],
-        verbose=False,
         output_dir="./output/timestamp",
         cli_args={"input": "infile_path"},
     )
@@ -287,25 +297,6 @@ def test_should_run_the_pipeline(
         _output_dir_="output_dir",
         _cli_args_={"input": "path", "dask_scheduler": "10.191"},
         _global_parameters_={"a": 10},
-    )
-
-
-@mock.patch("ska_sdp_piper.piper.pipeline.timestamp")
-def test_should_run_the_pipeline_with_verbose(
-    timestamp_mock, log_util, stages, default_scheduler
-):
-    timestamp_mock.return_value = "FORMATTED_TIME"
-    pipeline = Pipeline(
-        "test_pipeline", stages=stages, scheduler=default_scheduler
-    )
-    pipeline.run("output_dir", [], verbose=True)
-
-    log_util.configure.assert_has_calls(
-        [
-            mock.call(
-                "output_dir/test_pipeline_FORMATTED_TIME.log", verbose=True
-            ),
-        ]
     )
 
 
