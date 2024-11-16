@@ -209,7 +209,18 @@ def get_wcs_from_observation(observation, cell_size, nx, ny) -> WCS:
     """
     Reads an observation from the xradio processing set,
     and extracts WCS information.
-    This is required to generate an instance of Image class.
+    This is required to create an instance of Image class
+    defined in `ska_sdp_datamodels.image.Image`.
+
+    Since Image dimensions are fixed to
+    ["frequency", "polarisation", "y", "x"], the sequence of axes in WCS is
+    ["RA", "DEC", "STOKES", "FREQ"].
+
+    **NOTE:** Polarization axis is defaulted to stokes, with crval = 1.0 and
+    cdelta = 1.0. This is done due to the difference in the sequence of
+    linear and circular polarizations values in FITS and in processing set.
+    Consumer of this function is expected to populate correct values for
+    polarizations present in the processing set.
 
     Parameters
     ----------
@@ -240,16 +251,13 @@ def get_wcs_from_observation(observation, cell_size, nx, ny) -> WCS:
     ref_freq = observation.frequency.reference_frequency["data"]
     freq_unit = observation.frequency.units[0]
 
-    polarization_frame = get_polarization_frame_from_observation(observation)
-    pol = PolarisationFrame.fits_codes[polarization_frame.type]
-    npol = observation.polarization.size
-    if npol > 1:
-        dpol = pol[1] - pol[0]
-    else:
-        dpol = 1.0
+    # NOTE: Hardcoding to stokes polarization,
+    # consumer should fill-in correct polarization value.
+    ref_pol = 1.0
+    del_pol = 1.0
 
     fp_frame = field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
-    # computes immediately
+    # computes FIELD_PHASE_CENTER if its a dask array
     fp_center = field_and_source_xds.FIELD_PHASE_CENTER.to_numpy()
 
     # TODO: Verify: Is the fp_frame equal to frame?
@@ -259,9 +267,6 @@ def get_wcs_from_observation(observation, cell_size, nx, ny) -> WCS:
 
     new_wcs = WCS(naxis=4)
 
-    # Since Image dimensions are: ["frequency", "polarisation", "y", "x"]
-    # WCS / FITS dimensions must be: ["RA", "DEC", "STOKES", "FREQ"]
-
     # computes nx and ny if those are dask arrays
     new_wcs.wcs.crpix = [nx // 2, ny // 2, 1, 1]
     new_wcs.wcs.cunit = ["deg", "deg", "", freq_unit]
@@ -269,10 +274,10 @@ def get_wcs_from_observation(observation, cell_size, nx, ny) -> WCS:
     new_wcs.wcs.cdelt = [
         -cell_size_degree,
         cell_size_degree,
-        dpol,
+        del_pol,
         freq_channel_width,
     ]
-    new_wcs.wcs.crval = [coord.ra.deg, coord.dec.deg, pol[0], ref_freq]
+    new_wcs.wcs.crval = [coord.ra.deg, coord.dec.deg, ref_pol, ref_freq]
     new_wcs.wcs.ctype = ["RA---SIN", "DEC--SIN", "STOKES", "FREQ"]
 
     # NOTE: "ICRS" since sdp-datamodels also have fixed radesys

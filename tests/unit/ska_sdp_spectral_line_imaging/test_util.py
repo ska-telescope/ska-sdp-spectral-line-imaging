@@ -165,7 +165,7 @@ def test_should_get_polarization_frame_from_observation():
 @patch("ska_sdp_spectral_line_imaging.util.SkyCoord")
 @patch("ska_sdp_spectral_line_imaging.util.au")
 @patch("ska_sdp_spectral_line_imaging.util.WCS")
-def test_should_get_wcs_from_observation_for_single_pol(
+def test_should_get_wcs_from_observation_with_pol_I(
     wcs_mock, astro_unit_mock, sky_coord_mock
 ):
     obs = MagicMock(name="observation")
@@ -205,25 +205,3 @@ def test_should_get_wcs_from_observation_for_single_pol(
     assert actual_wcs.wcs.ctype == ["RA---SIN", "DEC--SIN", "STOKES", "FREQ"]
     assert actual_wcs.wcs.radesys == "ICRS"
     assert actual_wcs.wcs.equinox == 2000.0
-
-
-@patch("ska_sdp_spectral_line_imaging.util.SkyCoord")
-@patch("ska_sdp_spectral_line_imaging.util.au")
-@patch("ska_sdp_spectral_line_imaging.util.WCS")
-def test_should_get_wcs_from_observation_when_pol_is_more_than_one(
-    wcs_mock, astro_unit_mock, sky_coord_mock
-):
-    obs = MagicMock(name="observation")
-    # needed to make assertion pass
-    obs.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER.units = [
-        "rad",
-        "rad",
-    ]
-
-    obs.polarization.size = 4
-    obs.polarization.data = ["XX", "XY", "YX", "YY"]
-
-    actual_wcs = get_wcs_from_observation(obs, 3600.0, 256, 256)
-
-    assert actual_wcs.wcs.cdelt[2] == -1
-    assert actual_wcs.wcs.crval[2] == -5
