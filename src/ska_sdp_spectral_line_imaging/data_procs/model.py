@@ -11,29 +11,9 @@ from astropy.wcs import WCS
 
 from ska_sdp_piper.piper.utils import delayed_log
 
+from ..constants import FITS_AXIS_TO_IMAGE_DIM, FITS_CODE_TO_POL_NAME
+
 logger = logging.getLogger()
-
-fits_codes_to_pol_names = {
-    1: "I",
-    2: "Q",
-    3: "U",
-    4: "V",
-    -1: "RR",
-    -2: "LL",
-    -3: "RL",
-    -4: "LR",
-    -5: "XX",
-    -6: "YY",
-    -7: "XY",
-    -8: "YX",
-}
-
-fits_axis_to_image_dims = {
-    "RA": "x",
-    "DEC": "y",
-    "FREQ": "frequency",
-    "STOKES": "polarization",
-}
 
 
 @dask.delayed
@@ -124,7 +104,7 @@ def get_dataarray_from_fits(image_path, hduid=0):
     wcs = WCS(image_path)
 
     dimensions = [
-        fits_axis_to_image_dims[axis] for axis in reversed(wcs.axis_type_names)
+        FITS_AXIS_TO_IMAGE_DIM[axis] for axis in reversed(wcs.axis_type_names)
     ]
 
     coordinates = {}
@@ -137,7 +117,7 @@ def get_dataarray_from_fits(image_path, hduid=0):
     if "polarization" in dimensions:
         pol_wcs = wcs.sub(["stokes"])
         pol_codes = pol_wcs.wcs_pix2world(range(pol_wcs.pixel_shape[0]), 0)[0]
-        pol_names = [fits_codes_to_pol_names[code] for code in pol_codes]
+        pol_names = [FITS_CODE_TO_POL_NAME[code] for code in pol_codes]
         coordinates["polarization"] = pol_names
 
     data = get_dask_array_from_fits(image_path, hduid, shape, dtype)

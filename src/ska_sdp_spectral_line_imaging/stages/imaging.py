@@ -11,6 +11,7 @@ from ska_sdp_piper.piper.configurations import (
 )
 from ska_sdp_piper.piper.stage import ConfigurableStage
 
+from ..constants import SPEED_OF_LIGHT
 from ..data_procs.imaging import clean_cube
 from ..util import (
     estimate_cell_size,
@@ -21,9 +22,6 @@ from ..util import (
 )
 
 logger = logging.getLogger()
-
-# TODO: Find better place for constants
-SPEED_OF_LIGHT = 299792458
 
 
 @ConfigurableStage(
