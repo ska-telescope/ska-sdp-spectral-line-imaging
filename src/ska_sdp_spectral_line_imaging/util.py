@@ -174,10 +174,13 @@ def estimate_image_size(
     return np.ceil(image_size / 100) * 100
 
 
-def get_polarization(observation: xr.Dataset) -> PolarisationFrame:
+def get_polarization_frame_from_observation(
+    observation: xr.Dataset,
+) -> PolarisationFrame:
     """
     Reads an observation from the xradio processing set,
-    and extracts WCS information.
+    and generates a PolarizationFrame instance from the
+    polarization coordinates.
     This is required to generate an instance of Image class.
 
     Parameters
@@ -237,7 +240,7 @@ def get_wcs(observation, cell_size, nx, ny) -> WCS:
     ref_freq = observation.frequency.reference_frequency["data"]
     freq_unit = observation.frequency.units[0]
 
-    polarization_frame = get_polarization(observation)
+    polarization_frame = get_polarization_frame_from_observation(observation)
     pol = PolarisationFrame.fits_codes[polarization_frame.type]
     npol = observation.polarization.size
     if npol > 1:

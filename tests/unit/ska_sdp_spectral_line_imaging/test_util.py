@@ -15,7 +15,7 @@ from ska_sdp_spectral_line_imaging.util import (
     export_image_as,
     export_to_fits,
     export_to_zarr,
-    get_polarization,
+    get_polarization_frame_from_observation,
     get_wcs,
     rechunk,
 )
@@ -154,7 +154,7 @@ def test_should_get_polarization_frame_from_observation():
 
     expected_pol_frame = PolarisationFrame("stokesIQUV")
 
-    actual_pol_frame = get_polarization(obs)
+    actual_pol_frame = get_polarization_frame_from_observation(obs)
 
     assert actual_pol_frame == expected_pol_frame
 

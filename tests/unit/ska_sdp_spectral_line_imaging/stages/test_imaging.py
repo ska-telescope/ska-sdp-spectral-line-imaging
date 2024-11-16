@@ -8,7 +8,8 @@ from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
+    "ska_sdp_spectral_line_imaging.stages.imaging."
+    "get_polarization_frame_from_observation",
     return_value="polarization_frame",
 )
 @mock.patch(
@@ -107,7 +108,8 @@ def test_should_do_imaging_for_dirty_image_when_nmajor_iter_is_zero(
     ],
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
+    "ska_sdp_spectral_line_imaging.stages.imaging."
+    "get_polarization_frame_from_observation",
     return_value="polarization_frame",
 )
 @mock.patch(
@@ -191,7 +193,8 @@ def test_should_export_clean_artefacts(
 
 
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.get_polarization",
+    "ska_sdp_spectral_line_imaging.stages.imaging."
+    "get_polarization_frame_from_observation",
     return_value="polarization_frame",
 )
 @mock.patch(

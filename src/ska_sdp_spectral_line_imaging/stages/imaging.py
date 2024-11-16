@@ -16,7 +16,7 @@ from ..util import (
     estimate_cell_size,
     estimate_image_size,
     export_image_as,
-    get_polarization,
+    get_polarization_frame_from_observation,
     get_wcs,
 )
 
@@ -234,7 +234,7 @@ def imaging_stage(
 
     gridding_params["nx"] = gridding_params["ny"] = image_size
 
-    polarization_frame = get_polarization(ps)
+    polarization_frame = get_polarization_frame_from_observation(ps)
     wcs = get_wcs(ps, cell_size, gridding_params["nx"], gridding_params["ny"])
 
     imaging_products = clean_cube(
