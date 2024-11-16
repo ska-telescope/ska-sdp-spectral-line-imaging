@@ -16,7 +16,7 @@ from ska_sdp_spectral_line_imaging.util import (
     export_to_fits,
     export_to_zarr,
     get_polarization_frame_from_observation,
-    get_wcs,
+    get_wcs_from_observation,
     rechunk,
 )
 
@@ -192,7 +192,7 @@ def test_should_get_wcs_from_observation_for_single_pol(
     # setting "rad" unit to random value
     astro_unit_mock.rad = 2.0
 
-    actual_wcs = get_wcs(obs, 3600.0, 256, 256)
+    actual_wcs = get_wcs_from_observation(obs, 3600.0, 256, 256)
 
     sky_coord_mock.assert_called_once_with(ra=-10.0, dec=10.0, frame="fk5")
     wcs_mock.assert_called_once_with(naxis=4)
@@ -223,7 +223,7 @@ def test_should_get_wcs_from_observation_when_pol_is_more_than_one(
     obs.polarization.size = 4
     obs.polarization.data = ["XX", "XY", "YX", "YY"]
 
-    actual_wcs = get_wcs(obs, 3600.0, 256, 256)
+    actual_wcs = get_wcs_from_observation(obs, 3600.0, 256, 256)
 
     assert actual_wcs.wcs.cdelt[2] == -1
     assert actual_wcs.wcs.crval[2] == -5

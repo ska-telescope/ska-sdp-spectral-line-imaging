@@ -13,7 +13,8 @@ from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
     return_value="polarization_frame",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs_from_observation",
+    return_value="wcs",
 )
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_image_as")
@@ -113,7 +114,8 @@ def test_should_do_imaging_for_dirty_image_when_nmajor_iter_is_zero(
     return_value="polarization_frame",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs_from_observation",
+    return_value="wcs",
 )
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.export_image_as")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
@@ -198,7 +200,8 @@ def test_should_export_clean_artefacts(
     return_value="polarization_frame",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs", return_value="wcs"
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs_from_observation",
+    return_value="wcs",
 )
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_cell_size")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_image_size")

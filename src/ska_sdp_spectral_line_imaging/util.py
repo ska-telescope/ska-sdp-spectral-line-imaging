@@ -205,7 +205,7 @@ def get_polarization_frame_from_observation(
 
 
 # NOTE: This does not handle MOMENT images, only FREQ
-def get_wcs(observation, cell_size, nx, ny) -> WCS:
+def get_wcs_from_observation(observation, cell_size, nx, ny) -> WCS:
     """
     Reads an observation from the xradio processing set,
     and extracts WCS information.
