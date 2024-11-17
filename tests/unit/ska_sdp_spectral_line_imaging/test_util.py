@@ -147,7 +147,6 @@ def test_should_export_to_zarr_with_attrs():
     assert task == "zarr_task"
 
 
-# NOTE: Not mocking PolarizationFrame
 def test_should_get_polarization_frame_from_observation():
     obs = MagicMock(name="observation")
     obs.polarization.data = ["I", "Q", "U", "V"]
@@ -159,9 +158,6 @@ def test_should_get_polarization_frame_from_observation():
     assert actual_pol_frame == expected_pol_frame
 
 
-# NOTE: Not mocking "get_polarization" and "PolarisationFrame"
-# as "get_wcs" function covers more functionality of PolarisationFrame
-# which is not covered in any other unit test
 @patch("ska_sdp_spectral_line_imaging.util.SkyCoord")
 @patch("ska_sdp_spectral_line_imaging.util.au")
 @patch("ska_sdp_spectral_line_imaging.util.WCS")
@@ -170,12 +166,11 @@ def test_should_get_wcs_from_observation_with_pol_I(
 ):
     obs = MagicMock(name="observation")
 
-    field_and_source_xds = obs.VISIBILITY.field_and_source_xds
-    field_and_source_xds.FIELD_PHASE_CENTER.units = ["rad", "rad"]
-    field_and_source_xds.FIELD_PHASE_CENTER.frame = "fk5"
-    field_and_source_xds.FIELD_PHASE_CENTER.to_numpy.return_value = np.array(
-        [-5.0, 5.0]
-    )
+    field_phase_center = obs.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER
+    field_phase_center.sky_dir_label = xr.DataArray(["ra", "dec"])
+    field_phase_center.units = ["rad", "rad"]
+    field_phase_center.frame = "fk5"
+    field_phase_center.to_numpy.return_value = np.array([-5.0, 5.0])
 
     obs.frequency.channel_width = {"data": 65000}
     obs.frequency.reference_frequency = {"data": 10000}
@@ -205,3 +200,31 @@ def test_should_get_wcs_from_observation_with_pol_I(
     assert actual_wcs.wcs.ctype == ["RA---SIN", "DEC--SIN", "STOKES", "FREQ"]
     assert actual_wcs.wcs.radesys == "ICRS"
     assert actual_wcs.wcs.equinox == 2000.0
+
+
+def test_should_raise_value_error_if_coord_label_is_not_ra_dec():
+    obs = MagicMock(name="observation")
+    field_phase_center = obs.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER
+    field_phase_center.sky_dir_label = xr.DataArray(["ra"])
+
+    with pytest.raises(ValueError) as err:
+        get_wcs_from_observation(obs, 3600.0, 256, 256)
+
+    assert (
+        str(err.value)
+        == "Phase field center coordinates labels are not equal to RA / DEC."
+    )
+
+
+def test_should_raise_value_error_if_phase_center_unit_is_not_rad():
+    obs = MagicMock(name="observation")
+    field_phase_center = obs.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER
+    field_phase_center.sky_dir_label = xr.DataArray(["ra", "dec"])
+    field_phase_center.units = ["deg"]
+
+    with pytest.raises(ValueError) as err:
+        get_wcs_from_observation(obs, 3600.0, 256, 256)
+
+    assert (
+        str(err.value) == "Phase field center value is not defined in radian."
+    )

@@ -237,14 +237,33 @@ def get_wcs_from_observation(observation, cell_size, nx, ny) -> WCS:
     -------
         WCS
     """
-    field_and_source_xds = observation.VISIBILITY.field_and_source_xds
+    field_phase_center = (
+        observation.VISIBILITY.field_and_source_xds.FIELD_PHASE_CENTER
+    )
 
-    assert (
-        field_and_source_xds.FIELD_PHASE_CENTER.units[0] == "rad"
-    ), "Phase field center value is not defined in radian."
-    assert (
-        field_and_source_xds.FIELD_PHASE_CENTER.units[1] == "rad"
-    ), "Phase field center value is not defined in radian."
+    if set(field_phase_center.sky_dir_label.values) != {"ra", "dec"}:
+        raise ValueError(
+            "Phase field center coordinates labels are not equal to RA / DEC."
+        )
+    if set(field_phase_center.units) != {"rad"}:
+        raise ValueError("Phase field center value is not defined in radian.")
+
+    # computes FIELD_PHASE_CENTER if its a dask array
+    fp_center = {
+        label: value
+        for label, value in zip(
+            field_phase_center.sky_dir_label.values,
+            field_phase_center.to_numpy(),
+        )
+    }
+    fp_frame = field_phase_center.frame.lower()
+
+    # TODO: Verify: Is the fp_frame equal to frame?
+    coord = SkyCoord(
+        ra=fp_center["ra"] * au.rad,
+        dec=fp_center["dec"] * au.rad,
+        frame=fp_frame,
+    )
 
     cell_size_degree = cell_size / 3600
     freq_channel_width = observation.frequency.channel_width["data"]
@@ -255,15 +274,6 @@ def get_wcs_from_observation(observation, cell_size, nx, ny) -> WCS:
     # consumer should fill-in correct polarization value.
     ref_pol = 1.0
     del_pol = 1.0
-
-    fp_frame = field_and_source_xds.FIELD_PHASE_CENTER.frame.lower()
-    # computes FIELD_PHASE_CENTER if its a dask array
-    fp_center = field_and_source_xds.FIELD_PHASE_CENTER.to_numpy()
-
-    # TODO: Verify: Is the fp_frame equal to frame?
-    coord = SkyCoord(
-        ra=fp_center[0] * au.rad, dec=fp_center[1] * au.rad, frame=fp_frame
-    )
 
     new_wcs = WCS(naxis=4)
 
