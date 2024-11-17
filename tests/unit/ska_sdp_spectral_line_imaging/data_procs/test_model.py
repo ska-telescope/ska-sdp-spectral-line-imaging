@@ -1,154 +1,15 @@
 # pylint: disable=no-member
-import asyncio
 
 import mock
 import numpy as np
 import pytest
 import xarray as xr
-from mock import MagicMock
 
 from ska_sdp_spectral_line_imaging.data_procs.model import (
     apply_power_law_scaling,
     fit_polynomial_on_visibility,
-    get_dask_array_from_fits,
-    get_dataarray_from_fits,
-    read_fits_memmapped_delayed,
     report_peak_visibility,
 )
-
-
-@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.fits.open")
-def test_should_read_data_from_fits_delayed(fits_open_mock):
-    hud1 = MagicMock(name="hud1")
-    hud1.data = "data"
-    fits_open_mock.return_value = fits_open_mock
-    fits_open_mock.__enter__.return_value = ["hud0", hud1]
-
-    output = read_fits_memmapped_delayed("/path/image", 1).compute()
-
-    fits_open_mock.assert_called_once_with(
-        "/path/image", mode="denywrite", memmap=True, lazy_load_hdus=True
-    )
-    assert output == "data"
-
-
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.data_procs.model."
-    "read_fits_memmapped_delayed"
-)
-@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.dask.array")
-def test_should_get_dask_array_from_fits(dask_array_mock, read_fits_mem_mock):
-    dask_array_mock.from_delayed.return_value = "dask_array"
-    read_fits_mem_mock.return_value = "fits_data"
-
-    loop = asyncio.get_event_loop()
-
-    output = get_dask_array_from_fits(
-        "/path/image",
-        1,
-        (16, 16),
-        ">f8",
-    )
-
-    read_fits_mem_mock.assert_called_once_with("/path/image", 1)
-
-    read_fits_delayed_task = dask_array_mock.from_delayed.call_args.args[0]
-    task_output = loop.run_until_complete(read_fits_delayed_task)
-    assert task_output == "fits_data"
-    assert dask_array_mock.from_delayed.call_args.kwargs["shape"] == (16, 16)
-    assert dask_array_mock.from_delayed.call_args.kwargs["dtype"] == ">f8"
-
-    assert output == "dask_array"
-
-
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.data_procs.model.get_dask_array_from_fits"
-)
-@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.fits.open")
-@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.WCS")
-def test_should_read_fits_image_when_fits_is_4d(
-    wcs_mock, fits_open_mock, get_dask_array_from_fits_mock
-):
-    hud0 = MagicMock(name="fits_hud_0")
-    hud0.data.shape = (2, 3, 1, 1)  # pol, freq, y / dec, x / ra
-    hud0.data.dtype = ">f4"
-
-    wcs = MagicMock(name="wcs")
-    wcs.axis_type_names = ["RA", "DEC", "FREQ", "STOKES"]
-    spectral_wcs = MagicMock(name="spectral_wcs")
-    spectral_wcs.pixel_shape = [3]
-    spectral_wcs.wcs_pix2world.return_value = [
-        [10.0, 20.0, 30.0]
-    ]  # frequencies
-    stokes_wcs = MagicMock(name="stokes_wcs")
-    stokes_wcs.pixel_shape = [2]
-    stokes_wcs.wcs_pix2world.return_value = [[-7, -8]]  # fits_codes
-    wcs.sub.side_effect = [spectral_wcs, stokes_wcs]
-
-    fits_open_mock.return_value = fits_open_mock
-    fits_open_mock.__enter__.return_value = [hud0]
-    wcs_mock.return_value = wcs
-    get_dask_array_from_fits_mock.return_value = (
-        np.arange(6).reshape(hud0.data.shape).astype(np.float32)
-    )
-
-    expected_xrda = xr.DataArray(
-        np.array(
-            [[[[0.0]], [[1.0]], [[2.0]]], [[[3.0]], [[4.0]], [[5.0]]]],
-        ),
-        dims=["polarization", "frequency", "y", "x"],
-        coords={"polarization": ["XY", "YX"], "frequency": [10.0, 20.0, 30.0]},
-    )
-
-    output_xrda = get_dataarray_from_fits("image_path", 0)
-
-    fits_open_mock.assert_called_once_with("image_path", memmap=True)
-    wcs_mock.assert_called_once_with("image_path")
-    wcs.sub.assert_has_calls([mock.call(["spectral"]), mock.call(["stokes"])])
-    spectral_wcs.wcs_pix2world.assert_called_once_with(range(0, 3), 0)
-    stokes_wcs.wcs_pix2world.assert_called_once_with(range(0, 2), 0)
-    get_dask_array_from_fits_mock.assert_called_once_with(
-        "image_path", 0, (2, 3, 1, 1), ">f4"
-    )
-    xr.testing.assert_allclose(output_xrda, expected_xrda)
-    assert output_xrda.chunks is None
-
-
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.data_procs.model.get_dask_array_from_fits"
-)
-@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.fits.open")
-@mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.WCS")
-def test_should_read_fits_image_when_fits_has_no_freq_pol(
-    wcs_mock, fits_open_mock, get_dask_array_from_fits_mock
-):
-    hud0 = MagicMock(name="fits_hud_0")
-    hud0.data.shape = (2, 2)
-    hud0.data.dtype = ">f4"
-
-    wcs = MagicMock(name="wcs")
-    wcs.axis_type_names = ["RA", "DEC"]
-
-    fits_open_mock.return_value = fits_open_mock
-    fits_open_mock.__enter__.return_value = [hud0]
-    wcs_mock.return_value = wcs
-    get_dask_array_from_fits_mock.return_value = (
-        np.arange(4).reshape((2, 2)).astype(np.float32)
-    )
-
-    expected_xrda = xr.DataArray(
-        np.array([[0, 1], [2, 3]], dtype=np.float32), dims=["y", "x"]
-    )
-
-    output_xrda = get_dataarray_from_fits("image_path", 0)
-
-    fits_open_mock.assert_called_once_with("image_path", memmap=True)
-    wcs_mock.assert_called_once_with("image_path")
-    get_dask_array_from_fits_mock.assert_called_once_with(
-        "image_path", 0, (2, 2), ">f4"
-    )
-    xr.testing.assert_allclose(output_xrda, expected_xrda)
-    assert output_xrda.chunks is None
 
 
 @mock.patch("ska_sdp_spectral_line_imaging.data_procs.model.logger")

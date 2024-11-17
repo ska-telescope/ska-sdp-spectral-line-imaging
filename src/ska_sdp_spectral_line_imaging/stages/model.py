@@ -20,11 +20,10 @@ from ska_sdp_piper.piper.utils import delayed_log
 from ..data_procs.model import (
     apply_power_law_scaling,
     fit_polynomial_on_visibility,
-    get_dataarray_from_fits,
     report_peak_visibility,
 )
 from ..upstream_output import UpstreamOutput
-from ..util import export_to_zarr
+from ..util import export_to_zarr, get_dataarray_from_fits
 
 logger = logging.getLogger()
 

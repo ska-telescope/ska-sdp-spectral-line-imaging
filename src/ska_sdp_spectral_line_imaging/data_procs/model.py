@@ -1,30 +1,14 @@
 import logging
-from typing import Tuple
 
 import dask
 import dask.array
 import dask.delayed
 import numpy as np
 import xarray as xr
-from astropy.io import fits
-from astropy.wcs import WCS
 
 from ska_sdp_piper.piper.utils import delayed_log
 
-from ..constants import FITS_AXIS_TO_IMAGE_DIM, FITS_CODE_TO_POL_NAME
-
 logger = logging.getLogger()
-
-
-@dask.delayed
-def read_fits_memmapped_delayed(image_path, hduid=0):
-    with fits.open(
-        image_path, mode="denywrite", memmap=True, lazy_load_hdus=True
-    ) as hdul:
-        hdu = hdul[hduid]
-        data = hdu.data
-
-    return data
 
 
 def report_peak_visibility(visibility, unit):
@@ -45,88 +29,6 @@ def report_peak_visibility(visibility, unit):
         peak_frequency=peak_frequency,
         max_visibility=max_visibility,
         unit=unit,
-    )
-
-
-def get_dask_array_from_fits(
-    image_path: str,
-    hduid: int,
-    shape: Tuple,
-    dtype: type,
-):
-    data = dask.array.from_delayed(
-        read_fits_memmapped_delayed(image_path, hduid),
-        shape=shape,
-        dtype=dtype,
-    )
-
-    return data
-
-
-def get_dataarray_from_fits(image_path, hduid=0):
-    """
-    Reads FITS image and returns an xarray dataarray with
-    dimensions ["polarization", "frequency", "y", "x"] or
-    only ["y", "x"] if data is 2 dimensionsional.
-
-    Function can also read coordinte values for dimensions "polarization"
-    and "frequency". Spatial coordinates "y" and "x" are linear, and
-    the their coordinate values are not populatedin output dataarray.
-    If needed, those can be populated later.
-    Refer ska_sdp_datamodels.image.Image.constructor.
-
-    The image data is read as a dask array using delayed read calls to
-    astropy.fits.open.
-
-    Parameters
-    ----------
-    image_path: str
-        Path to FITS image
-
-    hduid: int
-        The HDU number in the HDUList read from FITS image.
-
-    Returns
-    -------
-        xarray.DataArray
-
-    Raises
-    ------
-        NotImplementedError
-            If chunksizes are passed as parameter
-    """
-    # opening image only to get metadata
-    with fits.open(image_path, memmap=True) as hdul:
-        hdu = hdul[hduid]
-        shape = hdu.data.shape
-        dtype = hdu.data.dtype
-
-    wcs = WCS(image_path)
-
-    dimensions = [
-        FITS_AXIS_TO_IMAGE_DIM[axis] for axis in reversed(wcs.axis_type_names)
-    ]
-
-    coordinates = {}
-    if "frequency" in dimensions:
-        spectral_wcs = wcs.sub(["spectral"])
-        frequency_range = spectral_wcs.wcs_pix2world(
-            range(spectral_wcs.pixel_shape[0]), 0
-        )[0]
-        coordinates["frequency"] = frequency_range
-    if "polarization" in dimensions:
-        pol_wcs = wcs.sub(["stokes"])
-        pol_codes = pol_wcs.wcs_pix2world(range(pol_wcs.pixel_shape[0]), 0)[0]
-        pol_names = [FITS_CODE_TO_POL_NAME[code] for code in pol_codes]
-        coordinates["polarization"] = pol_names
-
-    data = get_dask_array_from_fits(image_path, hduid, shape, dtype)
-
-    return xr.DataArray(
-        data,
-        dims=dimensions,
-        coords=coordinates,
-        name="fits_image_arr",
     )
 
 
