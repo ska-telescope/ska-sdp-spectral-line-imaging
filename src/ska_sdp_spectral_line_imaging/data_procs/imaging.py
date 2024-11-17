@@ -12,7 +12,12 @@ from ska_sdp_func_python.xradio.visibility.operations import (
 )
 
 from ..constants import SPEED_OF_LIGHT
-from ..util import estimate_cell_size_in_arcsec, estimate_image_size
+from ..util import (
+    estimate_cell_size_in_arcsec,
+    estimate_image_size,
+    get_polarization_frame_from_observation,
+    get_wcs_from_observation,
+)
 from .deconvolution import deconvolve, restore_cube
 from .predict import predict_for_channels
 
@@ -253,8 +258,6 @@ def clean_cube(
     n_iter_major,
     gridding_params,
     deconvolution_params,
-    polarization_frame,
-    wcs,
     beam_info,
 ):
     """
@@ -272,10 +275,6 @@ def clean_cube(
             Prameters to perform gridding.
         deconvolution_params: dict
             Deconvolution parameters
-        polarization_frame: PolarisationFrame
-            Polarisation information
-        wcs: WCS
-            WCS information
         beam_info:
             Clean beam e.g. {"bmaj":0.1, "bmin":0.05, "bpa":-60.0}.
             Units are deg, deg, deg
@@ -291,12 +290,15 @@ def clean_cube(
     nx = gridding_params.get("nx")
     ny = gridding_params.get("ny")
 
+    polarization_frame = get_polarization_frame_from_observation(ps)
+    wcs = get_wcs_from_observation(ps, cell_size, nx, ny)
+
     dirty_image = cube_imaging(
         ps,
         cell_size,
-        gridding_params["nx"],
-        gridding_params["ny"],
-        gridding_params["epsilon"],
+        nx,
+        ny,
+        epsilon,
         wcs,
         polarization_frame,
     )

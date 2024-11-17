@@ -206,7 +206,19 @@ def test_should_generate_psf_image(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.data_procs.imaging.cube_imaging",
 )
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging."
+    "get_polarization_frame_from_observation",
+    return_value="polarization_frame",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging."
+    "get_wcs_from_observation",
+    return_value="wcs",
+)
 def test_should_generate_dirty_image_if_niter_major_is_zero(
+    get_wcs_mock,
+    get_pol_mock,
     cube_imaging_mock,
     restore_cube_mock,
     deconvolve_mock,
@@ -232,10 +244,11 @@ def test_should_generate_dirty_image_if_niter_major_is_zero(
         n_iter_major,
         gridding_params,
         deconvolution_params,
-        "polarization_frame",
-        "wcs",
         "beam_info",
     )
+
+    get_pol_mock.assert_called_once_with(ps)
+    get_wcs_mock.assert_called_once_with(ps, 123, 1234, 4567)
 
     cube_imaging_mock.assert_called_once_with(
         ps, 123, 1234, 4567, 1, "wcs", "polarization_frame"
@@ -269,7 +282,19 @@ def test_should_generate_dirty_image_if_niter_major_is_zero(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.data_procs.imaging.dask.array",
 )
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging."
+    "get_polarization_frame_from_observation",
+    return_value="polarization_frame",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging."
+    "get_wcs_from_observation",
+    return_value="wcs",
+)
 def test_should_generate_restored_image_and_other_imaging_products(
+    get_wcs_mock,
+    get_pol_mock,
     dask_array_mock,
     cube_imaging_mock,
     restore_cube_mock,
@@ -344,10 +369,11 @@ def test_should_generate_restored_image_and_other_imaging_products(
         n_iter_major,
         gridding_params,
         deconvolution_params,
-        "polarization_frame",
-        "wcs",
         "beam_info",
     )
+
+    get_pol_mock.assert_called_once_with(ps)
+    get_wcs_mock.assert_called_once_with(ps, 123, 1234, 4567)
 
     import_image_from_fits_mock.assert_called_once_with(
         "path_to_psf", fixpol=True
@@ -434,9 +460,6 @@ def test_should_generate_restored_image_and_other_imaging_products(
     "ska_sdp_spectral_line_imaging.data_procs.imaging.predict_for_channels",
 )
 @mock.patch(
-    "ska_sdp_spectral_line_imaging.data_procs.imaging.import_image_from_fits"
-)
-@mock.patch(
     "ska_sdp_spectral_line_imaging.data_procs.imaging.Image",
 )
 @mock.patch(
@@ -455,7 +478,19 @@ def test_should_generate_restored_image_and_other_imaging_products(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.data_procs.imaging.generate_psf_image",
 )
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging."
+    "get_polarization_frame_from_observation",
+    return_value="polarization_frame",
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging."
+    "get_wcs_from_observation",
+    return_value="wcs",
+)
 def test_should_create_psf_if_psf_is_none(
+    get_wcs_mock,
+    get_pol_mock,
     generate_psf_image_mock,
     dask_array_mock,
     data_array_mock,
@@ -463,7 +498,6 @@ def test_should_create_psf_if_psf_is_none(
     restore_cube_mock,
     deconvolve_mock,
     image_mock,
-    import_image_from_fits_mock,
     predict_mock,
     subtract_mock,
 ):
@@ -489,8 +523,8 @@ def test_should_create_psf_if_psf_is_none(
         "cell_size": 123,
         "image_size": 1,
         "scaling_factor": 2.0,
-        "nx": 1,
-        "ny": 1,
+        "nx": 1234,
+        "ny": 4567,
     }
     deconvolution_params = {}
     psf_image_path = None
@@ -502,13 +536,14 @@ def test_should_create_psf_if_psf_is_none(
         n_iter_major,
         gridding_params,
         deconvolution_params,
-        "polarization_frame",
-        "wcs",
         "beam_info",
     )
 
+    get_pol_mock.assert_called_once_with(ps)
+    get_wcs_mock.assert_called_once_with(ps, 123, 1234, 4567)
+
     generate_psf_image_mock.assert_called_once_with(
-        ps, 123, 1, 1, 0.0001, "wcs", "polarization_frame"
+        ps, 123, 1234, 4567, 0.0001, "wcs", "polarization_frame"
     )
 
     deconvolve_mock.assert_called_once_with(

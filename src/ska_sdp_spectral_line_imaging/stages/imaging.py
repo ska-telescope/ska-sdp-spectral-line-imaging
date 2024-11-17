@@ -14,11 +14,7 @@ from ..data_procs.imaging import (
     get_cell_size_from_obs,
     get_image_size_from_obs,
 )
-from ..util import (
-    export_image_as,
-    get_polarization_frame_from_observation,
-    get_wcs_from_observation,
-)
+from ..util import export_image_as
 
 logger = logging.getLogger()
 
@@ -214,12 +210,8 @@ def imaging_stage(
 
     logger.info(f"Using image size = {image_size} pixels")
 
+    # clean_cube function expects 'nx' and 'ny' in gridding_params
     gridding_params["nx"] = gridding_params["ny"] = image_size
-
-    polarization_frame = get_polarization_frame_from_observation(ps)
-    wcs = get_wcs_from_observation(
-        ps, cell_size, gridding_params["nx"], gridding_params["ny"]
-    )
 
     imaging_products = clean_cube(
         ps,
@@ -227,8 +219,6 @@ def imaging_stage(
         n_iter_major,
         gridding_params,
         deconvolution_params,
-        polarization_frame,
-        wcs,
         beam_info,
     )
 
