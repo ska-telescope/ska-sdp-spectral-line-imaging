@@ -7,6 +7,8 @@ from ska_sdp_spectral_line_imaging.data_procs.imaging import (
     clean_cube,
     cube_imaging,
     generate_psf_image,
+    get_cell_size_from_obs,
+    get_image_size_from_obs,
     image_ducc,
 )
 
@@ -522,3 +524,52 @@ def test_should_create_psf_if_psf_is_none(
         residual_image,
         "beam_info",
     )
+
+
+@mock.patch("ska_sdp_spectral_line_imaging.data_procs.imaging.np")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging."
+    "estimate_cell_size_in_arcsec"
+)
+def test_should_get_cell_size_from_obs(estimate_cell_size_mock, numpy_mock):
+    max_baseline = Mock(name="max_baseline")
+    max_baseline.round.return_value = 3.45
+
+    observation = MagicMock(name="xradio_observation_xds")
+    observation.frequency.reference_frequency = {"data": 123.01}
+    observation.UVW.max.return_value = ("umax", "vmax", "wmax")
+    observation.frequency.max.return_value = 400
+
+    numpy_mock.abs.return_value = observation.UVW
+    numpy_mock.maximum.return_value = max_baseline
+
+    get_cell_size_from_obs(observation, 2.0)
+
+    numpy_mock.abs.assert_called_once_with(observation.UVW)
+    observation.UVW.max.assert_called_once_with(dim=["time", "baseline_id"])
+    numpy_mock.maximum.assert_called_once_with("umax", "vmax")
+    max_baseline.round.assert_called_once_with(2)
+
+    estimate_cell_size_mock.assert_called_once_with(
+        3.45,
+        749481.145,
+        2.0,
+    )
+
+
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.data_procs.imaging.estimate_image_size"
+)
+def test_should_get_image_size_from_obs(estimate_image_size_mock):
+    observation = MagicMock(name="xradio_observation_xds")
+    observation.frequency.min.return_value = 200
+    min_antenna_diameter = Mock(name="min_antenna_diameter")
+    observation.antenna_xds.DISH_DIAMETER.min.return_value = (
+        min_antenna_diameter
+    )
+    min_antenna_diameter.round.return_value = 50.5
+
+    get_image_size_from_obs(observation, 0.75)
+
+    min_antenna_diameter.round.assert_called_once_with(2)
+    estimate_image_size_mock.assert_called_once_with(1498962.29, 50.5, 0.75)

@@ -113,7 +113,6 @@ def estimate_cell_size_in_arcsec(
 ) -> float:
     """
     A generalized function which estimates cell size for given baseline value.
-    The baseline can be maximum value of U, V or W data.
 
     This function is dask compatible i.e. can take dask arrays as input,
     and return dask array as output.
@@ -121,10 +120,10 @@ def estimate_cell_size_in_arcsec(
     Parameters
     ----------
         baseline: float
-            Baseline length in meters.
+            Baseline length in meters. For better estimation, this has to be
+            the maximum baseline length in any direction.
         wavelength: float
-            Wavelength in meters.
-            For better estimation, it has to be
+            Wavelength in meters. For better estimation, it has to be
             the minimum wavelength observed.
         factor: float
             Scaling factor.
@@ -135,7 +134,7 @@ def estimate_cell_size_in_arcsec(
             Cell size in arcsecond.
             **The output is rounded** to the 2 decimal places.
     """
-    baseline /= wavelength
+    baseline = baseline / wavelength
 
     cell_size_rad = 1.0 / (2.0 * factor * baseline)
 
@@ -157,9 +156,11 @@ def estimate_image_size(
     Parameters
     ----------
         wavelength: float
-            Maximum wavelength of the observation in meter.
+            Wavelength in meters. For better estimation,
+            this has to be the maximum wavelength observed.
         antenna_diameter: float
-            Diameter of the antenna in meter.
+            Diameter of the antenna in meters. For better estimation,
+            this has to be the minimum of the diameters of all antennas.
         cell_size: float
             Cell size in arcsecond.
 

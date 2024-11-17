@@ -11,6 +11,8 @@ from ska_sdp_func_python.xradio.visibility.operations import (
     subtract_visibility,
 )
 
+from ..constants import SPEED_OF_LIGHT
+from ..util import estimate_cell_size_in_arcsec, estimate_image_size
 from .deconvolution import deconvolve, restore_cube
 from .predict import predict_for_channels
 
@@ -393,3 +395,72 @@ def clean_cube(
         }
 
     return imaging_products
+
+
+def get_cell_size_from_obs(observation, scaling_factor):
+    """
+    A helper function which reads UVW and other metadata from
+    xradio observation dataset,
+    and estimates cell size to be used for imaging.
+
+    The function is dask compatible, i.e. input dask arrays are
+    not eagerly computed. Consumer of this function must call `compute()`
+    on the returned object to get the actual values.
+
+    Parameters
+    ----------
+        observation: xarray.Dataset
+            Xradio observation
+        scaling_factor: float
+            Scaling factor for estimation of cell size
+
+    Returns
+    -------
+        xarray.Dataarray
+            Dataarray which wraps a dask array of size 1, representing
+            cell size value.
+    """
+    umax, vmax, _ = np.abs(observation.UVW).max(dim=["time", "baseline_id"])
+    # TODO: handle units properly. eg. Hz, MHz etc.
+    #  Assumption, current unit is Hz.
+    maximum_frequency = observation.frequency.max()
+    minimum_wavelength = SPEED_OF_LIGHT / maximum_frequency
+
+    # Taking maximum of u and v baselines, rounded
+    max_baseline = np.maximum(umax, vmax).round(2)
+
+    return estimate_cell_size_in_arcsec(
+        max_baseline, minimum_wavelength, scaling_factor
+    )
+
+
+def get_image_size_from_obs(observation, cell_size):
+    """
+    A helper function which reads antenna information and other metadata from
+    xradio observation dataset,
+    and estimates image size to be used for imaging.
+
+    The function is dask compatible, i.e. input dask arrays are
+    not eagerly computed. Consumer of this function must call `compute()`
+    on the returned object to get the actual values.
+
+    Parameters
+    ----------
+        observation: xarray.Dataset
+            Xradio observation
+        cell_size: float
+            Cell size in arcsecond.
+
+    Returns
+    -------
+        xarray.Dataarray
+            Dataarray which wraps a dask array of size 1, representing
+            image size value.
+    """
+    maximum_wavelength = SPEED_OF_LIGHT / observation.frequency.min()
+    # rounded to 2 decimals
+    min_antenna_diameter = observation.antenna_xds.DISH_DIAMETER.min().round(2)
+
+    return estimate_image_size(
+        maximum_wavelength, min_antenna_diameter, cell_size
+    )

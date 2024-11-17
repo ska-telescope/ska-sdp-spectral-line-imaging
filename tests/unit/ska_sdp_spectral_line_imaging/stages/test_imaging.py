@@ -3,11 +3,7 @@ import pytest
 from mock import MagicMock, mock
 from mock.mock import Mock, call
 
-from ska_sdp_spectral_line_imaging.stages.imaging import (
-    get_cell_size_from_obs,
-    get_image_size_from_obs,
-    imaging_stage,
-)
+from ska_sdp_spectral_line_imaging.stages.imaging import imaging_stage
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
@@ -213,11 +209,9 @@ def test_should_export_clean_artefacts(
 @mock.patch(
     "ska_sdp_spectral_line_imaging.stages.imaging.get_image_size_from_obs"
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.np")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
 def test_imaging_stage_should_calculate_image_and_cell_size_if_null(
     clean_cube_mock,
-    numpy_mock,
     get_image_size_mock,
     get_cell_size_mock,
     get_wcs_mock,
@@ -283,48 +277,3 @@ def test_imaging_stage_should_calculate_image_and_cell_size_if_null(
         "wcs",
         {"beam_info": "beam_info"},
     )
-
-
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.np")
-@mock.patch(
-    "ska_sdp_spectral_line_imaging.stages.imaging.estimate_cell_size_in_arcsec"
-)
-def test_should_get_cell_size_from_obs(estimate_cell_size_mock, numpy_mock):
-    max_baseline = Mock(name="max_baseline")
-    max_baseline.round.return_value = 3.45
-
-    ps = MagicMock(name="ps")
-    ps.frequency.reference_frequency = {"data": 123.01}
-    ps.UVW.max.return_value = ("umax", "vmax", "wmax")
-    ps.frequency.max.return_value = 400
-
-    numpy_mock.abs.return_value = ps.UVW
-    numpy_mock.maximum.return_value = max_baseline
-
-    get_cell_size_from_obs(ps, 2.0)
-
-    numpy_mock.abs.assert_called_once_with(ps.UVW)
-    ps.UVW.max.assert_called_once_with(dim=["time", "baseline_id"])
-    numpy_mock.maximum.assert_called_once_with("umax", "vmax")
-    max_baseline.round.assert_called_once_with(2)
-
-    estimate_cell_size_mock.assert_called_once_with(
-        3.45,
-        749481.145,
-        2.0,
-    )
-
-
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_image_size")
-def test_should_get_image_size_from_obs(estimate_image_size_mock):
-
-    ps = MagicMock(name="ps")
-    ps.frequency.min.return_value = 200
-    min_antenna_diameter = Mock(name="min_antenna_diameter")
-    ps.antenna_xds.DISH_DIAMETER.min.return_value = min_antenna_diameter
-    min_antenna_diameter.round.return_value = 50.5
-
-    get_image_size_from_obs(ps, 0.75)
-
-    min_antenna_diameter.round.assert_called_once_with(2)
-    estimate_image_size_mock.assert_called_once_with(1498962.29, 50.5, 0.75)
