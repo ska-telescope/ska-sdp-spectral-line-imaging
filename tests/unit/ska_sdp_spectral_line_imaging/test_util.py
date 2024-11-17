@@ -10,7 +10,7 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
 )
 
 from ska_sdp_spectral_line_imaging.util import (
-    estimate_cell_size,
+    estimate_cell_size_in_arcsec,
     estimate_image_size,
     export_image_as,
     export_to_fits,
@@ -83,7 +83,9 @@ def test_should_estimate_cell_size_in_arcsec():
     expected_cell_size = 1.08  # rounded to 2 decimals
 
     # action
-    actual_cell_size = estimate_cell_size(baseline, wavelength, factor)
+    actual_cell_size = estimate_cell_size_in_arcsec(
+        baseline, wavelength, factor
+    )
 
     # verify
     np.testing.assert_array_equal(actual_cell_size, expected_cell_size)

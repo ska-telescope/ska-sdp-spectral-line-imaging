@@ -1,9 +1,13 @@
 # pylint: disable=no-member
 import pytest
-from mock import mock
+from mock import MagicMock, mock
 from mock.mock import Mock, call
 
-from ska_sdp_spectral_line_imaging.stages.imaging import imaging_stage
+from ska_sdp_spectral_line_imaging.stages.imaging import (
+    get_cell_size_from_obs,
+    get_image_size_from_obs,
+    imaging_stage,
+)
 from ska_sdp_spectral_line_imaging.upstream_output import UpstreamOutput
 
 
@@ -203,41 +207,33 @@ def test_should_export_clean_artefacts(
     "ska_sdp_spectral_line_imaging.stages.imaging.get_wcs_from_observation",
     return_value="wcs",
 )
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_cell_size")
-@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_image_size")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_cell_size_from_obs"
+)
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.get_image_size_from_obs"
+)
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.np")
 @mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.clean_cube")
-def test_should_estimate_image_and_cell_size(
+def test_imaging_stage_should_calculate_image_and_cell_size_if_null(
     clean_cube_mock,
     numpy_mock,
-    estimate_image_size_mock,
-    estimate_cell_size_mock,
+    get_image_size_mock,
+    get_cell_size_mock,
     get_wcs_mock,
     get_pol_mock,
 ):
-    max_baseline = Mock(name="max_baseline")
-    numpy_mock.maximum.return_value = max_baseline
-    max_baseline.round.return_value = 3.45
+    ps = MagicMock(name="ps")
+    upstream_output = UpstreamOutput()
+    upstream_output["ps"] = ps
 
     cell_size_xdr = Mock(name="cell_size_dataarray")
-    estimate_cell_size_mock.return_value = cell_size_xdr
+    get_cell_size_mock.return_value = cell_size_xdr
     cell_size_xdr.compute.return_value = 0.75
 
     image_size_xdr = Mock(name="image_size_dataarray")
-    estimate_image_size_mock.return_value = image_size_xdr
+    get_image_size_mock.return_value = image_size_xdr
     image_size_xdr.compute.return_value = 500
-
-    ps = Mock(name="ps")
-    ps.UVW = Mock(name="UVW")
-    ps.frequency.reference_frequency = {"data": 123.01}
-    ps.UVW.max.return_value = ("umax", "vmax", "wmax")
-    ps.frequency.min.return_value = 200
-    ps.frequency.max.return_value = 400
-
-    min_antenna_diameter = Mock(name="min_antenna_diameter")
-    ps.antenna_xds.DISH_DIAMETER.min.return_value = min_antenna_diameter
-    min_antenna_diameter.round.return_value = 50.5
-    numpy_mock.abs.return_value = ps.UVW
 
     gridding_params = {
         "epsilon": 1e-4,
@@ -245,9 +241,6 @@ def test_should_estimate_image_and_cell_size(
         "image_size": None,
         "scaling_factor": 2.0,
     }
-
-    upstream_output = UpstreamOutput()
-    upstream_output["ps"] = ps
 
     imaging_stage.stage_definition(
         upstream_output,
@@ -264,20 +257,11 @@ def test_should_estimate_image_and_cell_size(
         "output_dir",
     )
 
-    numpy_mock.abs.assert_called_once_with(ps.UVW)
-    ps.UVW.max.assert_called_once_with(dim=["time", "baseline_id"])
-    numpy_mock.maximum.assert_called_once_with("umax", "vmax")
-    max_baseline.round.assert_called_once_with(2)
-
-    estimate_cell_size_mock.assert_called_once_with(
-        3.45,
-        749481.145,
+    get_cell_size_mock.assert_called_once_with(
+        ps,
         2.0,
     )
-
-    min_antenna_diameter.round.assert_called_once_with(2)
-
-    estimate_image_size_mock.assert_called_once_with(1498962.29, 50.5, 0.75)
+    get_image_size_mock.assert_called_once_with(ps, 0.75)
 
     get_pol_mock.assert_called_once_with(ps)
     get_wcs_mock.assert_called_once_with(ps, 0.75, 500, 500)
@@ -299,3 +283,48 @@ def test_should_estimate_image_and_cell_size(
         "wcs",
         {"beam_info": "beam_info"},
     )
+
+
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.np")
+@mock.patch(
+    "ska_sdp_spectral_line_imaging.stages.imaging.estimate_cell_size_in_arcsec"
+)
+def test_should_get_cell_size_from_obs(estimate_cell_size_mock, numpy_mock):
+    max_baseline = Mock(name="max_baseline")
+    max_baseline.round.return_value = 3.45
+
+    ps = MagicMock(name="ps")
+    ps.frequency.reference_frequency = {"data": 123.01}
+    ps.UVW.max.return_value = ("umax", "vmax", "wmax")
+    ps.frequency.max.return_value = 400
+
+    numpy_mock.abs.return_value = ps.UVW
+    numpy_mock.maximum.return_value = max_baseline
+
+    get_cell_size_from_obs(ps, 2.0)
+
+    numpy_mock.abs.assert_called_once_with(ps.UVW)
+    ps.UVW.max.assert_called_once_with(dim=["time", "baseline_id"])
+    numpy_mock.maximum.assert_called_once_with("umax", "vmax")
+    max_baseline.round.assert_called_once_with(2)
+
+    estimate_cell_size_mock.assert_called_once_with(
+        3.45,
+        749481.145,
+        2.0,
+    )
+
+
+@mock.patch("ska_sdp_spectral_line_imaging.stages.imaging.estimate_image_size")
+def test_should_get_image_size_from_obs(estimate_image_size_mock):
+
+    ps = MagicMock(name="ps")
+    ps.frequency.min.return_value = 200
+    min_antenna_diameter = Mock(name="min_antenna_diameter")
+    ps.antenna_xds.DISH_DIAMETER.min.return_value = min_antenna_diameter
+    min_antenna_diameter.round.return_value = 50.5
+
+    get_image_size_from_obs(ps, 0.75)
+
+    min_antenna_diameter.round.assert_called_once_with(2)
+    estimate_image_size_mock.assert_called_once_with(1498962.29, 50.5, 0.75)

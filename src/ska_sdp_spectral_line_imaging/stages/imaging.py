@@ -14,7 +14,7 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 from ..constants import SPEED_OF_LIGHT
 from ..data_procs.imaging import clean_cube
 from ..util import (
-    estimate_cell_size,
+    estimate_cell_size_in_arcsec,
     estimate_image_size,
     export_image_as,
     get_polarization_frame_from_observation,
@@ -22,6 +22,75 @@ from ..util import (
 )
 
 logger = logging.getLogger()
+
+
+def get_cell_size_from_obs(observation, scaling_factor):
+    """
+    A helper function which reads UVW and other metadata from
+    xradio observation dataset,
+    and estimates cell size to be used for imaging.
+
+    The function is dask compatible, i.e. input dask arrays are
+    not eagerly computed. Consumer of this function must call `compute()`
+    on the returned object to get the actual values.
+
+    Parameters
+    ----------
+        observation: xarray.Dataset
+            Xradio observation
+        scaling_factor: float
+            Scaling factor for estimation of cell size
+
+    Returns
+    -------
+        xarray.Dataarray
+            Dataarray which wraps a dask array of size 1, representing
+            cell size value.
+    """
+    umax, vmax, _ = np.abs(observation.UVW).max(dim=["time", "baseline_id"])
+    # TODO: handle units properly. eg. Hz, MHz etc.
+    #  Assumption, current unit is Hz.
+    maximum_frequency = observation.frequency.max()
+    minimum_wavelength = SPEED_OF_LIGHT / maximum_frequency
+
+    # Taking maximum of u and v baselines, rounded
+    max_baseline = np.maximum(umax, vmax).round(2)
+
+    return estimate_cell_size_in_arcsec(
+        max_baseline, minimum_wavelength, scaling_factor
+    )
+
+
+def get_image_size_from_obs(observation, cell_size):
+    """
+    A helper function which reads antenna information and other metadata from
+    xradio observation dataset,
+    and estimates image size to be used for imaging.
+
+    The function is dask compatible, i.e. input dask arrays are
+    not eagerly computed. Consumer of this function must call `compute()`
+    on the returned object to get the actual values.
+
+    Parameters
+    ----------
+        observation: xarray.Dataset
+            Xradio observation
+        cell_size: float
+            Cell size in arcsecond.
+
+    Returns
+    -------
+        xarray.Dataarray
+            Dataarray which wraps a dask array of size 1, representing
+            image size value.
+    """
+    maximum_wavelength = SPEED_OF_LIGHT / observation.frequency.min()
+    # rounded to 2 decimals
+    min_antenna_diameter = observation.antenna_xds.DISH_DIAMETER.min().round(2)
+
+    return estimate_image_size(
+        maximum_wavelength, min_antenna_diameter, cell_size
+    )
 
 
 @ConfigurableStage(
@@ -185,6 +254,8 @@ def imaging_stage(
     ps = upstream_output.ps
     cell_size = gridding_params.get("cell_size", None)
     image_size = gridding_params.get("image_size", None)
+    scaling_factor = gridding_params.get("scaling_factor", 3.0)
+
     output_path = os.path.join(_output_dir_, image_name)
 
     clean_products = {
@@ -197,19 +268,7 @@ def imaging_stage(
 
     if cell_size is None:
         logger.info("Estimating cell size...")
-        scaling_factor = gridding_params.get("scaling_factor", 3.0)
-        umax, vmax, _ = np.abs(ps.UVW).max(dim=["time", "baseline_id"])
-        # TODO: handle units properly. eg. Hz, MHz etc.
-        #  Assumption, current unit is Hz.
-        maximum_frequency = ps.frequency.max()
-        minimum_wavelength = SPEED_OF_LIGHT / maximum_frequency
-
-        # Taking maximum of u and v baselines, rounded
-        max_baseline = np.maximum(umax, vmax).round(2)
-
-        cell_size = estimate_cell_size(
-            max_baseline, minimum_wavelength, scaling_factor
-        )
+        cell_size = get_cell_size_from_obs(ps, scaling_factor)
         # computes
         cell_size = float(cell_size.compute(optimize_graph=True))
         gridding_params["cell_size"] = cell_size
@@ -218,12 +277,7 @@ def imaging_stage(
 
     if image_size is None:
         logger.info("Estimating image size...")
-        maximum_wavelength = SPEED_OF_LIGHT / ps.frequency.min()
-        antenna_diameter = ps.antenna_xds.DISH_DIAMETER.min().round(2)
-
-        image_size = estimate_image_size(
-            maximum_wavelength, antenna_diameter, cell_size
-        )
+        image_size = get_image_size_from_obs(ps, cell_size)
         # computes
         image_size = float(image_size.compute(optimize_graph=True))
         gridding_params["image_size"] = image_size

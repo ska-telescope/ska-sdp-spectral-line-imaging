@@ -108,12 +108,15 @@ def export_to_fits(image, output_path):
     image.image_acc.export_to_fits(f"{output_path}.fits")
 
 
-def estimate_cell_size(
+def estimate_cell_size_in_arcsec(
     baseline: float, wavelength: float, factor=3.0
 ) -> float:
     """
     A generalized function which estimates cell size for given baseline value.
     The baseline can be maximum value of U, V or W data.
+
+    This function is dask compatible i.e. can take dask arrays as input,
+    and return dask array as output.
 
     Parameters
     ----------
@@ -143,14 +146,17 @@ def estimate_cell_size(
 
 
 def estimate_image_size(
-    maximum_wavelength: float, antenna_diameter: float, cell_size: float
+    wavelength: float, antenna_diameter: float, cell_size: float
 ) -> int:
     """
     Estimates dimension of the image which will be used in the imaging stage.
 
+    This function is dask compatible i.e. can take dask arrays as input,
+    and return dask array as output.
+
     Parameters
     ----------
-        maximum_wavelength: float
+        wavelength: float
             Maximum wavelength of the observation in meter.
         antenna_diameter: float
             Diameter of the antenna in meter.
@@ -166,9 +172,7 @@ def estimate_image_size(
     """
     cell_size_rad = np.deg2rad(cell_size / 3600)
 
-    image_size = (1.5 * maximum_wavelength) / (
-        cell_size_rad * antenna_diameter
-    )
+    image_size = (1.5 * wavelength) / (cell_size_rad * antenna_diameter)
 
     # Rounding to the nearest multiple of 100
     return np.ceil(image_size / 100) * 100
