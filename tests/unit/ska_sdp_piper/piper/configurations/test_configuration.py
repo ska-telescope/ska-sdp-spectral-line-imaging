@@ -1,5 +1,5 @@
 import pytest
-from mock import Mock, mock
+from mock import Mock
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.exceptions import (
@@ -75,14 +75,3 @@ def test_should_raise_exception_if_function_arguments_are_invalide():
 
     with pytest.raises(ArgumentMismatchException):
         config.valididate_arguments_for(temp_stage)
-
-
-@mock.patch("ska_sdp_piper.piper.configurations.config_groups.logger")
-def test_should_warn_for_non_existing_config_key(logging_mock):
-    config = Configuration(stage_arguments=ConfigParam("number", 0))
-    config.update_config_params(bad_config="value")
-
-    logging_mock.warning.assert_called_once_with(
-        'Property "bad_config" is invalid. Ignoring and continuing the '
-        "pipeline."
-    )

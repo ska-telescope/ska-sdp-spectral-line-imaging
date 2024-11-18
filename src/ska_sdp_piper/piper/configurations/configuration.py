@@ -1,15 +1,10 @@
-import logging
-
 from ..exceptions import (
     ArgumentMismatchException,
     PipelineMetadataMissingException,
 )
-from .config_groups import ConfigGroups
-
-logger = logging.getLogger()
 
 
-class Configuration(ConfigGroups):
+class Configuration:
     """
     Class containing all the configurations for a stage
 
@@ -18,6 +13,17 @@ class Configuration(ConfigGroups):
         _config_params: dict(str -> ConfigParam)
             Configuration parameters for the stage
     """
+
+    def __init__(self, **kwargs):
+        """
+        Initialise a Configuration object.
+
+        Parameters
+        ----------
+           kwargs:
+               ConfigParam objects
+        """
+        self._config_params = kwargs
 
     @property
     def items(self):
@@ -29,6 +35,25 @@ class Configuration(ConfigGroups):
            Dictionary of configuration parameters with default values
         """
         return {key: param.value for key, param in self._config_params.items()}
+
+    def update_config_params(self, **kwargs):
+        """
+        Update the value of the configuration parameter
+
+        Parameters
+        ----------
+            **kwargs: Key word arguments
+
+        Raises
+        ------
+            TypeError:
+               If the update value doesn't match the type of the config param
+
+        """
+
+        for key, value in kwargs.items():
+            config_param = self._config_params[key]
+            config_param.value = value
 
     def valididate_arguments_for(self, stage):
         """

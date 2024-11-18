@@ -1,4 +1,3 @@
-import mock
 import pytest
 
 from ska_sdp_piper.piper.configurations.nested_config import (
@@ -88,30 +87,3 @@ def test_should_validate_parameter_updates_for_nested_configuration():
 
     with pytest.raises(ValueError):
         nested_config_param.value = {"param3": {"param3_1": 42}}
-
-
-@mock.patch("ska_sdp_piper.piper.configurations.config_groups.logger")
-def test_should_warn_for_non_existing_config_key(logging_mock):
-    nested_config_param = NestedConfigParam(
-        description="Nested Configuration",
-        param1=ConfigParam(
-            int,
-            1,
-            description="Parameter 1",
-            nullable=False,
-            allowed_values=[1, 2, 3],
-        ),
-        param2=ConfigParam(str, "param 2", description="Parameter 2"),
-        param3=NestedConfigParam(
-            "param 3",
-            param3_1=ConfigParam(int, 1, allowed_values=[1, 2]),
-            param3_2=ConfigParam(str, "value"),
-        ),
-    )
-
-    nested_config_param.value = dict(bad_config="value")
-
-    logging_mock.warning.assert_called_once_with(
-        'Property "bad_config" is invalid. Ignoring and continuing the '
-        "pipeline."
-    )
