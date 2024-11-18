@@ -1,15 +1,20 @@
 from functools import reduce
+import os
+import sys
 
 import pandas as pd
 
+module_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(f"{module_dir}/../src")
+
 from ska_sdp_piper.piper.configurations.nested_config import NestedConfigParam
 from ska_sdp_spectral_line_imaging import pipeline
-
 
 ############################################
 # Creating dictionary of dataframes
 # Each dataframe contains Configuration info
 ############################################
+
 def process_config_param(prefix, config_param):
     if config_param._type is NestedConfigParam:
         return reduce(
@@ -23,30 +28,37 @@ def process_config_param(prefix, config_param):
 
     return [{"param": prefix, **config_param.__dict__}]
 
+def generate_config_dfs_per_stage(pipeline_definition):
 
-dfs = {}
+    dataframes = {}
 
-for x in pipeline.spectral_line_imaging_pipeline._stages:
-    df = []
-    for name, config_param in x._Stage__config._config_params.items():
-        df.extend(process_config_param(name, config_param))
-    df = pd.DataFrame(df).fillna("None")
-    if df.empty:
-        continue
-    df = df.rename(columns={"_type": "type"})
-    df = df.rename(columns={"_ConfigParam__value": "default"})
-    df = df.rename(columns={"allowed_values": "allowed values"})
-    df.columns = df.columns.str.capitalize()
-    df["Type"] = df["Type"].apply(lambda x: x.__name__)
-    df["Allowed values"] = df["Allowed values"].apply(
-        lambda x: "" if x == "None" else x
-    )
-    dfs[x.name] = df
+    for stage in pipeline_definition._stages:
+        df = []
+        for name, config_param in stage._Stage__config._config_params.items():
+            df.extend(process_config_param(name, config_param))
 
+        df = pd.DataFrame(df).fillna("None")
+        if df.empty:
+            continue
+
+        df = df.rename(columns={"_type": "type"})
+        df = df.rename(columns={"_ConfigParam__value": "default"})
+        df = df.rename(columns={"allowed_values": "allowed values"})
+        df.columns = df.columns.str.capitalize()
+        df["Type"] = df["Type"].apply(lambda x: x.__name__)
+        df["Allowed values"] = df["Allowed values"].apply(
+            lambda x: "" if x == "None" else x
+        )
+        dataframes[stage.name] = df
+
+    return dataframes
+
+stage_name_to_pddf = generate_config_dfs_per_stage(pipeline.spectral_line_imaging_pipeline)
 
 #######################
 # Generate the RST file
 #######################
+
 header = """Stage Configs
 =============
 
@@ -88,5 +100,6 @@ def generate_stage_config(dfs, stage_config_path):
 
         f.write(output_string)
 
+out_rst_path = os.path.join(module_dir, "src/stage_config.rst")
 
-generate_stage_config(dfs, "docs/src/stage_config.rst")
+generate_stage_config(stage_name_to_pddf, out_rst_path)
