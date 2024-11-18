@@ -1,6 +1,6 @@
 """
 Stages
--------------------------
+------
 
 Stages used by Spectral Line Imaging Pipeline
 

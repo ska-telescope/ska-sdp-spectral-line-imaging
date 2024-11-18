@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.6.0
+## 0.6.1
 
 - Add `flagging_stage`.
 - The `read_model` stage can accept a FITS spectral cube as a model image.
@@ -36,13 +36,13 @@
 - Fix vulnerabilities in docker image
 - Performance improvements in the diagnostic stage
 
-## v0.3.0
+## 0.3.0
 
 - Add Singularity Image
 - Update Documentation
 - Update default pipeline configuration
 
-## v0.2.0
+## 0.2.0
 
 - Documentation updates
 - Enable dask bench marking
@@ -50,6 +50,6 @@
 - Move linting dependencies to dev section in pyproject
 - Streamline dev environment setup
 
-## v0.1.0
+## 0.1.0
 
 Initial release of SKA SDP Spectral Line Imaging Pipeline
