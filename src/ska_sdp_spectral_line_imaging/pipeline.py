@@ -1,21 +1,3 @@
-# This pipeline additionally depends on ska_sdp_datamodels
-# and ska_sdp_func_python
-#
-# Image the line free channels for the continuum model
-# wsclean --size 256 256 --scale 60arcsec --pol IQUV <input.ms>
-#
-# Installing the pipeline
-#
-# poetry install
-#
-# Running the pipline
-#
-# spectral-line-imaging-pipeline --input <input.ms>
-#
-# With config overridden
-# spectral-line-imaging-pipeline --input <input.ms> \
-# --config spectral_line_imaging_pipeline.yaml
-#
 # pylint: disable=no-member,import-error
 import logging
 from pathlib import Path

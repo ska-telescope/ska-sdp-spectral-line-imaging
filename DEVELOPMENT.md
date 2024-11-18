@@ -124,6 +124,14 @@ make oci-build-all
 
 ## Making a release
 
+### Pre-requisites
+
+1. Make sure that pipeline runs end to end in a distributed setup (e.g. local containerized dask workers, HPC system, or cloud).
+
+1. Please visit SKA's google cloud bucket, and update the dataset (processing set, config, model images) if required. This is a must if new version has breaking changes in the config.
+
+### Release guidelines
+
 We follow the guidelines for a release given [on this page](https://developer.skatelescope.org/en/latest/tutorial/release-management/automate-release-process.html#how-to-make-a-release).
 
 Following steps are simplified, and specific for this repository:
@@ -167,7 +175,7 @@ Following steps are simplified, and specific for this repository:
 
     1. The commit message title = "Bump version to V.V.V"
 
-1. Push the changes to the `main` branch. Make sure that the pipeline is green.
+1. Push the changes to the `main` branch. **Make sure that the pipeline is green.**
 
 1. Create a git-tag for the new version using `make create-git-tag` command.
 

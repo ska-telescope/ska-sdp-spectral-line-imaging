@@ -50,6 +50,8 @@ The pipeline can also be deployed inside a oci container.
     docker run [-v local:container] <image-name> [run | install-config] ...
     ```
 
+You can also spin up local containerized dask cluster using the docker image, and run pipeline within it. Please refer to ["Running on a Local Dask Cluster"](https://developer.skao.int/projects/ska-sdp-spectral-line-imaging/en/latest/local_dist_env.html) section of the documentation.
+
 ### Install the config
 
 Install the default config YAML of the pipeline to a specific directory using the `install-config` subcommand.
@@ -83,14 +85,16 @@ For all the options, run `spectral-line-imaging-pipeline run --help`.
 
 ### Autocompletions for bash and zsh
 
-```
+#### bash
+
+```bash
 export YAML_PATH=/path/to/pipeline/default
 source ./scripts/bash-completions.bash
 ```
 
 #### zsh
 
-```
+```zsh
 source ./scripts/bash-completions.bash
 bashcompinit
 ```
