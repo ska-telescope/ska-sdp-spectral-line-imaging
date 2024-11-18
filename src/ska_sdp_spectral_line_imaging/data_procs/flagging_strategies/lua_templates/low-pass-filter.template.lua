@@ -1,0 +1,1 @@
+aoflagger.low_pass_filter(converted_data, {window_size_str}, {time_sigma}, {freq_sigma})

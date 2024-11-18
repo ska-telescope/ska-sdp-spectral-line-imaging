@@ -17,6 +17,15 @@ from ska_sdp_spectral_line_imaging.constants import (
 )
 
 
+class SafeDict(dict):
+    """
+    Class to allow for selective format_map function
+    """
+
+    def __missing__(self, key):
+        return "{" + key + "}"
+
+
 def rechunk(target, ref, dim):
     """
     Rechunk a target DataArray based on a ref DataArray

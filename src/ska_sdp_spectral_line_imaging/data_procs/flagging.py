@@ -78,7 +78,7 @@ def flag_baseline(visibility, flags, ntime, nchan, npol, strategy_file):
     mask = flagger.make_flag_mask(ntime, nchan, False)
     mask.set_buffer(flags[0])
 
-    flags = strategy.run(data)
+    flags = strategy.run(data, mask)
     return flags.get_buffer()
 
 

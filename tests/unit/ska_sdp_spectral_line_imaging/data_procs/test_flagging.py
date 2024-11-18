@@ -135,4 +135,4 @@ class TestAOFlagger:
 
         mask_mock.set_buffer.assert_called_once_with("flag1")
 
-        strategy_mock.run.assert_called_once_with(data_mock)
+        strategy_mock.run.assert_called_once_with(data_mock, mask_mock)

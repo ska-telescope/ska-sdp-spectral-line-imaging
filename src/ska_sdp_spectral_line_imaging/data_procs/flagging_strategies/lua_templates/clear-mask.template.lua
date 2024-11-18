@@ -1,0 +1,1 @@
+input:clear_mask()

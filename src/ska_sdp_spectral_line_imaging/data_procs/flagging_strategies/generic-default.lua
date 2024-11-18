@@ -68,7 +68,13 @@ function execute(input)
             true
           )
         else
-          aoflagger.sumthreshold(converted_data, sumthr_level, sumthr_level * transient_threshold_factor, true, true)
+          aoflagger.sumthreshold(
+            converted_data, 
+            sumthr_level, 
+            sumthr_level * transient_threshold_factor, 
+            true, 
+            true
+          )
         end
 
         -- Do timestep & channel flagging
@@ -111,7 +117,12 @@ function execute(input)
           true
         )
       else
-        aoflagger.sumthreshold(converted_data, base_threshold, base_threshold * transient_threshold_factor, true, true)
+        aoflagger.sumthreshold(
+          converted_data, 
+          base_threshold, 
+          base_threshold * transient_threshold_factor, 
+          true, true
+        )
       end
     end -- end of complex representation iteration
 
@@ -143,7 +154,8 @@ function execute(input)
   end -- end of polarization iterations
 
   if exclude_original_flags then
-    aoflagger.scale_invariant_rank_operator_masked(input, copy_of_input, 0.2, 0.2)
+    aoflagger.scale_invariant_rank_operator_masked(
+      input, copy_of_input, 0.2, 0.2)
   else
     aoflagger.scale_invariant_rank_operator(input, 0.2, 0.2)
   end

@@ -224,6 +224,7 @@ def test_should_run_pipeline_with_flagging_enabled(prepare_test_data):
 
     expected_products = [
         "test_cube.restored.fits",
+        "default_strategy.lua",
         f"spectral_line_imaging_pipeline_{timestamp()}.log",
         f"spectral_line_imaging_pipeline_{timestamp()}.config.yml",
         f"spectral_line_imaging_pipeline_{timestamp()}.cli.yml",
