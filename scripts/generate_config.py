@@ -68,16 +68,11 @@ indent = "    "
 def generate_stage_config(dfs, stage_config_path):
     with open(stage_config_path, "w") as f:
         # Write the header first
-        f.write(header)
-        f.write("\n\n")
+        output_string = f"{header}\n\n"
 
         for name, df in dfs.items():
-            f.write(name)
-            f.write("\n")
-            f.write("*" * len(name))
-            f.write("\n")
-            f.write(table_config)
-            f.write("\n")
+            output_string += f"{name}\n{'*' * len(name)}\n{table_config}\n"
+
             # Convert DataFrame to markdown string and write it to file
             markdown = df.to_markdown(
                 index=False,
@@ -89,8 +84,9 @@ def generate_stage_config(dfs, stage_config_path):
                 indent + line for line in markdown.splitlines()
             )
 
-            f.write(indented_markdown)
-            f.write("\n\n\n")  # Add some space between tables
+            output_string += f"{indented_markdown}\n\n\n"
+
+        f.write(output_string)
 
 
 generate_stage_config(dfs, "docs/src/stage_config.rst")
