@@ -1,4 +1,5 @@
 [tool.poetry]
+include = ["MANIFEST.skao.int"]
 name = "ska-sdp-spectral-line-imaging"
 version = "0.6.1"
 description = "SKA SDP Spectral Line Imaging Pipeline"
