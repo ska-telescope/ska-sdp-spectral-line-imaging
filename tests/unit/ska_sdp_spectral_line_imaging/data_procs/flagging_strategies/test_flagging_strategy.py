@@ -28,9 +28,9 @@ def test_should_build_default_strategy_with_all_flags_true():
         transient_threshold_factor=5.0,
         threshold_timestep_rms=3.0,
         threshold_channel_rms=3.0,
-        exclude_original_flags=True,
-        flag_low_outliers=True,
-        include_low_pass=True,
+        keep_original_flags=True,
+        keep_outliers=True,
+        do_low_pass=True,
         window_size=[5, 3],
         time_sigma=6.0,
         freq_sigma=7.0,
@@ -42,10 +42,8 @@ def test_should_build_default_strategy_with_all_flags_true():
 
     mock_file.assert_called_once_with("default_strategy.lua", "w")
     file_handle = mock_file()
-    assert (
-        remove_empty_lines(file_handle.write.call_args.args[0])
-        == default_all_true
-    )
+
+    file_handle.write.assert_called_once_with(default_all_true)
 
 
 def test_should_build_default_strategy_with_no_low_pass():
@@ -56,8 +54,8 @@ def test_should_build_default_strategy_with_no_low_pass():
         transient_threshold_factor=5.0,
         threshold_timestep_rms=3.0,
         threshold_channel_rms=3.0,
-        flag_low_outliers=True,
-        include_low_pass=False,
+        keep_outliers=True,
+        do_low_pass=False,
         window_size=[5, 3],
         time_sigma=6.0,
         freq_sigma=7.0,
@@ -69,10 +67,7 @@ def test_should_build_default_strategy_with_no_low_pass():
 
     mock_file.assert_called_once_with("default_strategy.lua", "w")
     file_handle = mock_file()
-    assert (
-        remove_empty_lines(file_handle.write.call_args.args[0])
-        == default_no_low_pass
-    )
+    file_handle.write.assert_called_once_with(default_no_low_pass)
 
 
 def test_should_build_default_strategy_with_no_flag_low_outliers():
@@ -83,8 +78,8 @@ def test_should_build_default_strategy_with_no_flag_low_outliers():
         transient_threshold_factor=5.0,
         threshold_timestep_rms=3.0,
         threshold_channel_rms=3.0,
-        flag_low_outliers=False,
-        include_low_pass=True,
+        keep_outliers=False,
+        do_low_pass=True,
         window_size=[5, 3],
         time_sigma=6.0,
         freq_sigma=7.0,
@@ -96,10 +91,7 @@ def test_should_build_default_strategy_with_no_flag_low_outliers():
 
     mock_file.assert_called_once_with("default_strategy.lua", "w")
     file_handle = mock_file()
-    assert (
-        remove_empty_lines(file_handle.write.call_args.args[0])
-        == default_no_flag_low_outliers
-    )
+    file_handle.write.assert_called_once_with(default_no_flag_low_outliers)
 
 
 def test_should_build_default_strategy_with_no_original_flags():
@@ -110,8 +102,8 @@ def test_should_build_default_strategy_with_no_original_flags():
         transient_threshold_factor=5.0,
         threshold_timestep_rms=3.0,
         threshold_channel_rms=3.0,
-        flag_low_outliers=True,
-        include_low_pass=True,
+        keep_outliers=True,
+        do_low_pass=True,
         window_size=[5, 3],
         time_sigma=6.0,
         freq_sigma=7.0,
@@ -123,7 +115,4 @@ def test_should_build_default_strategy_with_no_original_flags():
 
     mock_file.assert_called_once_with("default_strategy.lua", "w")
     file_handle = mock_file()
-    assert (
-        remove_empty_lines(file_handle.write.call_args.args[0])
-        == default_no_original_mask
-    )
+    file_handle.write.assert_called_once_with(default_no_original_mask)
