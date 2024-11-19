@@ -107,13 +107,19 @@ class TestFlagging:
         flagging_stage.stage_definition(
             upstream_output,
             None,
-            {"config1": "values"},
+            {"config1": "values", "low_pass_filter": {"lpf_config": "values"}},
             False,
             "",
             "output_path",
         )
 
-        flagging_strategy_mock.assert_called_once_with(**{"config1": "values"})
+        flagging_strategy_mock.assert_called_once_with(
+            **{
+                "config1": "values",
+                "lpf_config": "values",
+                "low_pass_filter": {"lpf_config": "values"},
+            }
+        )
         builder_mock.write.assert_called_once_with(
             "output_path/default_strategy.lua"
         )
