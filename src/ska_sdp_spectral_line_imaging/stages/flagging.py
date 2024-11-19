@@ -142,7 +142,16 @@ def flagging_stage(
         upstream_output: UpstreamOutput
             Output from the upstream stage
         strategy_file: str
-            Path to the flagging strategy file
+            Path to the flagging strategy file.
+        strategy_configs: dict
+            Configuration for inbuilt spectral flagging strategy.
+            Will be used if the strategy_file is null.
+        export_flags: bool
+            Whether to export the FLAG as a zarr file.
+        psout_name: str
+            Filename for the exported flags.
+        _output_dir_: str
+            Path to output directory
 
     Returns
     -------
