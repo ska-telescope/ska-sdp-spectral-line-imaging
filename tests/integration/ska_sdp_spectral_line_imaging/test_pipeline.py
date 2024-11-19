@@ -213,6 +213,9 @@ def test_should_run_pipeline_with_flagging_enabled(prepare_test_data):
         "--set",
         "pipeline.flagging",
         "true",
+        "--set",
+        "parameters.flagging.export_flags",
+        "true",
     ]
     with mock.patch.object(sys, "argv", testargs):
         spectral_line_imaging_pipeline()
@@ -225,6 +228,7 @@ def test_should_run_pipeline_with_flagging_enabled(prepare_test_data):
     expected_products = [
         "test_cube.restored.fits",
         "default_strategy.lua",
+        "flags.zarr",
         f"spectral_line_imaging_pipeline_{timestamp()}.log",
         f"spectral_line_imaging_pipeline_{timestamp()}.config.yml",
         f"spectral_line_imaging_pipeline_{timestamp()}.cli.yml",
