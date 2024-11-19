@@ -2,7 +2,7 @@
 
 We have integrated various ways into this pipeline which can be used to benchmark it.
 
-## Using dask performance report
+## With dask performance report
 
 You can generate detailed reports of dask's run using [dask diagnostics](https://docs.dask.org/en/stable/diagnostics-distributed.html#diagnostics-distributed).
 
@@ -16,7 +16,7 @@ spectral-line-imaging-pipeline run --input input.ps --config config.yml --output
 
 Also, since dask performance report captures detailed metrics per task (so per process), this might affect the computation times.
 
-## Using Dool on local machine
+## With dool
 
 We have integrated [`dool`](https://github.com/scottchiefbaker/dool/tree/master) into `piper benchmark` command, which can be used to capture performance metrics (CPU, Memory, IO).
 
@@ -31,11 +31,12 @@ piper benchmark --setup --command "spectral-line-imaging-pipeline run --input in
 This will run the spectral line imaging pipeline as usual, and also store the captured metrics in a CSV formatted file in `output/benchmark` directory.
 These values can then be used for plotting graphs (see "Dool Visualizer" in [System Resource Tracing](https://confluence.skatelescope.org/display/SE/System%27s+resource+tracing+with+dool) confluence page).
 
-## Using dool on distributed setup
+### Running dool on distributed environment
 
-In a distributed setup, we need to make sure that we start `dool` seperately on each of the worker machines. The `piper benchmark` command can be used for this purpose.
+In a distributed setup, you need to make sure that you start `dool` seperately on each of the worker machines. The `piper benchmark` command can be used to setup and start dool.
 
-We have an example [docker-compose-benchmark.yml](https://gitlab.com/ska-telescope/sdp/science-pipeline-workflows/ska-sdp-spectral-line-imaging/-/blob/main/examples/docker-compose-benchmark.yml) which can run pipeline in distributed manner (in seperate docker containers), and will also capture metrics for each worker, storing them in seperate CSV files in `DATA/benchmark` directory.
+As an example on how to use `piper benchmark` in distributed environment, please refer the [`examples/docker-compose-benchmark.yml`](https://gitlab.com/ska-telescope/sdp/science-pipeline-workflows/ska-sdp-spectral-line-imaging/-/blob/main/examples/docker-compose-benchmark.yml) which is a slightly modified version of the existing [`docker-compose.yml`](https://gitlab.com/ska-telescope/sdp/science-pipeline-workflows/ska-sdp-spectral-line-imaging/-/blob/main/docker-compose.yml)  in the repository.
+
 The command to run can be something like this:
 
 ```bash
@@ -48,3 +49,7 @@ CONFIG=config.yml \
 OUTPUT_DIR=output \
 docker compose -f docker-compose-benchmark.yml up --abort-on-container-exit
 ```
+
+Above command will run pipeline in distributed manner (in seperate docker containers), and will also capture metrics for each worker, storing them in seperate CSV files in `DATA/benchmark` directory.
+
+Taking the entrypoint commands in `docker-compose-benchmark.yml` as references, you can write your own scripts which suit your distributed environment.

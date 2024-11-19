@@ -99,9 +99,13 @@ def read_model(
             If the corresponding image is not available in filesystem,
             this stage will raise an exception.
 
-        image_type: str
-            Whether all the images being read are "continuum"
-            or "spectral"
+        do_power_law_scaling: bool
+            Whether to perform power law scaling to scale model
+            image across channels. Only applicable for images with single
+            frequency channel.
+
+        spectral_index: float
+            Spectral index to perform power law scaling
 
     Returns
     -------

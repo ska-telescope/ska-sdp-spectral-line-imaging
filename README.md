@@ -125,8 +125,6 @@ The **predict_stage** will generate `VISIBILITY_MODEL` data by running predict o
 
 About the model FITS images:
 
-1. All FITS images have to be either **spectral or continuum**. They may contain data which is 2-dimensional or 4-dimensional when loaded into numpy.
-
-1. If FITS image is spectral, it must have same frequency coordinates (the reference frequency, frequency delta and number of channels) as the measurement set.
+1. If FITS image is spectral cube, it must have same frequency coordinates (the reference frequency, frequency delta and number of channels) as the measurement set.
 
 1. Currently **read_model** does not support reading data of multiple polarizations from a single FITS file. So for each polarization value in the processing set, there has to be a seperate FITS image.
