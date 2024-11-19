@@ -1,6 +1,6 @@
 services:
   scheduler:
-    image: ${SLIP}
+    image: ${IMAGE}
     hostname: scheduler
     volumes:
       - ${DATA}:/data${MOUNT_FLAGS}
@@ -9,13 +9,11 @@ services:
     entrypoint: ["dask","scheduler","--port","8786", "--dashboard-address", ":8787"]
 
   worker:
-    image: ${SLIP}
+    image: ${IMAGE}
     volumes:
       - ${DATA}:/data${MOUNT_FLAGS}
     deploy:
       replicas: ${REPLICAS}
-    environment:
-      REPLICA: "{{.Task.Slot}}"
     entrypoint: [
     "/bin/sh",
     "-c",
@@ -25,11 +23,11 @@ services:
     ]
 
   client:
-    image: ${SLIP}
+    image: ${IMAGE}
     container_name: client
     hostname: client
     volumes:
       - ${DATA}:/data${MOUNT_FLAGS}
     environment:
       - DASK_SCHEDULER_ADDRESS=tcp://scheduler:8786
-    entrypoint: ["piper", "benchmark", "--command", "spectral-line-imaging-pipeline run --input ${INPUT} --config ${CONFIG} --output ${OUTPUT} --dask-scheduler tcp://scheduler:8786", "--output-path", "/data/benchmark", "--setup"]
+    entrypoint: ["piper", "benchmark", "--command", "spectral-line-imaging-pipeline run --input /data/${INPUT} --config /data/${CONFIG} --output /data/${OUTPUT} --dask-scheduler tcp://scheduler:8786", "--output-path", "/data/benchmark", "--setup"]

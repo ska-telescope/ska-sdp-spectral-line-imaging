@@ -20,12 +20,10 @@ COPY --from=BUILD /build/dist/*.whl /build/requirements.txt ./
 
 RUN pip install --no-cache-dir --no-compile -r requirements.txt ska_sdp_spectral_line_imaging*.whl && \
   pip install --no-cache-dir jupyterlab==4.2.5 && \
-  apt-get update && apt-get install -y wget && \
+  apt-get update && apt-get install --no-install-recommends -y wget && \
   apt-get remove -y --autoremove libsqlite3-0 libgssapi-krb5-2 libk5crypto3 libkrb5support0 && \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-COPY --from=BUILD /build/examples/install-config-and-run-pipeline.sh ./
 
 ENTRYPOINT ["spectral-line-imaging-pipeline"]

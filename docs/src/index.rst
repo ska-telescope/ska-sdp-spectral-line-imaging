@@ -15,6 +15,7 @@ SKA SDP Spectral Line Imaging Pipeline
     DEVELOPMENT
     piper
     local_dist_env
+    benchmark
     stage_config
     api/api
 
