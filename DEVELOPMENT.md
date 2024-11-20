@@ -130,6 +130,8 @@ make oci-build-all
 
 1. Please visit SKA's google cloud bucket, and update the dataset (processing set, config, model images) if required. This is a must if new version has breaking changes in the config.
 
+1. Run `make make` to update the `.make` submodule to latest master commit.
+
 ### Release guidelines
 
 We follow the guidelines for a release given [on this page](https://developer.skatelescope.org/en/latest/tutorial/release-management/automate-release-process.html#how-to-make-a-release).
