@@ -58,10 +58,10 @@ class TestAOFlagger:
             "CHUNKED_VIS", "CHUNKED_FLAG", 10, 10, 2, strategy_file
         )
         ps.VISIBILITY.chunk.assert_called_once_with(
-            {"baseline_id": 1, "frequency": 10}
+            {"baseline_id": 1, "frequency": 10, "polarization": 2}
         )
         ps.FLAG.chunk.assert_called_once_with(
-            {"baseline_id": 1, "frequency": 10}
+            {"baseline_id": 1, "frequency": 10, "polarization": 2}
         )
 
         assert output == "VISIBILITY_FLAGS"

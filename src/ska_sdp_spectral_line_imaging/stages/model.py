@@ -139,13 +139,12 @@ def read_model(
             model_image,
             ps.frequency.data,
             spectral_index=spectral_index,
+            freq_chunks=ps.chunks["frequency"],
         )
 
     if "frequency" in model_image.dims and model_image.frequency.size == 1:
         # continuum image with extra dimension on frequency
         model_image = model_image.squeeze(dim="frequency", drop=True)
-
-    model_image = model_image.chunk(dict(polarization=-1))
 
     upstream_output["model_image"] = model_image
 

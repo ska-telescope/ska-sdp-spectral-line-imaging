@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple
 
 import dask
 import dask.array
@@ -37,6 +38,7 @@ def apply_power_law_scaling(
     frequency_range: np.ndarray,
     reference_frequency: float = None,
     spectral_index: float = 0.75,
+    freq_chunks: Tuple[int] = None,
 ):
     """
     Apply power law scaling on a continuum image and return a scaled cube.
@@ -72,7 +74,9 @@ def apply_power_law_scaling(
         spectral_index: float, optional
             Spectral index (alpha) used in power law scaling.
             Defaults to 0.75.
-
+        freq_chunks: Tuple[int], optional
+            Chunks corresponding to frequency channel
+            By default, frequency dimension will not be chunked
     Returns
     -------
         xr.DataArray
@@ -109,7 +113,7 @@ def apply_power_law_scaling(
         channel_multipliers,
         dims=["frequency"],
         coords={"frequency": frequency_range},
-    )
+    ).chunk({"frequency": freq_chunks})
 
     scaled_cube = image * channel_multipliers_da
     return scaled_cube

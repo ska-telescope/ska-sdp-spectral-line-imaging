@@ -14,7 +14,7 @@ services:
       - ${DATA}:/data${MOUNT_FLAGS}
     deploy:
       replicas: ${REPLICAS}
-    entrypoint: ["dask", "worker", "--nworkers", "1", "--nthreads", "4", "--memory-limit", "8GB", "--no-dashboard", "tcp://scheduler:8786"]
+    entrypoint: ["dask", "worker", "--nworkers", "1", "--nthreads", "4", "--memory-limit", "8GiB", "--no-dashboard", "tcp://scheduler:8786"]
 
   client:
     image: ${IMAGE}

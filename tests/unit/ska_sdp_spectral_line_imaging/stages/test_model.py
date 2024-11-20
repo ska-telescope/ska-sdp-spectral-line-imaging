@@ -216,7 +216,6 @@ def test_read_model_continuum_fits_with_pol_wcs_axis_with_power_law(
         coords={"polarization": pols},
     )
     scaled_cube = MagicMock(name="scaled_cube")
-    scaled_cube.chunk.return_value = "rechunked_scaled_cube"
     apply_power_law_scaling_mock.return_value = scaled_cube
 
     output = read_model.stage_definition(
@@ -242,8 +241,7 @@ def test_read_model_continuum_fits_with_pol_wcs_axis_with_power_law(
     assert (
         apply_power_law_scaling_mock.call_args.kwargs["spectral_index"] == 0.1
     )
-    scaled_cube.chunk.assert_called_once_with({"polarization": -1})
-    assert output["model_image"] == "rechunked_scaled_cube"
+    assert output["model_image"] == scaled_cube
 
 
 @mock.patch(
@@ -272,7 +270,7 @@ def test_should_read_model_from_continuum_fits_without_pol_axis(
         np.array([[[0, 1], [2, 3]], [[0, 1], [2, 3]]], dtype=np.float32),
         dims=["polarization", "y", "x"],
         coords={"polarization": pols},
-    ).chunk()
+    ).chunk({"polarization": 1})
 
     output = read_model.stage_definition(
         upout,

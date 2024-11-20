@@ -28,10 +28,12 @@ def flag_cube(ps, strategy_file):
     npol = ps.VISIBILITY.polarization.size
 
     visibility_rechunked = ps.VISIBILITY.chunk(
-        ({"baseline_id": 1, "frequency": nchan})
+        ({"baseline_id": 1, "frequency": nchan, "polarization": npol})
     )
 
-    flag_rechunked = ps.FLAG.chunk(({"baseline_id": 1, "frequency": nchan}))
+    flag_rechunked = ps.FLAG.chunk(
+        ({"baseline_id": 1, "frequency": nchan, "polarization": npol})
+    )
     return chunked_flagging(
         visibility_rechunked, flag_rechunked, ntime, nchan, npol, strategy_file
     )
