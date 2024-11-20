@@ -18,7 +18,7 @@ services:
     "/bin/sh",
     "-c",
     "piper benchmark --setup \
-     --command \"dask worker --nworkers 1 --nthreads 4 --memory-limit '8GB' --no-dashboard tcp://scheduler:8786\" \
+     --command \"dask worker --nworkers 1 --nthreads 4 --memory-limit 8GB --no-dashboard tcp://scheduler:8786\" \
      --output-path /data/${OUTPUT_DIR:-output}/benchmark \
      --output-file-prefix $${HOSTNAME}"
     ]
