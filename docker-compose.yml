@@ -6,7 +6,7 @@ services:
       - ${DATA}:/data${MOUNT_FLAGS}
     ports:
       - "8787:8787"
-    entrypoint: ["dask","scheduler","--port","8786", "--dashboard-address", ":8787"]
+    entrypoint: ["dask", "scheduler", "--port", "8786", "--dashboard-address", ":8787"]
 
   worker:
     image: ${IMAGE}
@@ -14,7 +14,7 @@ services:
       - ${DATA}:/data${MOUNT_FLAGS}
     deploy:
       replicas: ${REPLICAS}
-    entrypoint: ["dask","worker", "tcp://scheduler:8786"]
+    entrypoint: ["dask", "worker", "--nworkers", "1", "--nthreads", "4", "--memory-limit", "8GB", "--no-dashboard", "tcp://scheduler:8786"]
 
   client:
     image: ${IMAGE}

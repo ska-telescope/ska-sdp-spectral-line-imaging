@@ -6,7 +6,7 @@ services:
       - ${DATA}:/data${MOUNT_FLAGS}
     ports:
       - "8787:8787"
-    entrypoint: ["dask","scheduler","--port","8786", "--dashboard-address", ":8787"]
+    entrypoint: ["dask", "scheduler", "--port", "8786", "--dashboard-address", ":8787"]
 
   worker:
     image: ${IMAGE}
@@ -17,8 +17,9 @@ services:
     entrypoint: [
     "/bin/sh",
     "-c",
-    "piper benchmark --command \"dask worker tcp://scheduler:8786\" \
-     --output-path /data/benchmark --setup \
+    "piper benchmark --setup \
+     --command \"dask worker --nworkers 1 --nthreads 4 --memory-limit '8GB' --no-dashboard tcp://scheduler:8786\" \
+     --output-path /data/${OUTPUT_DIR:-output}/benchmark \
      --output-file-prefix $${HOSTNAME}"
     ]
 
@@ -30,4 +31,4 @@ services:
       - ${DATA}:/data${MOUNT_FLAGS}
     environment:
       - DASK_SCHEDULER_ADDRESS=tcp://scheduler:8786
-    entrypoint: ["piper", "benchmark", "--command", "spectral-line-imaging-pipeline run --input /data/${INPUT} --config /data/${CONFIG} --output /data/${OUTPUT} --dask-scheduler tcp://scheduler:8786", "--output-path", "/data/benchmark", "--setup"]
+    entrypoint: ["piper", "benchmark", "--setup", "--command", "spectral-line-imaging-pipeline run --input /data/${INPUT} --config /data/${CONFIG} --output /data/${OUTPUT_DIR:-output} --dask-scheduler tcp://scheduler:8786", "--output-path", "/data/${OUTPUT_DIR:-output}/benchmark", "--output-file-prefix", "client"]

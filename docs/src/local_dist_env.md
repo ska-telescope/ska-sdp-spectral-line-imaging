@@ -15,7 +15,8 @@ The repository contains a [docker-compose.yml](https://gitlab.com/ska-telescope/
 An example script for docker compose is:
 
 ```bash
-MOUNT_FLAGS=:z # only for SELinux Users
+# only for SELinux Users
+MOUNT_FLAGS=:z \
 IMAGE=artefact.skao.int/ska-sdp-spectral-line-imaging:0.6.1 \
 DATA=/path/to/local/dir \
 REPLICAS=4 \
@@ -60,6 +61,6 @@ Then run the pipeline whlie specifying the scheduler IP as:
 ```bash
 spectral-line-imaging-pipeline run \
 --input /path/to/processing_set.ps \
---config config.yml
+--config config.yml \
 --dask-scheduler localhost:8786
 ```

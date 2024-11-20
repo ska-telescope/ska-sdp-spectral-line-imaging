@@ -40,7 +40,8 @@ As an example on how to use `piper benchmark` in distributed environment, please
 The command to run can be something like this:
 
 ```bash
-MOUNT_FLAGS=:z # only for SELinux Users
+# only for SELinux Users
+MOUNT_FLAGS=:z \
 IMAGE=artefact.skao.int/ska-sdp-spectral-line-imaging:0.6.1 \
 DATA=/path/to/local/dir \
 REPLICAS=4 \
