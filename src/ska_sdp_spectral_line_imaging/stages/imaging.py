@@ -47,7 +47,10 @@ logger = logging.getLogger()
                 str,
                 "generic_clean",
                 nullable=False,
-                description="Deconvolution algorithm.",
+                description="""
+                Deconvolution algorithm. Note that 'hogbom' and 'msclean'
+                are only allowed when radler is not used.
+                """,
                 allowed_values=[
                     "multiscale",
                     "iuwt",

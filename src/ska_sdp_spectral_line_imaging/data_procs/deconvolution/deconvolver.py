@@ -70,7 +70,7 @@ def deconvolve_cube(dirty: Image, psf: Image, **kwargs) -> Tuple[Image, Image]:
     window = None  # must be an Image instance
 
     fracthresh, gain, niter, thresh, scales = common_arguments(**kwargs)
-    algorithm = kwargs.get("algorithm", "hogbom")
+    algorithm = kwargs["algorithm"]
 
     # TODO: Port other algorithms
     if algorithm == "msclean":

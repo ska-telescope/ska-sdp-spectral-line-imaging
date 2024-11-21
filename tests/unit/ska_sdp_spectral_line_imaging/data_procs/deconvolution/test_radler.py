@@ -52,8 +52,8 @@ class TestRadler:
         psf = Mock(name="psf")
         nx = "nx"
         ny = "ny"
-        cell_size = "cell_size"
-        radler_deconvolve_cube(dirty, psf, nx=nx, ny=ny, cell_size=cell_size)
+        algorithm = "generic_clean"
+        radler_deconvolve_cube(dirty, psf, nx=nx, ny=ny, algorithm=algorithm)
 
         apply_u_func_mock.assert_called_once_with(
             radler_deconvolve_channel,
@@ -69,7 +69,7 @@ class TestRadler:
             vectorize=True,
             dask="parallelized",
             keep_attrs=True,
-            kwargs=dict(nx=nx, ny=ny, cell_size=cell_size),
+            kwargs=dict(nx="nx", ny="ny", algorithm="generic_clean"),
         )
 
         image_mock.constructor.assert_has_calls(
@@ -86,6 +86,12 @@ class TestRadler:
                 ),
             ]
         )
+
+    def test_should_throw_exceptions_for_non_suported_algorithms(self):
+        with pytest.raises(ValueError):
+            radler_deconvolve_cube(
+                "dirty_image", "psf_image", algorithm="non-supported"
+            )
 
     @patch(
         "ska_sdp_spectral_line_imaging.data_procs.deconvolution.radler.Image"

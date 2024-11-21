@@ -107,16 +107,16 @@ def radler_deconvolve_cube(
     The algorithms available are
     (see: https://radler.readthedocs.io/en/latest/tree/cpp/algorithms.html)
 
-    msclean
+    multiscale
     iuwt
     more_sane
     generic_clean
 
     For example:
 
-    comp = radler_deconvolve_cube(dirty_list, psf_list, niter=1000,
-                gain=0.7, algorithm='msclean',
-                scales=[0, 3, 10, 30], threshold=0.01)
+    comp, res = radler_deconvolve_cube(dirty_image, psf_image, nx=256, ny=256,
+    cell_size=1.0, niter=1000, gain=0.7, algorithm='multiscale',
+    scales=[0, 3, 10, 30], threshold=0.01)
 
     Parameters
     ----------
@@ -129,11 +129,21 @@ def radler_deconvolve_cube(
 
     Returns
     -------
-        Component image cube
+        Tuple[Image, Image]
+            Component image cube, Residual Image cube
     """
 
     if not RADLER_AVAILABLE:
         raise ImportError("Unnable to import radler")
+
+    algorithm = kwargs["algorithm"]
+    if algorithm not in [
+        "multiscale",
+        "iuwt",
+        "more_sane",
+        "generic_clean",
+    ]:
+        raise ValueError(f"Radler: Unsupported algorithm {algorithm}")
 
     restored_radler_cube, dirty_cube = xr.apply_ufunc(
         radler_deconvolve_channel,
