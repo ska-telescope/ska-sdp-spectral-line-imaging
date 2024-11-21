@@ -64,6 +64,7 @@ def test_should_run_pipeline(prepare_test_data):
         "--config",
         "./test.config.yml",
     ]
+
     with mock.patch.object(sys, "argv", testargs):
         spectral_line_imaging_pipeline()
 
@@ -125,6 +126,7 @@ def test_should_generate_dirty_image_when_niter_major_is_zero(
         "parameters.predict_stage.export_model",
         "false",
     ]
+
     with mock.patch.object(sys, "argv", testargs):
         spectral_line_imaging_pipeline()
 
@@ -172,6 +174,7 @@ def test_should_run_pipeline_with_radler(prepare_test_data):
         "--config",
         "./test.config.radler.yml",
     ]
+
     with mock.patch.object(sys, "argv", testargs):
         spectral_line_imaging_pipeline()
 
@@ -223,6 +226,7 @@ def test_should_run_pipeline_with_flagging_enabled(prepare_test_data):
         "parameters.flagging.export_flags",
         "true",
     ]
+
     with mock.patch.object(sys, "argv", testargs):
         spectral_line_imaging_pipeline()
 

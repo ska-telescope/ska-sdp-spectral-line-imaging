@@ -159,7 +159,7 @@ def export_to_fits(image, output_path):
     clean_beam = image.attrs["clean_beam"]
 
     tasks = []
-    for _, pol in enumerate(image.polarisation.values):
+    for pol in image.polarisation.values:
         data = (
             image.pixels.sel(polarisation=pol)
             .expand_dims(dim="polarisation", axis=pol_axis_in_np)
@@ -173,21 +173,21 @@ def export_to_fits(image, output_path):
 
         if clean_beam:
             header.append(
-                fits.Card(
+                card=fits.Card(
                     "BMAJ",
                     clean_beam["bmaj"],
                     "[deg] CLEAN beam major axis",
                 )
             )
             header.append(
-                fits.Card(
+                card=fits.Card(
                     "BMIN",
                     clean_beam["bmin"],
                     "[deg] CLEAN beam minor axis",
                 )
             )
             header.append(
-                fits.Card(
+                card=fits.Card(
                     "BPA",
                     clean_beam["bpa"],
                     "[deg] CLEAN beam position angle",

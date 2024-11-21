@@ -57,10 +57,14 @@ read_model
     |                      |        |                                | the-model-visibilities>`_             to understand the requirements of the      |            |                  |
     |                      |        |                                | model image.                                                                     |            |                  |
     +----------------------+--------+--------------------------------+----------------------------------------------------------------------------------+------------+------------------+
-    | do_power_law_scaling | bool   | False                          | Perform power law scaling to scale model image across channels. Only applicable  | True       |                  |
-    |                      |        |                                | for continuum images.                                                            |            |                  |
+    | do_power_law_scaling | bool   | False                          | Whether to perform power law scaling to scale             model                  | True       |                  |
+    |                      |        |                                | image across channels. Only applicable for             continuum images.         |            |                  |
     +----------------------+--------+--------------------------------+----------------------------------------------------------------------------------+------------+------------------+
-    | spectral_index       | float  | 0.75                           | Spectral index to perform power law scaling                                      | True       |                  |
+    | spectral_index       | float  | 0.75                           | Spectral index (alpha) to perform power law scaling.                             | True       |                  |
+    |                      |        |                                | Note: The ratio of frequencies is raised to `-spectral_index`             Please |            |                  |
+    |                      |        |                                | refer `read_model stage                                                          |            |                  |
+    |                      |        |                                | <api/ska_sdp_spectral_line_imaging.stages.model.html>`_ for                      |            |                  |
+    |                      |        |                                | information on the formula.                                                      |            |                  |
     +----------------------+--------+--------------------------------+----------------------------------------------------------------------------------+------------+------------------+
 
 

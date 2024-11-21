@@ -1,5 +1,10 @@
 # Changelog
 
+## Latest
+
+- Add support power law scaling in `read_model` stage
+- Output FITS images are now written to seperate file per polarisation
+
 ## 0.6.1
 
 - Add `flagging_stage`.

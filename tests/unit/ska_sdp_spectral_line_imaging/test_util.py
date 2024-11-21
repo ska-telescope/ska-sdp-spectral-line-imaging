@@ -158,6 +158,20 @@ def test_should_export_image_to_fits_delayed(write_array_to_fits_mock):
         [call(dim="polarisation", axis=1), call(dim="polarisation", axis=1)]
     )
 
+    wcs.wcs.crval.__setitem__.assert_has_calls(
+        [
+            call(2, -5),
+            call(2, -8),
+        ]
+    )
+
+    wcs.wcs.cdelt.__setitem__.assert_has_calls(
+        [
+            call(2, 1.0),
+            call(2, 1.0),
+        ]
+    )
+
     write_array_to_fits_mock.assert_has_calls(
         [
             call(imageXX.data, header1, "output_dir/image_name.XX.fits"),

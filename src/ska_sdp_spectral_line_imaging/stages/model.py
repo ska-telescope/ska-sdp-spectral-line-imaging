@@ -56,13 +56,22 @@ logger = logging.getLogger()
         do_power_law_scaling=ConfigParam(
             bool,
             False,
-            description="Perform power law scaling to scale model "
-            "image across channels. Only applicable for continuum images.",
+            description="""
+            Whether to perform power law scaling to scale
+            model image across channels. Only applicable for
+            continuum images.
+            """,
         ),
         spectral_index=ConfigParam(
             float,
             0.75,
-            description="Spectral index to perform power law scaling",
+            description="""
+            Spectral index (alpha) to perform power law scaling.
+            Note: The ratio of frequencies is raised to `-spectral_index`
+            Please refer `read_model stage
+            <api/ska_sdp_spectral_line_imaging.stages.model.html>`_ for
+            information on the formula.
+            """,
         ),
     ),
 )
@@ -78,6 +87,22 @@ def read_model(
 
     Please refer `README <../README.html#regarding-the-model-visibilities>`_
     to understand the requirements of the model image.
+
+    If `do_power_law_scaling` is True, this function can scale model image
+    across channels. This is only applicable for images with single
+    frequency channel. The formula for power law scaling is as follows
+
+    .. math::
+
+        scaled\\_channel = current\\_channel *
+            (\\frac{channel\\_frequency}
+            {reference\\_frequency})^{-\\alpha}
+
+    Where:
+
+        - :math:`{channel\\_frequency}`: Frequency of the current channel
+        - :math:`{reference\\_frequency}`: Reference frequency
+        - :math:`{\\alpha}`: Spectral index
 
     Parameters
     ----------
@@ -100,12 +125,13 @@ def read_model(
             this stage will raise an exception.
 
         do_power_law_scaling: bool
-            Whether to perform power law scaling to scale model
-            image across channels. Only applicable for images with single
-            frequency channel.
+            Whether to perform power law scaling to scale
+            model image across channels. Only applicable for
+            continuum images.
 
         spectral_index: float
-            Spectral index to perform power law scaling
+            Spectral index (alpha) to perform power law scaling.
+            Note: The ratio of frequencies is raised to `-spectral_index`
 
     Returns
     -------
