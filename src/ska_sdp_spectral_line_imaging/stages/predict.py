@@ -57,6 +57,7 @@ def predict_stage(
 
     ps = upstream_output.ps
     model_image = upstream_output.model_image
+    additional_params = upstream_output.additional_params
 
     # TODO: If VISIBILITY_MODEL already exists in ps, do we want to copy the
     # attributes of existing VISIBILITY_MODEL to new VISIBILITY_MODEL?
@@ -64,7 +65,7 @@ def predict_stage(
     ps = ps.assign(
         {
             "VISIBILITY_MODEL": predict_for_channels(
-                ps, model_image, epsilon, cell_size
+                ps, model_image, epsilon, cell_size, **additional_params
             )
         }
     )

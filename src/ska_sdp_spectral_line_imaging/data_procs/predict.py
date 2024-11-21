@@ -4,6 +4,19 @@ import numpy as np
 import xarray as xr
 
 
+def _apply_power_law_scaling(
+    image: np.ndarray,
+    frequency_of_current_chunk: np.ndarray | float,
+    reference_frequency: float = None,
+    spectral_index: float = 0.75,
+):
+    channel_multiplier = np.power(
+        (frequency_of_current_chunk / reference_frequency[0]), -spectral_index
+    )
+
+    return image * channel_multiplier
+
+
 def predict_ducc(
     weight,
     flag,
@@ -15,6 +28,9 @@ def predict_ducc(
     nchan,
     ntime,
     nbaseline,
+    image_type,
+    ref_freq,
+    spectral_index,
 ):
     """
     Perform prediction using ducc0.gridder
@@ -41,6 +57,10 @@ def predict_ducc(
             Number of time dimension
         nbaseline: int
             Number of baseline dimension
+        image_type: str
+            continuum | spectral
+        ref_freq: float
+        spectral_index: float
 
     Returns
     -------
@@ -50,6 +70,16 @@ def predict_ducc(
     uvw_grid = uvw.reshape(ntime * nbaseline, 3)
     weight_grid = weight.reshape(ntime * nbaseline, nchan)
     freq_grid = freq.reshape(nchan)
+
+    if image_type == "continuum":
+        model_image = _apply_power_law_scaling(
+            model_image,
+            freq,
+            ref_freq,
+            spectral_index=spectral_index,
+        )
+
+    model_image = model_image.astype(np.float32)
 
     model = ducc0.wgridder.dirty2ms(
         uvw_grid,
@@ -87,9 +117,6 @@ def predict(ps, model_image, **kwargs):
         xarray.DataArray
     """
 
-    cell_size = kwargs["cell_size"]
-    epsilon = kwargs["epsilon"]
-
     model_vec = xr.apply_ufunc(
         predict_ducc,
         ps.WEIGHT,
@@ -114,15 +141,22 @@ def predict(ps, model_image, **kwargs):
             nchan=1,
             ntime=ps.time.size,
             nbaseline=ps.baseline_id.size,
-            cell_size=cell_size,
-            epsilon=epsilon,
+            **kwargs
         ),
     )
 
     return model_vec
 
 
-def predict_for_channels(ps, model_image, epsilon, cell_size):
+def predict_for_channels(
+    ps,
+    model_image,
+    epsilon,
+    cell_size,
+    image_type=None,
+    ref_freq=None,
+    spectral_index=None,
+):
 
     cell_size_radian = np.deg2rad(cell_size / 3600)
 
@@ -134,6 +168,9 @@ def predict_for_channels(ps, model_image, epsilon, cell_size):
         model_image,
         epsilon=epsilon,
         cell_size=cell_size_radian,
+        image_type=image_type,
+        ref_freq=ref_freq,
+        spectral_index=spectral_index,
     )
 
     predicted_visibility = predicted_visibility.assign_coords(

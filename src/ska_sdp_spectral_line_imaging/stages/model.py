@@ -18,7 +18,6 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 from ska_sdp_piper.piper.utils import delayed_log
 
 from ..data_procs.model import (
-    apply_power_law_scaling,
     fit_polynomial_on_visibility,
     report_peak_visibility,
 )
@@ -55,7 +54,7 @@ logger = logging.getLogger()
         ),
         do_power_law_scaling=ConfigParam(
             bool,
-            False,
+            True,
             description="""
             Whether to perform power law scaling to scale
             model image across channels. Only applicable for
@@ -160,19 +159,19 @@ def read_model(
         model_image = model_image.assign_coords(images[0].coords)
         model_image = model_image.assign_coords({"polarization": pols})
 
-    if do_power_law_scaling:
-        model_image = apply_power_law_scaling(
-            model_image,
-            ps.frequency.data,
-            spectral_index=spectral_index,
-            freq_chunks=ps.chunks["frequency"],
-        )
+    additional_params = {}
+    additional_params["spectral_index"] = spectral_index
 
     if "frequency" in model_image.dims and model_image.frequency.size == 1:
         # continuum image with extra dimension on frequency
+        additional_params["image_type"] = "continuum"
+        additional_params["ref_freq"] = model_image.frequency.data
         model_image = model_image.squeeze(dim="frequency", drop=True)
+    else:
+        model_image.attrs["image_type"] = "spectral"
 
     upstream_output["model_image"] = model_image
+    upstream_output["additional_params"] = additional_params
 
     return upstream_output
 
