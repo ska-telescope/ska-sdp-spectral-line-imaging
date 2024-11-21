@@ -73,10 +73,14 @@ def test_should_run_pipeline(prepare_test_data):
     assert os.path.exists(pipeline_output_path)
 
     expected_products = [
-        "test_cube.model.fits",
-        "test_cube.psf.fits",
-        "test_cube.residual.fits",
-        "test_cube.restored.fits",
+        "test_cube.model.I.fits",
+        "test_cube.model.V.fits",
+        "test_cube.psf.I.fits",
+        "test_cube.psf.V.fits",
+        "test_cube.residual.I.fits",
+        "test_cube.residual.V.fits",
+        "test_cube.restored.I.fits",
+        "test_cube.restored.V.fits",
         "residual.zarr",
         "model.zarr",
         f"spectral_line_imaging_pipeline_{timestamp()}.log",
@@ -132,7 +136,8 @@ def test_should_generate_dirty_image_when_niter_major_is_zero(
     expected_products = [
         # TODO: model and residual exports can be turned off
         # for other tests as it is already convered once
-        "test_cube.dirty.fits",
+        "test_cube.dirty.I.fits",
+        "test_cube.dirty.V.fits",
         f"spectral_line_imaging_pipeline_{timestamp()}.log",
         f"spectral_line_imaging_pipeline_{timestamp()}.config.yml",
         f"spectral_line_imaging_pipeline_{timestamp()}.cli.yml",
@@ -176,7 +181,8 @@ def test_should_run_pipeline_with_radler(prepare_test_data):
     assert os.path.exists(pipeline_output_path)
 
     expected_products = [
-        "test_cube.restored.fits",
+        "test_cube.restored.I.fits",
+        "test_cube.restored.V.fits",
         f"spectral_line_imaging_pipeline_{timestamp()}.log",
         f"spectral_line_imaging_pipeline_{timestamp()}.config.yml",
         f"spectral_line_imaging_pipeline_{timestamp()}.cli.yml",
@@ -226,7 +232,8 @@ def test_should_run_pipeline_with_flagging_enabled(prepare_test_data):
     assert os.path.exists(pipeline_output_path)
 
     expected_products = [
-        "test_cube.restored.fits",
+        "test_cube.restored.I.fits",
+        "test_cube.restored.V.fits",
         "default_strategy.lua",
         "flags.zarr",
         f"spectral_line_imaging_pipeline_{timestamp()}.log",

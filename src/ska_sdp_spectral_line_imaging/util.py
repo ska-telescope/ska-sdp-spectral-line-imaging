@@ -14,6 +14,7 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
 from ska_sdp_spectral_line_imaging.constants import (
     FITS_AXIS_TO_IMAGE_DIM,
     FITS_CODE_TO_POL_NAME,
+    POL_NAME_TO_FITS_CODE,
 )
 
 
@@ -105,24 +106,101 @@ def export_to_zarr(data, output_path, clear_attrs=False):
 
 
 @dask.delayed
-def export_to_fits(image, output_path):
+def _write_array_to_fits_delayed(data, header, output_path):
     """
-    Lazily export an image to FITS file format.
+    A helper function to write numpy array or dask array to fits image.
+    The caller has to call "compute()" on the returned delayed object, in
+    order to initiate the write call.
 
     Parameters
     ----------
-        image: ska_sdp_datamodels.image.image_model.Image
-            Image image to be exported
+        data: numpy.ndarray | dask.array
+            Data to write to the file.
+        header: astropy.io.fits.header.Header
+            FITS Header object, typically generated from WCS information.
         output_path: str
-            Output file path. A ".fits" is appended to this path.
+            Path to write to.
 
     Returns
     -------
         dask.delayed.Delayed
-            A dask delayed object which represents the task of writing
-            image to FITS.
+
     """
-    image.image_acc.export_to_fits(f"{output_path}.fits")
+    fits.writeto(
+        filename=output_path,
+        data=data,
+        header=header,
+        overwrite=True,
+    )
+
+
+def export_to_fits(image, output_path):
+    """
+    Exports Image instance to multiple FITS files, one per polarisation.
+
+    Parameters
+    ----------
+        image: ska_sdp_datamodels.image.Image
+        output_path: str
+
+    Returns
+    -------
+        List[dask.delayed.Delayed]
+
+    """
+    wcs = image.image_acc.wcs
+
+    # Since Image dimensions are: ["frequency", "polarisation", "y", "x"]
+    pol_axis_in_np = 1
+    # WCS / FITS dimensions must be: ["RA", "DEC", "POL", "CHAN"]
+    pol_axis_in_wcs = 2
+
+    # clean_beam must be a dictionary with keys {"bmaj", "bmin", "bpa"}.
+    clean_beam = image.attrs["clean_beam"]
+
+    tasks = []
+    for _, pol in enumerate(image.polarisation.values):
+        data = (
+            image.pixels.sel(polarisation=pol)
+            .expand_dims(dim="polarisation", axis=pol_axis_in_np)
+            .data
+        )
+
+        new_wcs = wcs.deepcopy()
+        new_wcs.wcs.crval[pol_axis_in_wcs] = POL_NAME_TO_FITS_CODE[pol]
+        new_wcs.wcs.cdelt[pol_axis_in_wcs] = 1.0
+        header = new_wcs.to_header()
+
+        if clean_beam:
+            header.append(
+                fits.Card(
+                    "BMAJ",
+                    clean_beam["bmaj"],
+                    "[deg] CLEAN beam major axis",
+                )
+            )
+            header.append(
+                fits.Card(
+                    "BMIN",
+                    clean_beam["bmin"],
+                    "[deg] CLEAN beam minor axis",
+                )
+            )
+            header.append(
+                fits.Card(
+                    "BPA",
+                    clean_beam["bpa"],
+                    "[deg] CLEAN beam position angle",
+                )
+            )
+
+        tasks.append(
+            _write_array_to_fits_delayed(
+                data, header, f"{output_path}.{pol}.fits"
+            )
+        )
+
+    return tasks
 
 
 def estimate_cell_size_in_arcsec(

@@ -10,6 +10,7 @@ from ska_sdp_datamodels.science_data_model.polarisation_model import (
 )
 
 from ska_sdp_spectral_line_imaging.util import (
+    _write_array_to_fits_delayed,
     estimate_cell_size_in_arcsec,
     estimate_image_size,
     export_image_as,
@@ -60,15 +61,12 @@ def test_should_export_image_as_zarr(export_to_zarr_mock):
 @patch("ska_sdp_spectral_line_imaging.util.export_to_fits")
 def test_should_export_image_as_fits(export_to_fits_mock):
     image = Mock(name="image")
-    export_to_fits_mock.return_value = "fits_task"
+    export_to_fits_mock.return_value = "fits_tasks"
 
-    loop = asyncio.get_event_loop()
-    export_task = loop.run_until_complete(
-        export_image_as(image, "output_path", export_format="fits")
-    )
+    export_task = export_image_as(image, "output_path", export_format="fits")
 
     export_to_fits_mock.assert_called_once_with(image, "output_path")
-    assert export_task == "fits_task"
+    assert export_task == "fits_tasks"
 
 
 def test_should_throw_exception_for_unsupported_data_format():
@@ -110,14 +108,64 @@ def test_should_estimate_image_size():
     np.testing.assert_array_equal(actual_image_size, expected_image_size)
 
 
-def test_should_export_image_to_fits_delayed():
-    image = MagicMock(name="Image instance")
+@patch("ska_sdp_spectral_line_imaging.util.fits")
+def test_should_write_array_to_fits_delayed(fits_mock):
 
-    export_to_fits(image, "output_dir/image_name").compute()
+    _write_array_to_fits_delayed(
+        "data", "header", "output_path/file.fits"
+    ).compute()
 
-    image.image_acc.export_to_fits.assert_called_once_with(
-        "output_dir/image_name.fits"
+    fits_mock.writeto.assert_called_once_with(
+        filename="output_path/file.fits",
+        data="data",
+        header="header",
+        overwrite=True,
     )
+
+
+@patch("ska_sdp_spectral_line_imaging.util._write_array_to_fits_delayed")
+def test_should_export_image_to_fits_delayed(write_array_to_fits_mock):
+    image = MagicMock(name="Image")
+    image.polarisation = xr.DataArray(["XX", "YX"])
+    image.attrs.__getitem__.return_value = {"bmaj": 10, "bmin": 20, "bpa": 30}
+
+    imageXX = MagicMock(name="Image XX")
+    imageYX = MagicMock(name="Image YX")
+    image.pixels.sel.return_value = image
+    image.expand_dims.side_effect = [imageXX, imageYX]
+
+    wcs = MagicMock(name="wcs")
+    wcs.deepcopy.return_value = wcs
+
+    header1 = Mock(name="header1")
+    header2 = Mock(name="header1")
+    wcs.to_header.side_effect = [header1, header2]
+
+    image.image_acc.wcs = wcs
+    write_array_to_fits_mock.side_effect = ["fits_task1", "fits_task2"]
+
+    loop = asyncio.get_event_loop()
+    tasks = export_to_fits(image, "output_dir/image_name")
+    output = [loop.run_until_complete(task) for task in tasks]
+
+    image.attrs.__getitem__.assert_called_once_with("clean_beam")
+
+    image.pixels.sel.assert_has_calls(
+        [call(polarisation="XX"), call(polarisation="YX")]
+    )
+
+    image.expand_dims.assert_has_calls(
+        [call(dim="polarisation", axis=1), call(dim="polarisation", axis=1)]
+    )
+
+    write_array_to_fits_mock.assert_has_calls(
+        [
+            call(imageXX.data, header1, "output_dir/image_name.XX.fits"),
+            call(imageYX.data, header2, "output_dir/image_name.YX.fits"),
+        ]
+    )
+
+    assert output == ["fits_task1", "fits_task2"]
 
 
 def test_should_export_to_zarr_without_attrs():

@@ -15,6 +15,8 @@ FITS_CODE_TO_POL_NAME = {
     -8: "YX",
 }
 
+POL_NAME_TO_FITS_CODE = {v: k for k, v in FITS_CODE_TO_POL_NAME.items()}
+
 FITS_AXIS_TO_IMAGE_DIM = {
     "RA": "x",
     "DEC": "y",
