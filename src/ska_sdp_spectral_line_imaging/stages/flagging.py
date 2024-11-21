@@ -68,15 +68,8 @@ logger = logging.getLogger()
             ),
             threshold_channel_rms=ConfigParam(
                 float,
-                3.0,
+                99.0,
                 description="RMS sigma threshold for frequency domain",
-                nullable=False,
-            ),
-            keep_original_flags=ConfigParam(
-                bool,
-                True,
-                description="Consider the original flags while applying"
-                " strategy",
                 nullable=False,
             ),
             keep_outliers=ConfigParam(
@@ -86,11 +79,18 @@ logger = logging.getLogger()
                 " rms threshold.",
                 nullable=False,
             ),
+            keep_original_flags=ConfigParam(
+                bool,
+                True,
+                description="Consider the original flags while applying"
+                " strategy",
+                nullable=False,
+            ),
             low_pass_filter=NestedConfigParam(
                 "Low pass filter configs",
                 do_low_pass=ConfigParam(
                     bool,
-                    True,
+                    False,
                     description="Do low pass filtering",
                     nullable=False,
                 ),

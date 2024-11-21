@@ -127,13 +127,13 @@ flagging
     +----------------------------------------------+--------+-----------+---------------------------------------------------------------------------------+------------+------------------+
     | strategy_configs.threshold_timestep_rms      | float  | 3.0       | RMS sigma threshold for time domain                                             | False      |                  |
     +----------------------------------------------+--------+-----------+---------------------------------------------------------------------------------+------------+------------------+
-    | strategy_configs.threshold_channel_rms       | float  | 3.0       | RMS sigma threshold for frequency domain                                        | False      |                  |
-    +----------------------------------------------+--------+-----------+---------------------------------------------------------------------------------+------------+------------------+
-    | strategy_configs.keep_original_flags         | bool   | True      | Consider the original flags while applying strategy                             | False      |                  |
+    | strategy_configs.threshold_channel_rms       | float  | 99.0      | RMS sigma threshold for frequency domain                                        | False      |                  |
     +----------------------------------------------+--------+-----------+---------------------------------------------------------------------------------+------------+------------------+
     | strategy_configs.keep_outliers               | bool   | True      | Keep frequency outliers during channel rms threshold.                           | False      |                  |
     +----------------------------------------------+--------+-----------+---------------------------------------------------------------------------------+------------+------------------+
-    | strategy_configs.low_pass_filter.do_low_pass | bool   | True      | Do low pass filtering                                                           | False      |                  |
+    | strategy_configs.keep_original_flags         | bool   | True      | Consider the original flags while applying strategy                             | False      |                  |
+    +----------------------------------------------+--------+-----------+---------------------------------------------------------------------------------+------------+------------------+
+    | strategy_configs.low_pass_filter.do_low_pass | bool   | False     | Do low pass filtering                                                           | False      |                  |
     +----------------------------------------------+--------+-----------+---------------------------------------------------------------------------------+------------+------------------+
     | strategy_configs.low_pass_filter.window_size | list   | [11, 21]  | Kernel size for low pass filtering                                              | False      |                  |
     +----------------------------------------------+--------+-----------+---------------------------------------------------------------------------------+------------+------------------+
