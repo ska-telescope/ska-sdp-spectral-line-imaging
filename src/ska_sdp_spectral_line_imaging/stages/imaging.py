@@ -144,7 +144,7 @@ def imaging_stage(
     processing set. Processing set is present in from the upstream_output.
 
     For detailed parameter info, please refer to
-    "Stage Config" section in the documentation.
+    "Stages and configurations" section in the documentation.
 
     Parameters
     ----------

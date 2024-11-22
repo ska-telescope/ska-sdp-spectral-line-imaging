@@ -1,10 +1,12 @@
-Stage Configs
-=============
+Stages and configurations
+#########################
 
-This page is generated using docs/generate_config.py
+.. This page is generated using docs/generate_config.py
 
 The descriptions of each stage are copied from the docstrings of stages.
 Refer to the `API page for stages <api/ska_sdp_spectral_line_imaging.stages.html>`_
+
+Each stage has parameters, which are defined in the YAML config file passed to the pipeline.
 
 
 load_data
@@ -13,6 +15,9 @@ load_data
     Reads processing set, selects one partition, and returns xarray dataset
     to be used by further stage.
     The proceessing set path is passed through ``--input`` option from cli.
+
+Parameters
+==========
 
 ..  table::
     :width: 100%
@@ -31,6 +36,9 @@ vis_stokes_conversion
     Converts visibilities to expected output polarizations.
     The visibilities are taken from processing set in the
     upstream_output.
+
+Parameters
+==========
 
 ..  table::
     :width: 100%
@@ -70,6 +78,9 @@ read_model
         - :math:`{reference\_frequency}`: Reference frequency
         - :math:`{\alpha}`: Spectral index
 
+Parameters
+==========
+
 ..  table::
     :width: 100%
     :widths: 15, 10, 10, 45, 10, 10
@@ -104,6 +115,9 @@ predict_stage
 
     Predicts visibilities from model image data using ducc0.wgridder.
 
+Parameters
+==========
+
 ..  table::
     :width: 100%
     :widths: 15, 10, 10, 45, 10, 10
@@ -128,6 +142,9 @@ continuum_subtraction
     The "VISIBILITY" and "VISIBILITY_MODEL" are taken
     from upstream_output.
 
+Parameters
+==========
+
 ..  table::
     :width: 100%
     :widths: 15, 10, 10, 45, 10, 10
@@ -148,6 +165,9 @@ flagging
 ********
 
     Perfoms flagging on visibilities using strategies and existing flags.
+
+Parameters
+==========
 
 ..  table::
     :width: 100%
@@ -197,7 +217,10 @@ imaging
     processing set. Processing set is present in from the upstream_output.
 
     For detailed parameter info, please refer to
-    "Stage Config" section in the documentation.
+    "Stages and configurations" section in the documentation.
+
+Parameters
+==========
 
 ..  table::
     :width: 100%
