@@ -85,7 +85,8 @@ def read_model(
     Read model image(s) from FITS file(s).
     Supports reading from continuum or spectral FITS images.
 
-    Please refer `README <../README.html#regarding-the-model-visibilities>`_
+    Please refer to "Getting Started" in the documentation
+    (or "README.md" in the repository)
     to understand the requirements of the model image.
 
     If `do_power_law_scaling` is True, this function can scale model image
@@ -190,19 +191,21 @@ def read_model(
 )
 def vis_stokes_conversion(upstream_output, output_polarizations):
     """
-    Visibility to stokes conversion
+    Converts visibilities to expected output polarizations.
+    The visibilities are taken from processing set in the
+    upstream_output.
 
     Parameters
     ----------
-        upstream_output: dict
+        upstream_output: UpstreamOutput
             Output from the upstream stage
-        output_polarizations: list
+        output_polarizations: list[str]
             List of desired polarization codes, in the order they will appear
             in the output dataset polarization axis
 
     Returns
     -------
-        dict
+        UpstreamOutput
     """
     ps = upstream_output.ps
 
@@ -239,7 +242,9 @@ def cont_sub(
     _output_dir_,
 ):
     """
-    Perform continuum subtraction
+    Perform subtraction of visibilities.
+    The "VISIBILITY" and "VISIBILITY_MODEL" are taken
+    from upstream_output.
 
     Parameters
     ----------

@@ -1,14 +1,18 @@
 Stage Configs
 =============
 
-.. This file is generated using scripts/generate_config.py
+This page is generated using docs/generate_config.py
 
-.. This file is referenced by "imaging" stage docstring by a relative reference
-.. to the generated html page.
+The descriptions of each stage are copied from the docstrings of stages.
+Refer to the `API page for stages <api/ska_sdp_spectral_line_imaging.stages.html>`_
 
 
 load_data
 *********
+
+    Reads processing set, selects one partition, and returns xarray dataset
+    to be used by further stage.
+    The proceessing set path is passed through ``--input`` option from cli.
 
 ..  table::
     :width: 100%
@@ -24,6 +28,10 @@ load_data
 vis_stokes_conversion
 *********************
 
+    Converts visibilities to expected output polarizations.
+    The visibilities are taken from processing set in the
+    upstream_output.
+
 ..  table::
     :width: 100%
     :widths: 15, 10, 10, 45, 10, 10
@@ -38,6 +46,29 @@ vis_stokes_conversion
 
 read_model
 **********
+
+    Read model image(s) from FITS file(s).
+    Supports reading from continuum or spectral FITS images.
+
+    Please refer to "Getting Started" in the documentation
+    (or "README.md" in the repository)
+    to understand the requirements of the model image.
+
+    If `do_power_law_scaling` is True, this function can scale model image
+    across channels. This is only applicable for images with single
+    frequency channel. The formula for power law scaling is as follows
+
+    .. math::
+
+        scaled\_channel = current\_channel *
+            (\frac{channel\_frequency}
+            {reference\_frequency})^{-\alpha}
+
+    Where:
+
+        - :math:`{channel\_frequency}`: Frequency of the current channel
+        - :math:`{reference\_frequency}`: Reference frequency
+        - :math:`{\alpha}`: Spectral index
 
 ..  table::
     :width: 100%
@@ -71,6 +102,8 @@ read_model
 predict_stage
 *************
 
+    Predicts visibilities from model image data using ducc0.wgridder.
+
 ..  table::
     :width: 100%
     :widths: 15, 10, 10, 45, 10, 10
@@ -91,6 +124,10 @@ predict_stage
 continuum_subtraction
 *********************
 
+    Perform subtraction of visibilities.
+    The "VISIBILITY" and "VISIBILITY_MODEL" are taken
+    from upstream_output.
+
 ..  table::
     :width: 100%
     :widths: 15, 10, 10, 45, 10, 10
@@ -109,6 +146,8 @@ continuum_subtraction
 
 flagging
 ********
+
+    Perfoms flagging on visibilities using strategies and existing flags.
 
 ..  table::
     :width: 100%
@@ -153,6 +192,12 @@ flagging
 
 imaging
 *******
+
+    Performs clean algorithm on the visibilities present in
+    processing set. Processing set is present in from the upstream_output.
+
+    For detailed parameter info, please refer to
+    "Stage Config" section in the documentation.
 
 ..  table::
     :width: 100%

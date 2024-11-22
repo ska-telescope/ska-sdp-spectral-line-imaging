@@ -16,7 +16,9 @@ from ska_sdp_piper.piper.stage import ConfigurableStage
 )
 def load_data(upstream_output, obs_id: int, _cli_args_):
     """
-    Selects the field from processing set
+    Reads processing set, selects one partition, and returns xarray dataset
+    to be used by further stage.
+    The proceessing set path is passed through ``--input`` option from cli.
 
     Parameters
     ----------

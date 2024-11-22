@@ -59,16 +59,21 @@ stage_name_to_pddf = generate_config_dfs_per_stage(pipeline.spectral_line_imagin
 # Generate the RST file
 #######################
 
-header = """Stage Configs
-=============
+header = """Stages and configurations
+#########################
 
-.. This file is generated using scripts/generate_config.py
+.. This page is generated using docs/generate_config.py
 
-.. This file is referenced by "imaging" stage docstring by a relative reference
-.. to the generated html page.
+The descriptions of each stage are copied from the docstrings of stages.
+Refer to the `API page for stages <api/ska_sdp_spectral_line_imaging.stages.html>`_
+
+Each stage has parameters, which are defined in the YAML config file passed to the pipeline.
 """
 
 table_config = """
+Parameters
+==========
+
 ..  table::
     :width: 100%
     :widths: 15, 10, 10, 45, 10, 10
@@ -77,13 +82,18 @@ table_config = """
 indent = "    "
 
 
-def generate_stage_config(dfs, stage_config_path):
+def generate_stage_config(pipeline_definition, dataframes, stage_config_path):
     with open(stage_config_path, "w") as f:
         # Write the header first
         output_string = f"{header}\n\n"
 
-        for name, df in dfs.items():
-            output_string += f"{name}\n{'*' * len(name)}\n{table_config}\n"
+        for stage in pipeline_definition._stages:
+            name = stage.name
+            df = dataframes[name]
+            # Assuming that all stages have "Parameters" section
+            doc = stage.__doc__.split(sep="Parameters")[0].rstrip()
+
+            output_string += f"{name}\n{'*' * len(name)}\n{doc}\n{table_config}\n"
 
             # Convert DataFrame to markdown string and write it to file
             markdown = df.to_markdown(
@@ -102,4 +112,4 @@ def generate_stage_config(dfs, stage_config_path):
 
 out_rst_path = os.path.join(module_dir, "src/stage_config.rst")
 
-generate_stage_config(stage_name_to_pddf, out_rst_path)
+generate_stage_config(pipeline.spectral_line_imaging_pipeline, stage_name_to_pddf, out_rst_path)

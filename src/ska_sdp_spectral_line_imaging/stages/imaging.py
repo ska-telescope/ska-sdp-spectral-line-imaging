@@ -140,10 +140,11 @@ def imaging_stage(
     _output_dir_,
 ):
     """
-    Creates a dirty image using ducc0.gridder.
+    Performs clean algorithm on the visibilities present in
+    processing set. Processing set is present in from the upstream_output.
 
     For detailed parameter info, please refer to
-    `Stage Configurations <../stage_config.html>`_
+    "Stage Config" section in the documentation.
 
     Parameters
     ----------

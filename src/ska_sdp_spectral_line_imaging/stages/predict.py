@@ -37,12 +37,13 @@ def predict_stage(
     upstream_output, epsilon, cell_size, export_model, psout_name, _output_dir_
 ):
     """
-    Perform model prediction
+    Predicts visibilities from model image data using ducc0.wgridder.
 
     Parameters
     ----------
-        upstream_output: dict
-            Output from the upstream stage
+        upstream_output: UpstreamOutput
+            Output from the upstream stage. This contains processing set (ps)
+            and model image data (model_image)
         epsilon: float
             Floating point accuracy for ducc gridder
         cell_size: float
@@ -52,7 +53,7 @@ def predict_stage(
 
     Returns
     -------
-        dict
+        UpstreamOutput
     """
 
     ps = upstream_output.ps
