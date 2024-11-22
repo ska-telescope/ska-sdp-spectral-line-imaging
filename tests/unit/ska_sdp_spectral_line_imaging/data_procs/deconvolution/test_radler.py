@@ -90,7 +90,7 @@ class TestRadler:
     def test_should_throw_exceptions_for_non_suported_algorithms(self):
         with pytest.raises(ValueError):
             radler_deconvolve_cube(
-                "dirty_image", "psf_image", algorithm="non-supported"
+                "dirty_image", "psf_image", algorithm="msclean"
             )
 
     @patch(

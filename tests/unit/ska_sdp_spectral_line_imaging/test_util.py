@@ -1,6 +1,7 @@
 # pylint: disable=no-member
 import asyncio
 
+import mock
 import numpy as np
 import pytest
 import xarray as xr
@@ -123,8 +124,25 @@ def test_should_write_array_to_fits_delayed(fits_mock):
     )
 
 
+@pytest.fixture(scope="function")
+def fits_card_mock():
+    with mock.patch(
+        "ska_sdp_spectral_line_imaging.util.fits.Card"
+    ) as fits_card:
+
+        def incrementing_names():
+            counter = 1
+            while True:
+                yield f"fits_card_{counter}"
+                counter += 1
+
+        fits_card.side_effect = incrementing_names()
+
+        yield fits_card
+
+
 @patch("ska_sdp_spectral_line_imaging.util._write_array_to_fits_delayed")
-def test_should_export_image_to_fits_delayed(write_array_to_fits_mock):
+def test_should_export_image_to_fits(write_array_to_fits_mock, fits_card_mock):
     image = MagicMock(name="Image")
     image.polarisation = xr.DataArray(["XX", "YX"])
     image.attrs.__getitem__.return_value = {"bmaj": 10, "bmin": 20, "bpa": 30}
@@ -137,9 +155,9 @@ def test_should_export_image_to_fits_delayed(write_array_to_fits_mock):
     wcs = MagicMock(name="wcs")
     wcs.deepcopy.return_value = wcs
 
-    header1 = Mock(name="header1")
-    header2 = Mock(name="header1")
-    wcs.to_header.side_effect = [header1, header2]
+    headerXX = Mock(name="header XX")
+    headerYX = Mock(name="header YX")
+    wcs.to_header.side_effect = [headerXX, headerYX]
 
     image.image_acc.wcs = wcs
     write_array_to_fits_mock.side_effect = ["fits_task1", "fits_task2"]
@@ -172,10 +190,46 @@ def test_should_export_image_to_fits_delayed(write_array_to_fits_mock):
         ]
     )
 
+    fits_card_mock.assert_has_calls(
+        [
+            call(
+                "BMAJ",
+                10,
+                "[deg] CLEAN beam major axis",
+            ),
+            call(
+                "BMIN",
+                20,
+                "[deg] CLEAN beam minor axis",
+            ),
+            call(
+                "BPA",
+                30,
+                "[deg] CLEAN beam position angle",
+            ),
+        ]
+    )
+
+    headerXX.append.assert_has_calls(
+        [
+            call(card="fits_card_1"),
+            call(card="fits_card_2"),
+            call(card="fits_card_3"),
+        ]
+    )
+
+    headerYX.append.assert_has_calls(
+        [
+            call(card="fits_card_4"),
+            call(card="fits_card_5"),
+            call(card="fits_card_6"),
+        ]
+    )
+
     write_array_to_fits_mock.assert_has_calls(
         [
-            call(imageXX.data, header1, "output_dir/image_name.XX.fits"),
-            call(imageYX.data, header2, "output_dir/image_name.YX.fits"),
+            call(imageXX.data, headerXX, "output_dir/image_name.XX.fits"),
+            call(imageYX.data, headerYX, "output_dir/image_name.YX.fits"),
         ]
     )
 

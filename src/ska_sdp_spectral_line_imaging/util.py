@@ -137,16 +137,21 @@ def _write_array_to_fits_delayed(data, header, output_path):
 def export_to_fits(image, output_path):
     """
     Exports Image instance to multiple FITS files, one per polarisation.
+    The caller is expected to call ``dask.compute()`` on the returned delayed
+    objects for the actual writes to happen.
 
     Parameters
     ----------
         image: ska_sdp_datamodels.image.Image
+            Image instance containing all the polarisations.
         output_path: str
+            Path to write FITS image to.
+            The output_path is appended with ".{pol}.fits"
+            where "pol" is the polarization being written.
 
     Returns
     -------
         List[dask.delayed.Delayed]
-
     """
     wcs = image.image_acc.wcs
 
