@@ -42,7 +42,7 @@ The command to run can be something like this:
 ```bash
 # only for SELinux Users
 MOUNT_FLAGS=:z \
-IMAGE=artefact.skao.int/ska-sdp-spectral-line-imaging:0.6.1 \
+IMAGE=artefact.skao.int/ska-sdp-spectral-line-imaging:0.6.2 \
 DATA=/path/to/local/dir \
 REPLICAS=4 \
 INPUT=processing_set.ps \

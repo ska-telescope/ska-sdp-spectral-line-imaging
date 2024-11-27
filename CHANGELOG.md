@@ -1,8 +1,9 @@
 # Changelog
 
-## Latest
+## 0.6.2
 
-- Add support power law scaling in `read_model` stage
+- Add support for power law scaling in `read_model` stage
+- Add support for configurable spectral line imaging flaggin strategy
 - Output FITS images are now written to seperate file per polarisation
 
 ## 0.6.1
