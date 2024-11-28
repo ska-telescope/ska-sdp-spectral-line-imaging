@@ -73,12 +73,13 @@ spectral-line-imaging-pipeline install-config --config-install-path path/to/dir 
 
 Run the spectral line pipeline using the `run` subcommand.
 
-To run on the accompanying [SKA MID](#ska-mid-data) simulated data, run:
+For example:
 
 ```bash
 spectral-line-imaging-pipeline run \
---input ska_low_simulated_data.ps \
---config ska_low_config.yml
+--input /path/to/processing_set \
+--config /path/to/config \
+--output /path/to/output/dir
 ```
 
 For all the options, run `spectral-line-imaging-pipeline run --help`.
@@ -100,11 +101,6 @@ bashcompinit
 ```
 
 ## Some pre-requisites of the pipeline
-
-### SKA MID Data
-
-The data `sim_mid_contsubbed_xrad31_freq1.ps`, the config file `spectral_line_imaging_pipeline.yml` and a psf image `ska_mid_gen_psf.fits` are present in SKA's google cloud bucket.
-Please contact members from team DHRUVA to know how to access it.
 
 ### Running pipeline on custom MSv2 dataset
 
