@@ -1,4 +1,4 @@
-from mock import Mock, mock
+import mock
 
 from ska_sdp_spectral_line_imaging.pipeline import (
     pipeline_diagnostic,
@@ -20,11 +20,11 @@ def test_should_perform_diagnostics(
     spectral_line_diagnose_mock,
     path_mock,
 ):
-    cli_args = Mock(name="cli_args")
-    cli_args.input = "input"
-    cli_args.output = "output"
-    cli_args.channel = 1
-    cli_args.dask_scheduler = "dask-scheduler"
+    cli_args = {}
+    cli_args["input"] = "input"
+    cli_args["output"] = "output"
+    cli_args["channel"] = 1
+    cli_args["dask_scheduler"] = "dask-scheduler"
     spectral_line_diagnose_mock.return_value = spectral_line_diagnose_mock
 
     pipeline_diagnostic(cli_args)
@@ -52,11 +52,11 @@ def test_should_perform_diagnostics(
 def test_should_perform_diagnostics_with_default_output(
     create_dir_mock, spectral_line_diagnose_mock, path_mock
 ):
-    cli_args = Mock(name="cli_args")
-    cli_args.input = "input"
-    cli_args.output = None
-    cli_args.channel = 1
-    cli_args.dask_scheduler = "dask-scheduler"
+    cli_args = {}
+    cli_args["input"] = "input"
+    cli_args["output"] = None
+    cli_args["channel"] = 1
+    cli_args["dask_scheduler"] = "dask-scheduler"
     spectral_line_diagnose_mock.return_value = spectral_line_diagnose_mock
 
     pipeline_diagnostic(cli_args)

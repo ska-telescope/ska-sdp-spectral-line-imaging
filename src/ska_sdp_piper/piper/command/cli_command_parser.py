@@ -1,7 +1,6 @@
 import argparse
-import sys
 
-from ..utils import write_yml
+from ..utils import write_yml as write_yaml_util
 
 
 class CLIArgument:
@@ -49,22 +48,6 @@ class CLICommandParser:
         self.__parser = argparse.ArgumentParser()
         self.__subparser = self.__parser.add_subparsers()
 
-    def parse_args(self):
-        """
-        Parse CLI args.
-
-        Returns
-        -------
-            argparser.Namespace
-        """
-        if len(sys.argv) == 1:
-            sys.stderr.write(
-                f"{sys.argv[0]}: error: positional arguments missing.\n"
-            )
-            self.__parser.print_help()
-            sys.exit(2)
-        return self.__parser.parse_args()
-
     def create_sub_parser(
         self, subparser_name, sub_command, cli_args, help=None
     ):
@@ -96,9 +79,7 @@ class CLICommandParser:
         -------
             dict
         """
-
-        cli_args = self.__parser.parse_args()
-        return dict(cli_args._get_kwargs())
+        return vars(self.__parser.parse_args())
 
     def write_yml(self, path):
         """
@@ -114,4 +95,4 @@ class CLICommandParser:
         if "sub_command" in cli_args:
             del cli_args["sub_command"]
 
-        write_yml(path, cli_args)
+        write_yaml_util(path, cli_args)

@@ -47,11 +47,13 @@ def pipeline_diagnostic(cli_args):
 
     Parameters
     ----------
-        cli_args: argparse.Namespace
+        cli_args: dict
             CLI arguments
     """
-    input_path = Path(cli_args.input)
-    output_dir = "./diagnosis" if cli_args.output is None else cli_args.output
+    input_path = Path(cli_args["input"])
+    output_dir = (
+        "./diagnosis" if cli_args["output"] is None else cli_args["output"]
+    )
 
     timestamped_output_dir = Path(create_output_dir(output_dir, "pipeline-qa"))
     logger.info("==========================================")
@@ -62,8 +64,8 @@ def pipeline_diagnostic(cli_args):
     diagnoser = SpectralLineDiagnoser(
         input_path,
         timestamped_output_dir,
-        cli_args.channel,
-        cli_args.dask_scheduler,
+        cli_args["channel"],
+        cli_args["dask_scheduler"],
         scheduler=scheduler,
     )
     diagnoser.diagnose()

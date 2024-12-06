@@ -116,31 +116,46 @@ class Pipeline(Command, metaclass=NamedInstance):
             global_parameters=self._global_config.items,
         )
 
+    def _install_config(self, config_cli_args):
+        """
+        Install the config
+
+        Parameters
+        ----------
+            config_cli_args: dict
+                CLI arguments
+        """
+        config_install_dir = config_cli_args["config_install_path"]
+
+        RuntimeConfig(**self.config).update_from_cli_overrides(
+            config_cli_args["override_defaults"]
+        ).write_yml(f"{config_install_dir}/{self.name}.yml")
+
     def _run(self, cli_args):
         """
         Run sub command
 
         Parameters
         ----------
-            cli_args: argparse.Namespace
+            cli_args: dict
                 CLI arguments
         """
-        stages = [] if cli_args.stages is None else cli_args.stages[0]
+        stages = [] if cli_args["stages"] is None else cli_args["stages"][0]
 
-        output_path = (
+        output_dir = (
             "./output"
-            if cli_args.output_path is None
-            else cli_args.output_path
+            if cli_args["output_path"] is None
+            else cli_args["output_path"]
         )
-        output_dir = create_output_dir(output_path, self.name)
+        timestamped_output_dir = create_output_dir(output_dir, self.name)
 
-        log_file = f"{output_dir}/{self.name}_{timestamp()}.log"
-        LogUtil.configure(log_file, verbose=(cli_args.verbose != 0))
+        log_file = f"{timestamped_output_dir}/{self.name}_{timestamp()}.log"
+        LogUtil.configure(log_file, verbose=(cli_args["verbose"] != 0))
 
         runtime_config = (
             RuntimeConfig(**self.config)
-            .update_from_yaml(cli_args.config_path)
-            .update_from_cli_overrides(cli_args.override_defaults)
+            .update_from_yaml(cli_args["config_path"])
+            .update_from_cli_overrides(cli_args["override_defaults"])
             .update_from_cli_stages(stages)
         )
 
@@ -149,67 +164,32 @@ class Pipeline(Command, metaclass=NamedInstance):
             **runtime_config.global_parameters
         )
 
-        cli_output_file = f"{output_dir}/{self.name}_{timestamp()}.cli.yml"
+        cli_output_file = (
+            f"{timestamped_output_dir}/{self.name}_{timestamp()}.cli.yml"
+        )
         self._cli_command_parser.write_yml(cli_output_file)
 
         config_output_path = (
-            f"{output_dir}/{self.name}_{timestamp()}.config.yml"
+            f"{timestamped_output_dir}/{self.name}_{timestamp()}.config.yml"
         )
         runtime_config.write_yml(config_output_path)
-
-        self.run(
-            stages=runtime_config.stages_to_run,
-            output_dir=output_dir,
-            cli_args=self._cli_command_parser.cli_args_dict,
-        )
-
-    def _install_config(self, cli_args):
-        """
-        Install the config
-
-        Parameters
-        ----------
-            cli_args: argparse.Namespace
-                CLI arguments
-        """
-        RuntimeConfig(**self.config).update_from_cli_overrides(
-            cli_args.override_defaults
-        ).write_yml(f"{cli_args.config_install_path}/{self.name}.yml")
-
-    def run(
-        self,
-        output_dir,
-        stages,
-        cli_args=None,
-    ):
-        """
-        Executes the pipeline
-
-        Parameters
-        ----------
-          output_dir: str
-             Path to output directory
-          stages: list[str]
-             Names of the stages to be executed
-          verbose: bool
-             Toggle DEBUG log level
-          cli_args: dict
-             CLI arguments
-        """
-        cli_args = {} if cli_args is None else cli_args
 
         self.logger.info("=============== START =====================")
         self.logger.info(f"Executing {self.name} pipeline with metadata:")
         self.logger.info(f"Infile Path: {cli_args.get('input')}")
         self.logger.info(f"Stages: {stages}")
         self.logger.info(f"Configuration Path: {cli_args.get('config_path')}")
-        self.logger.info(f"Current run output path : {output_dir}")
+        self.logger.info(f"Current run output path : {timestamped_output_dir}")
 
-        executor = ExecutorFactory.get_executor(output_dir, **cli_args)
+        executor = ExecutorFactory.get_executor(
+            timestamped_output_dir, **cli_args
+        )
+
+        stages = runtime_config.stages_to_run
         self._stages.validate(stages)
 
         self._stages.add_additional_parameters(
-            _output_dir_=output_dir,
+            _output_dir_=timestamped_output_dir,
             _cli_args_=cli_args,
             _global_parameters_=self._global_config.items,
         )

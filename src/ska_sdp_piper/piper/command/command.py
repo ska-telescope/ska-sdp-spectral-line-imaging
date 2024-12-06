@@ -64,10 +64,15 @@ class Command:
         """
         Run the pipeline as a CLI command
         """
-        cli_args = self._cli_command_parser.parse_args()
+        cli_args = self._cli_command_parser.cli_args_dict
+
+        if "sub_command" not in cli_args:
+            raise ValueError(
+                "Subcommand is missing. Run with '-h' to see help."
+            )
 
         try:
-            cli_args.sub_command(cli_args)
+            cli_args["sub_command"](cli_args)
         except builtins.BaseException as ex:
             self.logger.exception(ex)
             raise ex
