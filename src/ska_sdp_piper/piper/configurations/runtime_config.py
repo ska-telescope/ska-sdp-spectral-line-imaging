@@ -88,15 +88,15 @@ class RuntimeConfig:
         config_dict = read_yml(yaml_path)
         self.pipeline = {
             **self.pipeline,
-            **config_dict.get("pipeline", dict()),
+            **config_dict.get(ConfigRoot.PIPELINE, dict()),
         }
         self.parameters = {
             **self.parameters,
-            **config_dict.get("parameters", dict()),
+            **config_dict.get(ConfigRoot.PARAMETERS, dict()),
         }
         self.global_parameters = {
             **self.global_parameters,
-            **config_dict.get("global_parameters", dict()),
+            **config_dict.get(ConfigRoot.GLOBAL_PARAMETERS, dict()),
         }
 
         return self
@@ -157,9 +157,9 @@ class RuntimeConfig:
         """
 
         config = {
-            "parameters": self.parameters,
-            "pipeline": self.pipeline,
-            "global_parameters": self.global_parameters,
+            ConfigRoot.PARAMETERS: self.parameters,
+            ConfigRoot.PIPELINE: self.pipeline,
+            ConfigRoot.GLOBAL_PARAMETERS: self.global_parameters,
         }
         write_yml(path, config)
 

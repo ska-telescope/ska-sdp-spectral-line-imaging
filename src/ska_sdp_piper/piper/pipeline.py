@@ -4,7 +4,7 @@ import logging
 from .command import Command
 from .configurations import Configuration
 from .configurations.runtime_config import RuntimeConfig
-from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS
+from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS, ConfigRoot
 from .executors import ExecutorFactory
 from .named_instance import NamedInstance
 from .utils import LogUtil, create_output_dir, timestamp
@@ -102,14 +102,15 @@ class Pipeline(Command, metaclass=NamedInstance):
         -------
         dict
             Pipeline configuration with top level keys
+                - `global_parameters`
                 - `parameters`
                 - `pipelines`
         """
-        return dict(
-            pipeline=self._pipeline_config(),
-            parameters=self._parameter(),
-            global_parameters=self._global_config.items,
-        )
+        return {
+            ConfigRoot.PIPELINE: self._pipeline_config(),
+            ConfigRoot.PARAMETERS: self._parameter(),
+            ConfigRoot.GLOBAL_PARAMETERS: self._global_config.items,
+        }
 
     def install_config(
         self, config_install_path, override_defaults=None, **kwargs
