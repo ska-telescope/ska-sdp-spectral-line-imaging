@@ -136,13 +136,13 @@ class Pipeline(Command, metaclass=NamedInstance):
     def _run(
         self,
         config_path=None,
-        output_path=None,
-        stages=None,
         dask_scheduler=None,
+        output_path=None,
         override_defaults=None,
-        with_report=False,
+        stages=None,
         verbose=0,
-        **kwargs,
+        with_report=False,
+        **extra_kwargs,
     ):
         """
         Run the pipeline.
@@ -150,11 +150,43 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         Parameters
         ----------
-            stages: list[str], optional
-                A list containing names of the stages to execute.
-            override_defaults: list[list[str, any]], optional
-                A list of parameters to override in the config
-                at runtime.
+            config_path: str, or os.PathLike, optional
+                Path to the config yaml file. If not passed, the pipeline
+                will run with its default config.
+            dask_scheduler: string, or Cluster, optional
+                An IP address of the scheduler, or an instance of a dask
+                Cluster, which will be passed to a dask Client. If not
+                provided, then the pipeline will run locally on the with
+                multi-threading.
+            output_path: str, or os.PathLike, optional
+                Path to the output directory. Actual output will be stored
+                in a new directory inside "output_path" with timestamp.
+                If not passed, a new directory called "output" will be
+                created in the current working directory.
+            override_defaults: list of [list[str, any]], optional
+                A list of parameters to override in the config at runtime.
+                This takes preference over the config file passed
+                in "config_path".
+            stages: list of str, optional
+                A list containing names of the stages to execute. This takes
+                preference over the stages in config file and the
+                "override_defaults" parameter.
+            verbose: int, default=0
+                Determines the verbosity of the logs. If 0, only logs till
+                INFO level will be present in the output. If 1 (or higher),
+                DEBUG logs will be present. Currently piper only supports
+                2 levels of verbosity.
+            with_report: bool, default=True
+                If true, this outputs a dask report of the execution in a
+                html file along with other outputs of the pipeline.
+                Note: This parameter requires "dask_scheduler" to be passed,
+                as the reports are not generated for local execution.
+            extra_kwargs: dict
+                A dictionary which holds all the additional arguments passed
+                to the pipeline "run" subcommand, apart from the defaults
+                defined in piper.
+                This kwargs are available to the stages as a dictionary
+                named "_cli_args_".
 
         Returns
         -------
@@ -211,7 +243,7 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self._stages.add_additional_parameters(
             _output_dir_=timestamped_output_dir,
-            _cli_args_=kwargs,
+            _cli_args_=extra_kwargs,
             _global_parameters_=self._global_config.items,
         )
 
