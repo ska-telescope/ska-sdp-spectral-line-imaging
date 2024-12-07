@@ -49,21 +49,53 @@ spectral_line_imaging_pipeline = Pipeline(
 @spectral_line_imaging_pipeline.sub_command(
     "diagnose",
     DIAGNOSTIC_CLI_ARGS,
-    help="Diagnose the pipeline",
+    help="""
+    Run diagnostics on the pipeline output products.
+    This will generate various graphs from the output
+    visibitlies of the pipeline
+    (model and residual after continuum subtraction).
+    The graphs are stores as PNG images in the specified output
+    directory.
+    """,
 )
-def pipeline_diagnostic(cli_args):
+def diagnose(input, channel, dask_scheduler=None, output=None, **kwargs):
     """
-    Pipeline diagnostics sub_command
+    Run diagnostics on the pipeline output products.
+    This will generate various graphs from the output
+    visibitlies of the pipeline
+    (model and residual after continuum subtraction).
+    The graphs are stores as PNG images in the specified output
+    directory.
+
+    This can be run from cli as "diagnose" subcommand.
 
     Parameters
     ----------
-        cli_args: dict
-            CLI arguments
+        input: str, or os.PathLike
+            Path to the directory containing the output
+            products of the pipeline.
+        channel: int
+            A line free channel to plot uv distances.
+        dask_scheduler: str, or Cluster, optional
+            An IP address of the scheduler, or an instance of a dask
+            Cluster, which will be passed to a dask Client. If not
+            provided, then the pipeline will run locally on the with
+            multi-threading.
+        output: str, or os.PathLike, optional
+            Path to the directory to place the diagnosis
+            output products. If not provided, a new directory called
+            "diagnosis" will be created in current working directory.
+            Actual output products will be stored in a new timestamped
+            directory inside the output directory.
+        kwargs: dict
+            A dictionary to hold any additional kwargs
+
+    Returns
+    -------
+        None
     """
-    input_path = Path(cli_args["input"])
-    output_dir = (
-        "./diagnosis" if cli_args["output"] is None else cli_args["output"]
-    )
+    input_path = Path(input)
+    output_dir = output or "./diagnosis"
 
     timestamped_output_dir = Path(create_output_dir(output_dir, "pipeline-qa"))
     logger.info("==========================================")
@@ -74,8 +106,9 @@ def pipeline_diagnostic(cli_args):
     diagnoser = SpectralLineDiagnoser(
         input_path,
         timestamped_output_dir,
-        cli_args["channel"],
-        cli_args["dask_scheduler"],
+        channel,
+        dask_scheduler,
         scheduler=scheduler,
     )
+
     diagnoser.diagnose()

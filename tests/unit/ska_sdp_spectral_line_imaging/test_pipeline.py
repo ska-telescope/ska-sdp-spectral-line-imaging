@@ -1,40 +1,40 @@
 import mock
 
-from ska_sdp_spectral_line_imaging.pipeline import (
-    pipeline_diagnostic,
-    scheduler,
-)
+from ska_sdp_spectral_line_imaging.pipeline import diagnose, scheduler
 
 
 @mock.patch(
     "ska_sdp_spectral_line_imaging.pipeline.Path",
-    side_effect=["input_dir", "output_dir"],
+    side_effect=["pipeline_output_path", "timestamped_output_path"],
 )
 @mock.patch("ska_sdp_spectral_line_imaging.pipeline.SpectralLineDiagnoser")
 @mock.patch(
     "ska_sdp_spectral_line_imaging.pipeline.create_output_dir",
-    return_value="output_path",
+    return_value="timestamped_output_dir",
 )
 def test_should_perform_diagnostics(
     create_dir_mock,
     spectral_line_diagnose_mock,
     path_mock,
 ):
-    cli_args = {}
-    cli_args["input"] = "input"
-    cli_args["output"] = "output"
-    cli_args["channel"] = 1
-    cli_args["dask_scheduler"] = "dask-scheduler"
     spectral_line_diagnose_mock.return_value = spectral_line_diagnose_mock
 
-    pipeline_diagnostic(cli_args)
-    path_mock.assert_has_calls([mock.call("input"), mock.call("output_path")])
-    create_dir_mock.assert_called_once_with("output", "pipeline-qa")
+    diagnose(
+        input="pipeline_output_dir",
+        channel=1,
+        dask_scheduler="dask-scheduler-ip",
+        output="output_dir",
+    )
+
+    create_dir_mock.assert_called_once_with("output_dir", "pipeline-qa")
+    path_mock.assert_has_calls(
+        [mock.call("pipeline_output_dir"), mock.call("timestamped_output_dir")]
+    )
     spectral_line_diagnose_mock.assert_called_once_with(
-        "input_dir",
-        "output_dir",
+        "pipeline_output_path",
+        "timestamped_output_path",
         1,
-        "dask-scheduler",
+        "dask-scheduler-ip",
         scheduler=scheduler,
     )
     spectral_line_diagnose_mock.diagnose.assert_called_once()
@@ -42,31 +42,28 @@ def test_should_perform_diagnostics(
 
 @mock.patch(
     "ska_sdp_spectral_line_imaging.pipeline.Path",
-    side_effect=["input_dir", "output_dir"],
+    side_effect=["pipeline_output_path", "timestamped_output_path"],
 )
 @mock.patch("ska_sdp_spectral_line_imaging.pipeline.SpectralLineDiagnoser")
 @mock.patch(
     "ska_sdp_spectral_line_imaging.pipeline.create_output_dir",
-    return_value="output_path",
+    return_value="timestamped_output_dir",
 )
-def test_should_perform_diagnostics_with_default_output(
+def test_should_perform_diagnostics_with_default_kwargs(
     create_dir_mock, spectral_line_diagnose_mock, path_mock
 ):
-    cli_args = {}
-    cli_args["input"] = "input"
-    cli_args["output"] = None
-    cli_args["channel"] = 1
-    cli_args["dask_scheduler"] = "dask-scheduler"
     spectral_line_diagnose_mock.return_value = spectral_line_diagnose_mock
 
-    pipeline_diagnostic(cli_args)
-    path_mock.assert_has_calls([mock.call("input"), mock.call("output_path")])
+    diagnose(input="pipeline_output", channel=10)
+
     create_dir_mock.assert_called_once_with("./diagnosis", "pipeline-qa")
+    path_mock.assert_has_calls(
+        [mock.call("pipeline_output"), mock.call("timestamped_output_dir")]
+    )
     spectral_line_diagnose_mock.assert_called_once_with(
-        "input_dir",
-        "output_dir",
-        1,
-        "dask-scheduler",
+        "pipeline_output_path",
+        "timestamped_output_path",
+        10,
+        None,
         scheduler=scheduler,
     )
-    spectral_line_diagnose_mock.diagnose.assert_called_once()

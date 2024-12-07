@@ -40,43 +40,50 @@ DEFAULT_CLI_ARGS = [
         dest="output_path",
         type=str,
         nargs="?",
-        help="Path to store pipeline outputs",
+        help="Path to store pipeline output products.",
     ),
     CLIArgument(
         "--stages",
         dest="stages",
         action="extend",
         nargs="*",
-        help="Pipleline stages to be executed",
+        help="""Names of the stages in the pipeline to execute.
+            The stage names must be space seperated.
+            e.g. "--stages stage1 stage2" """,
     ),
     CLIArgument(
         "--dask-scheduler",
         dest="dask_scheduler",
         type=str,
-        help=(
-            "Optional dask scheduler address to which to submit jobs. "
-            "If specified, any eligible pipeline step will be distributed on "
-            "the associated Dask cluster."
-        ),
+        help="""Optional dask scheduler address to which to submit jobs.
+            If not specified, the pipeline will run locally using
+            threads.""",
     ),
     CLIArgument(
         "--set",
         dest="override_defaults",
         action="append",
         nargs=2,
-        metavar=("path", "value"),
-        help="Overrides for default config",
+        metavar=("path_to_key", "value"),
+        help="""Overrides for default config of the pipeline
+            You need to call --set seperately for each parameter
+            which you wish to override.
+            e.g. "--set parameters.param1 20 --set pipeline.stage False".
+            For nested keys, join the keys with '.' to create single string.
+            e.g. "--set root_key.child_key.param_key 30"
+            """,
     ),
     CLIArgument(
         "--with-report",
         dest="with_report",
         action=argparse.BooleanOptionalAction,
         default=False,
-        help=(
-            "Optionaly capture performance report for dask distributed tasks."
-            " If the flag is true, the diagnostic report would be saved "
-            "as dask_report.html file in the run output folder."
-        ),
+        help="""Optionaly capture performance report for dask
+            distributed tasks.
+            If the flag is true, the diagnostic report would be saved
+            as dask_report.html file in the run output folder.
+            Note: This will not work for local execution. This means that
+            --dask-scheduler must be specified.""",
     ),
     CLIArgument(
         "--verbose",

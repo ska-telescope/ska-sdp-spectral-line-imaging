@@ -96,7 +96,7 @@ class Pipeline(Command, metaclass=NamedInstance):
     @property
     def config(self):
         """
-        Get all the configuration
+        Get the pipeline config as dictionary.
 
         Returns
         -------
@@ -116,13 +116,13 @@ class Pipeline(Command, metaclass=NamedInstance):
         self, config_install_path, override_defaults=None, **kwargs
     ):
         """
-        Install the config.
+        Write the config of the pipeline as a yaml file to a given path.
         This can be run from cli as "install-config" subcommand.
 
         Parameters
         ----------
             config_install_path: str
-                Directory to install config to.
+                Directory to write config to.
             override_defaults: list[list[str, any]], optional
                 A list of parameters to override in the config.
                 Each element of the list is a list containing key
@@ -160,12 +160,14 @@ class Pipeline(Command, metaclass=NamedInstance):
                 provided, then the pipeline will run locally on the with
                 multi-threading.
             output_path: str, or os.PathLike, optional
-                Path to the output directory. Actual output will be stored
-                in a new directory inside "output_path" with timestamp.
+                Path to the output directory.
                 If not passed, a new directory called "output" will be
                 created in the current working directory.
+                Actual output products will be stored in a new timestamped
+                directory inside the output directory.
             override_defaults: list of [list[str, any]], optional
                 A list of parameters to override in the config at runtime.
+                e.g. [["parameters.param1", 20], ["pipeline.stage1", False]]
                 This takes preference over the config file passed
                 in "config_path".
             stages: list of str, optional
