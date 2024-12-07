@@ -59,13 +59,13 @@ class Pipeline(Command, metaclass=NamedInstance):
             "run",
             DEFAULT_CLI_ARGS + (cli_args or []),
             help="Run the pipeline",
-        )(self._run)
+        )(self.run)
 
         self.sub_command(
             "install-config",
             CONFIG_CLI_ARGS,
             help="Installs the default config at --config-install-path",
-        )(self._install_config)
+        )(self.install_config)
 
     def _pipeline_config(self):
         """
@@ -111,7 +111,7 @@ class Pipeline(Command, metaclass=NamedInstance):
             global_parameters=self._global_config.items,
         )
 
-    def _install_config(
+    def install_config(
         self, config_install_path, override_defaults=None, **kwargs
     ):
         """
@@ -133,7 +133,7 @@ class Pipeline(Command, metaclass=NamedInstance):
             override_defaults
         ).write_yml(f"{config_install_path}/{self.name}.yml")
 
-    def _run(
+    def run(
         self,
         config_path=None,
         dask_scheduler=None,
