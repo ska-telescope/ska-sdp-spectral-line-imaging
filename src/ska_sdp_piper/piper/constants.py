@@ -29,13 +29,6 @@ CONFIG_CLI_ARGS = [
 
 DEFAULT_CLI_ARGS = [
     CLIArgument(
-        "--input",
-        dest="input",
-        type=str,
-        required=True,
-        help="Input visibility path",
-    ),
-    CLIArgument(
         "--config",
         dest="config_path",
         type=str,
@@ -52,14 +45,14 @@ DEFAULT_CLI_ARGS = [
     CLIArgument(
         "--stages",
         dest="stages",
-        action="append",
+        action="extend",
         nargs="*",
         help="Pipleline stages to be executed",
     ),
     CLIArgument(
         "--dask-scheduler",
+        dest="dask_scheduler",
         type=str,
-        default=None,
         help=(
             "Optional dask scheduler address to which to submit jobs. "
             "If specified, any eligible pipeline step will be distributed on "

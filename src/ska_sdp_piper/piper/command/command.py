@@ -72,7 +72,7 @@ class Command:
             )
 
         try:
-            cli_args["sub_command"](cli_args)
+            cli_args["sub_command"](**cli_args)
         except builtins.BaseException as ex:
             self.logger.exception(ex)
             raise ex

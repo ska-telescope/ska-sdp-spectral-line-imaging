@@ -22,7 +22,7 @@ def test_should_run_the_sub_command(cli_command_parser):
     command = Command()
     command()
     sub_command_mock.assert_called_once_with(
-        {"input": "infile_path", "sub_command": sub_command_mock}
+        input="infile_path", sub_command=sub_command_mock
     )
 
 

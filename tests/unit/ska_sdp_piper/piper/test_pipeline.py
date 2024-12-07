@@ -44,8 +44,9 @@ def stages(mock_stages):
 def cli_command_parser():
     with mock.patch(
         "ska_sdp_piper.piper.command.command.CLICommandParser"
-    ) as cli_arguments_mock:
-        yield cli_arguments_mock
+    ) as cli_command_parser_mock:
+        cli_command_parser_mock.return_value = cli_command_parser_mock
+        yield cli_command_parser_mock
 
 
 @pytest.fixture(scope="function")
@@ -101,16 +102,27 @@ def timestamp_mock():
         yield timestamp
 
 
+@pytest.fixture(scope="function")
+def runtime_config_mock():
+    with mock.patch(
+        "ska_sdp_piper.piper.pipeline.RuntimeConfig"
+    ) as run_config:
+        run_config.update_from_cli_stages.return_value = run_config
+        run_config.update_from_cli_overrides.return_value = run_config
+        run_config.update_from_yaml.return_value = run_config
+        run_config.return_value = run_config
+
+        yield run_config
+
+
 def test_should_initialise_the_pipeline_with_default_cli_args(
     cli_command_parser, stages, default_scheduler
 ):
-    cli_arg_mock = Mock(name="cli_arg")
-    cli_command_parser.return_value = cli_arg_mock
     pipeline = Pipeline(
         "test_pipeline", stages=stages, scheduler=default_scheduler
     )
     cli_command_parser.assert_called_once()
-    cli_arg_mock.create_sub_parser.assert_has_calls(
+    cli_command_parser.create_sub_parser.assert_has_calls(
         [
             mock.call(
                 "run",
@@ -131,8 +143,6 @@ def test_should_initialise_the_pipeline_with_default_cli_args(
 def test_should_initialise_the_pipeline_with_additional_cli_args(
     cli_command_parser, stages, default_scheduler
 ):
-    cli_arg_mock = Mock(name="cli_arg")
-    cli_command_parser.return_value = cli_arg_mock
     cli_args = [CLIArgument("additional_arg1"), CLIArgument("additional_arg2")]
     pipeline = Pipeline(
         "test_pipeline",
@@ -141,7 +151,7 @@ def test_should_initialise_the_pipeline_with_additional_cli_args(
         scheduler=default_scheduler,
     )
 
-    cli_arg_mock.create_sub_parser.assert_has_calls(
+    cli_command_parser.create_sub_parser.assert_has_calls(
         [
             mock.call(
                 "run",
@@ -159,20 +169,9 @@ def test_should_initialise_the_pipeline_with_additional_cli_args(
     )
 
 
-@pytest.fixture(scope="function")
-def runtime_config_mock():
-    with mock.patch(
-        "ska_sdp_piper.piper.pipeline.RuntimeConfig"
-    ) as run_config:
-        run_config.update_from_cli_stages.return_value = run_config
-        run_config.update_from_cli_overrides.return_value = run_config
-        run_config.update_from_yaml.return_value = run_config
-        run_config.return_value = run_config
-
-        yield run_config
-
-
+@mock.patch("ska_sdp_piper.piper.pipeline.Configuration")
 def test_should_run_the_pipeline_from_cli_command(
+    configuration_mock,
     runtime_config_mock,
     create_output_mock,
     cli_command_parser,
@@ -183,23 +182,20 @@ def test_should_run_the_pipeline_from_cli_command(
 ):
     runtime_config_mock.stages_to_run = ["a", "b"]
 
-    cli_command_parser.return_value = cli_command_parser
-    cli_command_parser.cli_args_dict = {"input": "infile_path"}
-
     args = {}
-    args["input"] = "infile_path"
     args["dask_scheduler"] = "10.131"
     args["config_path"] = "config_path"
     args["override_defaults"] = "CLI_OVERRIDES"
-    args["verbose"] = False
+    args["verbose"] = 0
     args["output_path"] = "output_path_from_cli"
-    args["stages"] = [["a", "b"]]
+    args["stages"] = ["a", "b"]
+
+    cli_command_parser.cli_args_dict = args
 
     pipeline = Pipeline(
         "test_pipeline", stages=stages, scheduler=default_scheduler
     )
     args["sub_command"] = pipeline._run
-    cli_command_parser.cli_args_dict = args
 
     pipeline()
 
@@ -230,6 +226,12 @@ def test_should_run_the_pipeline_from_cli_command(
 
     runtime_config_mock.write_yml.assert_called_once_with(
         "./output/timestamp/test_pipeline_FORMATTED_TIME.config.yml",
+    )
+
+    stages.add_additional_parameters.assert_called_once_with(
+        _output_dir_="./output/timestamp",
+        _cli_args_={"sub_command": pipeline._run},
+        _global_parameters_=configuration_mock.return_value.items,
     )
 
 
@@ -268,19 +270,22 @@ def test_should_run_the_pipeline(
     )
 
     args = {}
-    args["input"] = "infile_path"
     args["dask_scheduler"] = "10.131"
     args["config_path"] = "config_path"
     args["override_defaults"] = "CLI_OVERRIDES"
-    args["verbose"] = False
+    args["verbose"] = 0
     args["output_path"] = "output_dir"
-    args["stages"] = [["stage1", "stage2"]]
+    args["stages"] = ["stage1", "stage2"]
+    args["with_report"] = True
+    args["new_argument"] = 123
 
-    pipeline._run(args)
+    pipeline._run(**args)
 
     executor_factory.get_executor.assert_called_once_with(
-        "./output/timestamp",
-        **args,
+        dask_scheduler="10.131",
+        output_dir="./output/timestamp",
+        verbose=False,
+        with_report=True,
     )
 
     default_scheduler.schedule.assert_called_once_with(mock_stages)
@@ -291,7 +296,7 @@ def test_should_run_the_pipeline(
     stages.get_stages.assert_called_once_with(["stage1", "stage2"])
     stages.add_additional_parameters.assert_called_once_with(
         _output_dir_="./output/timestamp",
-        _cli_args_=args,
+        _cli_args_={"new_argument": 123},
         _global_parameters_={"a": 10},
     )
 
@@ -328,14 +333,10 @@ def test_should_install_default_config(runtime_config_mock, default_scheduler):
     runtime_config_mock.return_value = runtime_config_mock
     runtime_config_mock.update_from_cli_overrides = runtime_config_mock
 
-    args_mock = {}
-    args_mock["config_install_path"] = "/path/to/install"
-    args_mock["override_defaults"] = None
-
     pipeline = Pipeline(
         "test_pipeline", stages=Stages(), scheduler=default_scheduler
     )
-    pipeline._install_config(args_mock)
+    pipeline._install_config(config_install_path="/path/to/install")
 
     runtime_config_mock.write_yml.assert_called_once_with(
         "/path/to/install/test_pipeline.yml"
@@ -347,17 +348,17 @@ def test_should_override_install_default_config(
     runtime_config_mock, default_scheduler
 ):
     runtime_config_mock.return_value = runtime_config_mock
-    args_mock = {}
-    args_mock["config_install_path"] = "/path/to/install"
-    args_mock["override_defaults"] = [
-        ["parameters.b", "2"],
-        ["parameters.y.z", "[oea, aoe, xyz]"],
-    ]
 
     pipeline = Pipeline(
         "test_pipeline", stages=Stages(), scheduler=default_scheduler
     )
-    pipeline._install_config(args_mock)
+    pipeline._install_config(
+        config_install_path="/path/to/install",
+        override_defaults=[
+            ["parameters.b", "2"],
+            ["parameters.y.z", "[oea, aoe, xyz]"],
+        ],
+    )
 
     runtime_config_mock.update_from_cli_overrides.assert_called_once_with(
         [

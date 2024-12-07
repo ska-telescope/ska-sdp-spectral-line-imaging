@@ -1,7 +1,11 @@
+import logging
+
 from xradio.vis.read_processing_set import read_processing_set
 
 from ska_sdp_piper.piper.configurations import ConfigParam, Configuration
 from ska_sdp_piper.piper.stage import ConfigurableStage
+
+logger = logging.getLogger()
 
 
 @ConfigurableStage(
@@ -34,6 +38,8 @@ def load_data(upstream_output, obs_id: int, _cli_args_):
         UpstreamOutput
     """
     input_path = _cli_args_["input"]
+    logger.info(f"Input processing set path: {input_path}")
+
     ps = read_processing_set(ps_store=input_path)
 
     # computes

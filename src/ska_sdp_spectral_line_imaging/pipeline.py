@@ -2,6 +2,7 @@
 import logging
 from pathlib import Path
 
+from ska_sdp_piper.piper.command.cli_command_parser import CLIArgument
 from ska_sdp_piper.piper.pipeline import Pipeline
 from ska_sdp_piper.piper.stage import Stages
 from ska_sdp_piper.piper.utils import create_output_dir
@@ -32,6 +33,15 @@ spectral_line_imaging_pipeline = Pipeline(
             imaging_stage,
         ]
     ),
+    cli_args=[
+        CLIArgument(
+            "--input",
+            dest="input",
+            type=str,
+            required=True,
+            help="Path to input processing set",
+        ),
+    ],
     scheduler=scheduler,
 )
 

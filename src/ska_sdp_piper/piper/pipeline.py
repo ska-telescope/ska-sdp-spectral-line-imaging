@@ -50,19 +50,14 @@ class Pipeline(Command, metaclass=NamedInstance):
         """
         super().__init__()
         self.name = name
-        self._global_config = (
-            Configuration() if global_config is None else global_config
-        )
-
+        self._global_config = global_config or Configuration()
         self.logger = logging.getLogger(self.name)
-
         self._stages = stages
-
         self.scheduler = scheduler
 
         self.sub_command(
             "run",
-            DEFAULT_CLI_ARGS + ([] if cli_args is None else cli_args),
+            DEFAULT_CLI_ARGS + (cli_args or []),
             help="Run the pipeline",
         )(self._run)
 
@@ -116,46 +111,70 @@ class Pipeline(Command, metaclass=NamedInstance):
             global_parameters=self._global_config.items,
         )
 
-    def _install_config(self, config_cli_args):
+    def _install_config(
+        self, config_install_path, override_defaults=None, **kwargs
+    ):
         """
-        Install the config
+        Install the config.
+        This can be run from cli as "install-config" subcommand.
 
         Parameters
         ----------
-            config_cli_args: dict
-                CLI arguments
+            config_install_path: str
+                Directory to install config to.
+            override_defaults: list[list[str, any]], optional
+                A list of parameters to override in the config.
+                Each element of the list is a list containing key
+                to update and the new value.
         """
-        config_install_dir = config_cli_args["config_install_path"]
+        override_defaults = override_defaults or []
 
         RuntimeConfig(**self.config).update_from_cli_overrides(
-            config_cli_args["override_defaults"]
-        ).write_yml(f"{config_install_dir}/{self.name}.yml")
+            override_defaults
+        ).write_yml(f"{config_install_path}/{self.name}.yml")
 
-    def _run(self, cli_args):
+    def _run(
+        self,
+        config_path=None,
+        output_path=None,
+        stages=None,
+        dask_scheduler=None,
+        override_defaults=None,
+        with_report=False,
+        verbose=0,
+        **kwargs,
+    ):
         """
-        Run sub command
+        Run the pipeline.
+        This can be run from cli as "run" subcommand.
 
         Parameters
         ----------
-            cli_args: dict
-                CLI arguments
-        """
-        stages = [] if cli_args["stages"] is None else cli_args["stages"][0]
+            stages: list[str], optional
+                A list containing names of the stages to execute.
+            override_defaults: list[list[str, any]], optional
+                A list of parameters to override in the config
+                at runtime.
 
-        output_dir = (
-            "./output"
-            if cli_args["output_path"] is None
-            else cli_args["output_path"]
-        )
+        Returns
+        -------
+            None
+        """
+        stages = stages or []
+        override_defaults = override_defaults or []
+        verbose = verbose != 0
+
+        output_dir = output_path or "./output"
+
         timestamped_output_dir = create_output_dir(output_dir, self.name)
 
         log_file = f"{timestamped_output_dir}/{self.name}_{timestamp()}.log"
-        LogUtil.configure(log_file, verbose=(cli_args["verbose"] != 0))
+        LogUtil.configure(log_file, verbose=verbose)
 
         runtime_config = (
             RuntimeConfig(**self.config)
-            .update_from_yaml(cli_args["config_path"])
-            .update_from_cli_overrides(cli_args["override_defaults"])
+            .update_from_yaml(config_path)
+            .update_from_cli_overrides(override_defaults)
             .update_from_cli_stages(stages)
         )
 
@@ -176,13 +195,15 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self.logger.info("=============== START =====================")
         self.logger.info(f"Executing {self.name} pipeline with metadata:")
-        self.logger.info(f"Infile Path: {cli_args.get('input')}")
         self.logger.info(f"Stages: {stages}")
-        self.logger.info(f"Configuration Path: {cli_args.get('config_path')}")
+        self.logger.info(f"Configuration Path: {config_path}")
         self.logger.info(f"Current run output path : {timestamped_output_dir}")
 
         executor = ExecutorFactory.get_executor(
-            timestamped_output_dir, **cli_args
+            dask_scheduler=dask_scheduler,
+            output_dir=timestamped_output_dir,
+            verbose=verbose,
+            with_report=with_report,
         )
 
         stages = runtime_config.stages_to_run
@@ -190,7 +211,7 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         self._stages.add_additional_parameters(
             _output_dir_=timestamped_output_dir,
-            _cli_args_=cli_args,
+            _cli_args_=kwargs,
             _global_parameters_=self._global_config.items,
         )
 
