@@ -87,7 +87,7 @@ DEFAULT_CLI_ARGS = [
     ),
     CLIArgument(
         "--verbose",
-        "-v",
+        "-V",
         dest="verbose",
         action="count",
         default=0,

@@ -48,7 +48,7 @@ class CLICommandParser:
         """
 
         self.__parser = argparse.ArgumentParser()
-        self.__subparser = self.__parser.add_subparsers(title="Subcommands")
+        self.__subparser = self.__parser.add_subparsers(title="subcommands")
 
     def create_sub_parser(self, name, func, cli_args, help=None):
         """
@@ -81,6 +81,17 @@ class CLICommandParser:
             dict
         """
         return vars(self.__parser.parse_args())
+
+    def add_argument(self, cli_arg):
+        """
+        Adds argument to the program (root) parser
+
+        Parameters
+        ----------
+            cli_arg: CLIArgument
+                Contains information about the arugment
+        """
+        self.__parser.add_argument(*cli_arg.args, **cli_arg.kwargs)
 
     def write_yml(self, path):
         """

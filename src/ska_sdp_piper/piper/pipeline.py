@@ -1,7 +1,7 @@
 import functools
 import logging
 
-from .command import Command
+from .command import CLIArgument, Command
 from .configurations import Configuration
 from .configurations.runtime_config import RuntimeConfig
 from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS, ConfigRoot
@@ -27,6 +27,8 @@ class Pipeline(Command, metaclass=NamedInstance):
             Scheduler used to schedule the stages
         _global_config: configuration.Configuration
             Default global configuration of the pipeline
+        version: str, default=None
+            Version of the pipeline definition.
     """
 
     def __init__(
@@ -36,6 +38,7 @@ class Pipeline(Command, metaclass=NamedInstance):
         scheduler,
         global_config=None,
         cli_args=None,
+        version=None,
         **kwargs,
     ):
         """
@@ -49,11 +52,14 @@ class Pipeline(Command, metaclass=NamedInstance):
                 Stages to be executed
             scheduler: PiperScheduler
                 Contains the logic required to schedule the stages
-            global_config: Configuration
+            global_config: Configuration, optional
                 Pipeline level configurations
-            cli_args: list of CLIArgument
+            cli_args: list of CLIArgument, optional
                 Additional runtime arguments for the pipeline which are
                 appended to the "run" subcommand.
+            version: str, optional
+                Version associated with the pipeline.
+                This is used for the --version cli option.
             **kwargs:
                 Additional kwargs
         """
@@ -62,6 +68,7 @@ class Pipeline(Command, metaclass=NamedInstance):
         self._stages = stages
         self._scheduler = scheduler
         self._global_config = global_config or Configuration()
+        self.version = version
 
         self.sub_command(
             DEFAULT_CLI_ARGS + (cli_args or []),
@@ -72,6 +79,15 @@ class Pipeline(Command, metaclass=NamedInstance):
             CONFIG_CLI_ARGS,
             help="Installs the default config at --config-install-path",
         )(self.install_config)
+
+        self._cli_command_parser.add_argument(
+            CLIArgument(
+                "-v",
+                "--version",
+                action="version",
+                version=f"%(prog)s {self.version}",
+            )
+        )
 
     def _pipeline_config(self):
         """

@@ -7,6 +7,7 @@ from ska_sdp_piper.piper.pipeline import Pipeline
 from ska_sdp_piper.piper.stage import Stages
 from ska_sdp_piper.piper.utils import create_output_dir
 
+from . import __version__
 from .diagnosis.cli_arguments import DIAGNOSTIC_CLI_ARGS
 from .diagnosis.spectral_line_diagnoser import SpectralLineDiagnoser
 from .scheduler import DefaultScheduler
@@ -43,6 +44,7 @@ spectral_line_imaging_pipeline = Pipeline(
         ),
     ],
     scheduler=scheduler,
+    version=__version__,
 )
 
 
