@@ -10,7 +10,7 @@ class NamedInstance(type):
 
     _instances = {}
 
-    def __call__(cls, name, _existing_instance_=False, *args, **kwargs):
+    def __call__(cls, name, *args, _existing_instance_=False, **kwargs):
         """
         Creates mapping between cls, name and instance of cls
 
@@ -20,11 +20,11 @@ class NamedInstance(type):
                 Class to instantiate
             name: str
                 Name of the instance.
+            *args
+                Additional args
             _existing_instance_: bool
                 If _existing_instance_ is true, return existing instance,
                 else create new
-            *args
-                Additional args
             **kwargs
                 Additional named args
 
@@ -32,9 +32,11 @@ class NamedInstance(type):
         -------
             Instance of cls
         """
+        key = (cls, name)
+
         if not _existing_instance_:
-            cls._instances[(cls, name)] = super(NamedInstance, cls).__call__(
+            cls._instances[key] = super(NamedInstance, cls).__call__(
                 name, *args, **kwargs
             )
 
-        return cls._instances.get((cls, name), None)
+        return cls._instances.get(key, None)

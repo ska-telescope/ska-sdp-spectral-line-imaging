@@ -351,4 +351,5 @@ def test_should_get_instance_of_pipeline(default_scheduler):
     pipeline = Pipeline(
         "test_pipeline", Stages(["stage"]), scheduler=default_scheduler
     )
+    # pylint: disable=no-value-for-parameter
     assert pipeline == Pipeline("test_pipeline", _existing_instance_=True)

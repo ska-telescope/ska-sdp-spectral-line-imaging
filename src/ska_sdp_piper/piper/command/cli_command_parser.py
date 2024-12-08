@@ -48,16 +48,17 @@ class CLICommandParser:
         """
 
         self.__parser = argparse.ArgumentParser()
-        self.__subparser = self.__parser.add_subparsers()
+        self.__subparser = self.__parser.add_subparsers(title="Subcommands")
 
     def create_sub_parser(self, name, func, cli_args, help=None):
         """
-        Creates sub parser.
+        Creates sub parser for a subcommand defined by func, and
+        assigns cli arguments to it.
 
         Parameters
         ----------
             name: str
-                Name of the sub subcommand.
+                Name of the subcommand.
             func: function
                 Function associated with the subcommand.
             cli_args: list of CLIArgument

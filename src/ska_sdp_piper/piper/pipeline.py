@@ -19,17 +19,21 @@ class Pipeline(Command, metaclass=NamedInstance):
 
     Attributes
     ----------
-      name: str
-          Name of the pipeline
-      _stages: list[stage.ConfigurableStage]
-          Stage to be executed
+        name: str
+            Name of the pipeline
+        _stages: list of stage.ConfigurableStage
+            Stage to be executed
+        _scheduler: PiperScheduler
+            Scheduler used to schedule the stages
+        _global_config: configuration.Configuration
+            Default global configuration of the pipeline
     """
 
     def __init__(
         self,
         name,
-        stages=None,
-        scheduler=None,
+        stages,
+        scheduler,
         global_config=None,
         cli_args=None,
         **kwargs,
@@ -39,22 +43,25 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         Parameters
         ----------
-          name: str
-              Name of the pipeline
-          stages: piper.stages.Stages
-              Stages to be executed
-          global_config: Configuration
-              Pipeline level configurations
-          cli_args: list[CLIArgument]
-              Runtime arguments for the pipeline
-          **kwargs:
-              Additional kwargs
+            name: str
+                Name of the pipeline
+            stages: piper.stages.Stages
+                Stages to be executed
+            scheduler: PiperScheduler
+                Contains the logic required to schedule the stages
+            global_config: Configuration
+                Pipeline level configurations
+            cli_args: list of CLIArgument
+                Additional runtime arguments for the pipeline which are
+                appended to the "run" subcommand.
+            **kwargs:
+                Additional kwargs
         """
         super().__init__()
         self.name = name
-        self._global_config = global_config or Configuration()
         self._stages = stages
-        self.scheduler = scheduler
+        self._scheduler = scheduler
+        self._global_config = global_config or Configuration()
 
         self.sub_command(
             DEFAULT_CLI_ARGS + (cli_args or []),
@@ -257,9 +264,9 @@ class Pipeline(Command, metaclass=NamedInstance):
             )}"""
         )
 
-        self.scheduler.schedule(executable_stages)
+        self._scheduler.schedule(executable_stages)
         logger.info("Scheduling done, now executing the graph...")
 
-        executor.execute(self.scheduler.tasks)
+        executor.execute(self._scheduler.tasks)
 
         logger.info("=============== FINISH =====================")
