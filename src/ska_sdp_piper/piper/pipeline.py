@@ -1,7 +1,7 @@
 import functools
 import logging
 
-from .command import CLIArgument, Command
+from .command import Command
 from .configurations import Configuration
 from .configurations.runtime_config import RuntimeConfig
 from .constants import CONFIG_CLI_ARGS, DEFAULT_CLI_ARGS, ConfigRoot
@@ -80,14 +80,7 @@ class Pipeline(Command, metaclass=NamedInstance):
             help="Installs the default config at --config-install-path",
         )(self.install_config)
 
-        self._cli_command_parser.add_argument(
-            CLIArgument(
-                "-v",
-                "--version",
-                action="version",
-                version=f"%(prog)s {self.version}",
-            )
-        )
+        self._cli_command_parser.add_version(self.version)
 
     def _pipeline_config(self):
         """

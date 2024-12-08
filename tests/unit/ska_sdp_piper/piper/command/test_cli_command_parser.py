@@ -48,17 +48,15 @@ def test_should_create_sub_parser(arg_parser):
     )
 
 
-def test_should_add_argument_to_root_parser(arg_parser):
+def test_should_add_version(arg_parser):
     cli_command_parser = CLICommandParser()
-    cli_command_parser.add_argument(
-        CLIArgument("arg1", "arg2", value1="value1", value2="value2")
-    )
+    cli_command_parser.add_version("10.5.2")
 
     arg_parser.add_argument.assert_called_once_with(
-        "arg1",
-        "arg2",
-        value1="value1",
-        value2="value2",
+        "-v",
+        "--version",
+        action="version",
+        version="%(prog)s 10.5.2",
     )
 
 

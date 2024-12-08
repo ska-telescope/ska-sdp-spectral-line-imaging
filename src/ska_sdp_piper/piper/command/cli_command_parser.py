@@ -82,16 +82,23 @@ class CLICommandParser:
         """
         return vars(self.__parser.parse_args())
 
-    def add_argument(self, cli_arg):
+    def add_version(self, version):
         """
-        Adds argument to the program (root) parser
+        Adds version (--version) option to the root parser.
+        This is a special function because of the way version
+        action is specified in python's argparser.
 
         Parameters
         ----------
-            cli_arg: CLIArgument
-                Contains information about the arugment
+            version: str
+                Version information
         """
-        self.__parser.add_argument(*cli_arg.args, **cli_arg.kwargs)
+        self.__parser.add_argument(
+            "-v",
+            "--version",
+            action="version",
+            version=f"%(prog)s {version}",
+        )
 
     def write_yml(self, path):
         """

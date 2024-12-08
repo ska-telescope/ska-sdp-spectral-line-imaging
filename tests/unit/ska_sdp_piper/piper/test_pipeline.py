@@ -124,17 +124,7 @@ def configuration():
         yield configuration_mock
 
 
-@pytest.fixture(scope="function")
-def cli_argument():
-    with mock.patch(
-        "ska_sdp_piper.piper.pipeline.CLIArgument", return_value="cli_argument"
-    ) as cli_argument_mock:
-        cli_argument_mock.return_value = "cli_argument"
-        yield cli_argument_mock
-
-
 def test_should_initialise_the_pipeline_with_defaults(
-    cli_argument,
     cli_command_parser,
     configuration,
     default_scheduler,
@@ -161,13 +151,7 @@ def test_should_initialise_the_pipeline_with_defaults(
             ),
         ]
     )
-    cli_argument.assert_called_once_with(
-        "-v",
-        "--version",
-        action="version",
-        version="%(prog)s None",
-    )
-    cli_command_parser.add_argument.assert_called_once_with("cli_argument")
+    cli_command_parser.add_version.assert_called_once_with(None)
 
     assert pipeline._global_config.items == {"globalparam": 10}
     assert pipeline.version is None
@@ -204,7 +188,7 @@ def test_should_initialise_the_pipeline_with_additional_cli_args(
 
 
 def test_should_initialise_the_pipeline_with_version(
-    cli_argument, cli_command_parser, stages, default_scheduler
+    cli_command_parser, stages, default_scheduler
 ):
     pipeline = Pipeline(
         "test_pipeline",
@@ -213,13 +197,7 @@ def test_should_initialise_the_pipeline_with_version(
         version="0.10.5",
     )
 
-    cli_argument.assert_called_once_with(
-        "-v",
-        "--version",
-        action="version",
-        version="%(prog)s 0.10.5",
-    )
-    cli_command_parser.add_argument.assert_called_once_with("cli_argument")
+    cli_command_parser.add_version.assert_called_once_with("0.10.5")
 
     assert pipeline.version == "0.10.5"
 
