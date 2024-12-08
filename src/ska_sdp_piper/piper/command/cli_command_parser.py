@@ -2,6 +2,8 @@ import argparse
 
 from ..utils import write_yml as write_yaml_util
 
+SUB_COMMAND_KEY = "sub_command"
+
 
 class CLIArgument:
     """
@@ -48,25 +50,23 @@ class CLICommandParser:
         self.__parser = argparse.ArgumentParser()
         self.__subparser = self.__parser.add_subparsers()
 
-    def create_sub_parser(
-        self, subparser_name, sub_command, cli_args, help=None
-    ):
+    def create_sub_parser(self, name, func, cli_args, help=None):
         """
         Creates sub parser.
 
         Parameters
         ----------
-            subparser_name: str
-                Name of the sub parser.
-            sub_command: func
-                Function associated with the sub command.
-            cli_args: [CLIArgument]
-                List of CLI arguments associated with the sub command.
+            name: str
+                Name of the sub subcommand.
+            func: function
+                Function associated with the subcommand.
+            cli_args: list of CLIArgument
+                List of cli arguments associated with the sub command.
             help: str
                 Help text for the sub command.
         """
-        sub_p = self.__subparser.add_parser(subparser_name, help=help)
-        sub_p.set_defaults(sub_command=sub_command)
+        sub_p = self.__subparser.add_parser(name=name, help=help)
+        sub_p.set_defaults(**{SUB_COMMAND_KEY: func})
         for arg in cli_args:
             sub_p.add_argument(*arg.args, **arg.kwargs)
 
@@ -92,7 +92,7 @@ class CLICommandParser:
         """
 
         cli_args = self.cli_args_dict
-        if "sub_command" in cli_args:
-            del cli_args["sub_command"]
+        if SUB_COMMAND_KEY in cli_args:
+            del cli_args[SUB_COMMAND_KEY]
 
         write_yaml_util(path, cli_args)

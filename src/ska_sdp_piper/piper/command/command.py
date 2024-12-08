@@ -1,7 +1,9 @@
 import builtins
 import logging
 
-from .cli_command_parser import CLICommandParser
+from .cli_command_parser import SUB_COMMAND_KEY, CLICommandParser
+
+logger = logging.getLogger()
 
 
 class Command:
@@ -19,20 +21,21 @@ class Command:
         Instantiate command object
         """
         self._cli_command_parser = CLICommandParser()
-        self.logger = logging.getLogger()
 
-    def sub_command(self, name, cli_args, help=None):
+    def sub_command(self, cli_args, subcommand_name=None, help=None):
         """
-        Decorator for adding sub commands
+        Decorator for adding sub commands.
 
         Parameters
         ----------
-            name: str
-                Name of the sub command
-            cli_args: list[cli_command_parser.CLIArgument]
+            cli_args: list of cli_command_parser.CLIArgument
                 List of CLI arguments for the sub command
-            help: str
-                Help text
+            subcommand_name: str, optional
+                Name of the subcommand. If not provided,
+                then it is derived from the wrapped function itself,
+                by converting snake_case to dash-case.
+            help: str, optional
+                Help text for the subcommand
 
         Returns
         -------
@@ -52,8 +55,12 @@ class Command:
             -------
                 function
             """
+            name = subcommand_name or func.__name__.replace("_", "-")
             self._cli_command_parser.create_sub_parser(
-                name, func, cli_args, help=help
+                name=name,
+                func=func,
+                cli_args=cli_args,
+                help=help,
             )
 
             return func
@@ -66,13 +73,13 @@ class Command:
         """
         cli_args = self._cli_command_parser.cli_args_dict
 
-        if "sub_command" not in cli_args:
+        if SUB_COMMAND_KEY not in cli_args:
             raise ValueError(
                 "Subcommand is missing. Run with '-h' to see help."
             )
 
         try:
-            cli_args["sub_command"](**cli_args)
+            cli_args[SUB_COMMAND_KEY](**cli_args)
         except builtins.BaseException as ex:
-            self.logger.exception(ex)
+            logger.exception(ex)
             raise ex

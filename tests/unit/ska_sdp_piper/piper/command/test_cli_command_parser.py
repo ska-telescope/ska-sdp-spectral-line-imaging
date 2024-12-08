@@ -24,19 +24,22 @@ def test_should_create_cli_command_parser(arg_parser):
 
 def test_should_create_sub_parser(arg_parser):
     subparser_mock = Mock(name="subparser_mock")
-    add_parser_mock = Mock(name="add_parser")
-
-    subparser_mock.add_parser.return_value = add_parser_mock
     arg_parser.add_subparsers.return_value = subparser_mock
 
+    add_parser_mock = Mock(name="add_parser")
+    subparser_mock.add_parser.return_value = add_parser_mock
+
     cli_args = CLICommandParser()
-    run_additional_cli_args = [
+    run_cli_args = [
         CLIArgument("arg1", value1="value1", value2="value2"),
         CLIArgument("arg2", key1="key1", key2="key2"),
     ]
-    cli_args.create_sub_parser("run", "RUN", run_additional_cli_args)
+    cli_args.create_sub_parser("run", "function", run_cli_args)
 
-    add_parser_mock.set_defaults.assert_called_once_with(sub_command="RUN")
+    subparser_mock.add_parser.assert_called_once_with(name="run", help=None)
+    add_parser_mock.set_defaults.assert_called_once_with(
+        sub_command="function"
+    )
     add_parser_mock.add_argument.assert_has_calls(
         [
             mock.call("arg1", value1="value1", value2="value2"),

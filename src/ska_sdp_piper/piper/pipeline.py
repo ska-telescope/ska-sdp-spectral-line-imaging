@@ -9,6 +9,8 @@ from .executors import ExecutorFactory
 from .named_instance import NamedInstance
 from .utils import LogUtil, create_output_dir, timestamp
 
+logger = logging.getLogger()
+
 
 class Pipeline(Command, metaclass=NamedInstance):
     """
@@ -51,18 +53,15 @@ class Pipeline(Command, metaclass=NamedInstance):
         super().__init__()
         self.name = name
         self._global_config = global_config or Configuration()
-        self.logger = logging.getLogger(self.name)
         self._stages = stages
         self.scheduler = scheduler
 
         self.sub_command(
-            "run",
             DEFAULT_CLI_ARGS + (cli_args or []),
             help="Run the pipeline",
         )(self.run)
 
         self.sub_command(
-            "install-config",
             CONFIG_CLI_ARGS,
             help="Installs the default config at --config-install-path",
         )(self.install_config)
@@ -228,11 +227,11 @@ class Pipeline(Command, metaclass=NamedInstance):
         )
         runtime_config.write_yml(config_output_path)
 
-        self.logger.info("=============== START =====================")
-        self.logger.info(f"Executing {self.name} pipeline with metadata:")
-        self.logger.info(f"Stages: {stages}")
-        self.logger.info(f"Configuration Path: {config_path}")
-        self.logger.info(f"Current run output path : {timestamped_output_dir}")
+        logger.info("=============== START =====================")
+        logger.info(f"Executing {self.name} pipeline with metadata:")
+        logger.info(f"Stages: {stages}")
+        logger.info(f"Configuration Path: {config_path}")
+        logger.info(f"Current run output path : {timestamped_output_dir}")
 
         executor = ExecutorFactory.get_executor(
             dask_scheduler=dask_scheduler,
@@ -252,15 +251,15 @@ class Pipeline(Command, metaclass=NamedInstance):
 
         executable_stages = self._stages.get_stages(stages)
 
-        self.logger.info(
+        logger.info(
             f"""Selected stages to run: {', '.join(
                 stage.name for stage in executable_stages
             )}"""
         )
 
         self.scheduler.schedule(executable_stages)
-        self.logger.info("Scheduling done, now executing the graph...")
+        logger.info("Scheduling done, now executing the graph...")
 
         executor.execute(self.scheduler.tasks)
 
-        self.logger.info("=============== FINISH =====================")
+        logger.info("=============== FINISH =====================")

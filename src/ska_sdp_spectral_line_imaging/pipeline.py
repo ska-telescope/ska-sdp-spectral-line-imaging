@@ -47,7 +47,6 @@ spectral_line_imaging_pipeline = Pipeline(
 
 
 @spectral_line_imaging_pipeline.sub_command(
-    "diagnose",
     DIAGNOSTIC_CLI_ARGS,
     help="""
     Run diagnostics on the pipeline output products.

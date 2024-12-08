@@ -134,15 +134,15 @@ def test_should_initialise_the_pipeline_with_default_cli_args(
     cli_command_parser.create_sub_parser.assert_has_calls(
         [
             mock.call(
-                "run",
-                pipeline.run,
-                DEFAULT_CLI_ARGS,
+                name="run",
+                func=pipeline.run,
+                cli_args=DEFAULT_CLI_ARGS,
                 help="Run the pipeline",
             ),
             mock.call(
-                "install-config",
-                pipeline.install_config,
-                CONFIG_CLI_ARGS,
+                name="install-config",
+                func=pipeline.install_config,
+                cli_args=CONFIG_CLI_ARGS,
                 help="Installs the default config at --config-install-path",
             ),
         ]
@@ -163,15 +163,15 @@ def test_should_initialise_the_pipeline_with_additional_cli_args(
     cli_command_parser.create_sub_parser.assert_has_calls(
         [
             mock.call(
-                "run",
-                pipeline.run,
-                DEFAULT_CLI_ARGS + cli_args,
+                name="run",
+                func=pipeline.run,
+                cli_args=DEFAULT_CLI_ARGS + cli_args,
                 help="Run the pipeline",
             ),
             mock.call(
-                "install-config",
-                pipeline.install_config,
-                CONFIG_CLI_ARGS,
+                name="install-config",
+                func=pipeline.install_config,
+                cli_args=CONFIG_CLI_ARGS,
                 help="Installs the default config at --config-install-path",
             ),
         ]
