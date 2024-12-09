@@ -41,7 +41,13 @@ def load_data(upstream_output, obs_id: int, _cli_args_):
 
     # TODO: There is an issue in either xradio/xarray/dask that causes chunk
     # sizes to be different for coordinate variables
-    selected_ps = ps[sel].unify_chunks()
+    # selected_ps = ps[sel].unify_chunks()
+
+    # hack to remove baseline antenna variables
+    # as they are chunked in different way
+    selected_ps = ps[sel].drop_vars(
+        ["baseline_antenna1_name", "baseline_antenna2_name"]
+    )
 
     upstream_output["input_data"] = ps
     upstream_output["ps"] = selected_ps

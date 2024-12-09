@@ -15,9 +15,7 @@ def test_should_load_data(read_processing_set_mock):
     ps.summary.name = ["observation"]
 
     selected_ps = Mock(name="selected_ps")
-    selected_ps.unify_chunks = Mock(
-        name="unify-chunk", return_value="selected_ps"
-    )
+    selected_ps.drop_vars = Mock(name="drop_vars", return_value="selected_ps")
     ps.__getitem__ = Mock(name="ps-getitem", return_value=selected_ps)
 
     read_processing_set_mock.return_value = ps
@@ -25,6 +23,10 @@ def test_should_load_data(read_processing_set_mock):
     upstream_output = UpstreamOutput()
 
     actual = load_data.stage_definition(upstream_output, 0, {"input": "path"})
+
+    selected_ps.drop_vars.assert_called_once_with(
+        ["baseline_antenna1_name", "baseline_antenna2_name"]
+    )
 
     assert actual.ps == "selected_ps"
     assert actual.input_data == ps
