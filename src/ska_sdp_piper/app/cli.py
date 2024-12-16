@@ -1,11 +1,10 @@
 import logging
 import os
-import subprocess
 
 from typer import Context, Option, Typer
 
-from .. import scripts
 from ..piper.utils import LogUtil
+from .benchmark import DOOL_BIN, run_dool, setup_dool
 from .executable_pipeline import ExecutablePipeline
 
 logger = logging.getLogger(__name__)
@@ -77,15 +76,15 @@ def benchmark(
         is_flag=True,
         help="""Setup dool for benchmarking""",
     ),
-    output_path=Option(
+    output_path: str = Option(
         default="./benchmark",
         help="""Output folder to store the results.""",
     ),
-    capture_interval=Option(
+    capture_interval: int = Option(
         default=5,
         help="""Time interval for catpuring benchmarking stats""",
     ),
-    output_file_prefix=Option(
+    output_file_prefix: str = Option(
         default=None,
         help="""Output file name prefix""",
     ),
@@ -95,6 +94,8 @@ def benchmark(
 
     Parameters
     ----------
+        ctx: Context
+            Command context
         command: str
             Name of the pipeline to be benchmarked
         setup: bool
@@ -105,45 +106,31 @@ def benchmark(
             Time interval for capturing benchmarking stats
         output_file_prefix: str
             Output File prefix name
-        ctx: Context
-            Command context
-
     """
 
     if not setup and command is None:
         ctx.command.get_help(ctx)
         return
 
-    script_path = os.path.dirname(os.path.abspath(scripts.__file__))
     output_prefix = (
         "" if output_file_prefix is None else f"{output_file_prefix}_"
     )
 
     if setup:
-        if not os.path.exists(f"{script_path}/dool"):
-            subprocess.run(
-                [
-                    f"{script_path}/setup-dool.sh",
-                    f"{script_path}/dool",
-                ]
-            )
+        if not os.path.exists(DOOL_BIN):
+            setup_dool()
 
     if command is not None:
-        if not os.path.exists(f"{script_path}/dool"):
+        if not os.path.exists(DOOL_BIN):
             raise RuntimeError(
                 "Dool not found, please run with `--setup` option"
             )
 
-        subprocess.run(
-            [
-                f"{script_path}/run-dool.sh",
-                output_path,
-                f'{output_prefix}{command.split(" ")[0]}',
-                command,
-            ],
-            env={
-                "DOOL_BIN": f"{script_path}/dool/dool",
-                "PATH": os.getenv("PATH"),
-                "DELAY_IN_SECONDS": capture_interval,
-            },
+        command_list = command.split(" ")
+
+        run_dool(
+            output_dir=output_path,
+            file_prefix=f"{output_prefix}{command_list[0]}",
+            command=command_list,
+            capture_interval=capture_interval,
         )

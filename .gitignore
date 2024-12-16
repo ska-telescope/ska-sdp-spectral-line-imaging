@@ -14,4 +14,4 @@ dist/
 /MANIFEST.skao.int
 /.vscode/
 /benchmarks/
-src/ska_sdp_piper/scripts/dool
+src/ska_sdp_piper/app/dool*

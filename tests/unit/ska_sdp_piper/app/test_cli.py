@@ -1,6 +1,7 @@
 import pytest
 from mock import Mock, mock
 
+from ska_sdp_piper.app.benchmark import DOOL_BIN
 from ska_sdp_piper.app.cli import benchmark, install, uninstall
 
 
@@ -45,128 +46,109 @@ def test_should_uninstall_executable(exec_pip_mock):
 
 
 @mock.patch("ska_sdp_piper.app.cli.os")
-@mock.patch("ska_sdp_piper.app.cli.subprocess")
-def test_should_run_benchmark_setup_from_cli(subprocess_mock, os_mock):
-
-    os_mock.path.dirname.return_value = "SCRIPT_DIR"
+@mock.patch("ska_sdp_piper.app.cli.setup_dool")
+def test_should_run_benchmark_setup_from_cli(setup_dool_mock, os_mock):
     os_mock.path.exists.return_value = False
+
     benchmark(None, command=None, setup=True)
 
-    os_mock.path.exists.assert_called_once_with("SCRIPT_DIR/dool")
-    subprocess_mock.run.assert_called_once_with(
-        ["SCRIPT_DIR/setup-dool.sh", "SCRIPT_DIR/dool"]
-    )
+    os_mock.path.exists.assert_called_once_with(DOOL_BIN)
+    setup_dool_mock.assert_called_once_with()
 
 
 @mock.patch("ska_sdp_piper.app.cli.os")
-@mock.patch("ska_sdp_piper.app.cli.subprocess")
-def test_should_not_setup_dool_if_already_present(subprocess_mock, os_mock):
-
-    os_mock.path.dirname.return_value = "SCRIPT_DIR"
+@mock.patch("ska_sdp_piper.app.cli.setup_dool")
+def test_should_not_setup_dool_if_already_present(setup_dool_mock, os_mock):
     os_mock.path.exists.return_value = True
+
     benchmark(None, command=None, setup=True)
 
-    os_mock.path.exists.assert_called_once_with("SCRIPT_DIR/dool")
-    subprocess_mock.run.assert_not_called()
+    os_mock.path.exists.assert_called_once_with(DOOL_BIN)
+    setup_dool_mock.assert_not_called()
 
 
-@mock.patch("ska_sdp_piper.app.cli.os")
-@mock.patch("ska_sdp_piper.app.cli.subprocess")
-def test_should_show_ctx_help_if_no_argument_is_provided(
-    subprocess_mock, os_mock
-):
-
-    os_mock.path.dirname.return_value = "SCRIPT_DIR"
-    os_mock.path.exists.return_value = True
+def test_should_show_ctx_help_if_no_argument_is_provided():
     ctx = Mock(name="ctx")
     benchmark(ctx, command=None, setup=False)
-
     ctx.command.get_help.assert_called_once_with(ctx)
 
 
 @mock.patch("ska_sdp_piper.app.cli.os")
-@mock.patch("ska_sdp_piper.app.cli.subprocess")
+@mock.patch("ska_sdp_piper.app.cli.run_dool")
+@mock.patch("ska_sdp_piper.app.cli.setup_dool")
 def test_should_run_benchmark_on_local_for_the_command(
-    subprocess_mock, os_mock
+    setup_dool_mock, run_dool_mock, os_mock
 ):
-
-    os_mock.path.dirname.return_value = "SCRIPT_DIR"
-    os_mock.path.exists.return_value = True
-    os_mock.getenv.return_value = "OS_ENV"
     ctx = Mock(name="ctx")
+
     benchmark(
         ctx,
-        command="test command additional params --option value",
+        command="test command --option value",
         setup=False,
-        output_path="output",
+        output_path="./benchmark",
+        capture_interval=5,
         output_file_prefix=None,
-        capture_interval=1,
     )
 
-    subprocess_mock.run.assert_called_once_with(
-        [
-            "SCRIPT_DIR/run-dool.sh",
-            "output",
-            "test",
-            "test command additional params --option value",
-        ],
-        env={
-            "DOOL_BIN": "SCRIPT_DIR/dool/dool",
-            "PATH": "OS_ENV",
-            "DELAY_IN_SECONDS": 1,
-        },
+    setup_dool_mock.assert_not_called()
+    run_dool_mock.assert_called_once_with(
+        output_dir="./benchmark",
+        file_prefix="test",
+        command=["test", "command", "--option", "value"],
+        capture_interval=5,
     )
 
 
 @mock.patch("ska_sdp_piper.app.cli.os")
-@mock.patch("ska_sdp_piper.app.cli.subprocess")
-def test_should_run_benchmark_on_local_for_the_command_with_file_prefix(
-    subprocess_mock, os_mock
+@mock.patch("ska_sdp_piper.app.cli.run_dool")
+@mock.patch("ska_sdp_piper.app.cli.setup_dool")
+def test_should_run_benchmark_on_local_with_file_prefix(
+    setup_dool_mock, run_dool_mock, os_mock
 ):
-
-    os_mock.path.dirname.return_value = "SCRIPT_DIR"
-    os_mock.path.exists.return_value = True
-    os_mock.getenv.return_value = "OS_ENV"
     ctx = Mock(name="ctx")
+    os_mock.path.exists.side_effect = [False, True]
+
     benchmark(
         ctx,
-        command="test command additional params --option value",
-        setup=False,
+        command="test command --option value",
+        setup=True,
         output_path="output",
+        capture_interval=100,
         output_file_prefix="run_1",
-        capture_interval=1,
     )
 
-    subprocess_mock.run.assert_called_once_with(
+    os_mock.path.exists.assert_has_calls(
         [
-            "SCRIPT_DIR/run-dool.sh",
-            "output",
-            "run_1_test",
-            "test command additional params --option value",
-        ],
-        env={
-            "DOOL_BIN": "SCRIPT_DIR/dool/dool",
-            "PATH": "OS_ENV",
-            "DELAY_IN_SECONDS": 1,
-        },
+            mock.call(DOOL_BIN),
+            mock.call(DOOL_BIN),
+        ]
+    )
+    setup_dool_mock.assert_called_once_with()
+    run_dool_mock.assert_called_once_with(
+        output_dir="output",
+        file_prefix="run_1_test",
+        command=["test", "command", "--option", "value"],
+        capture_interval=100,
     )
 
 
 @mock.patch("ska_sdp_piper.app.cli.os")
-@mock.patch("ska_sdp_piper.app.cli.subprocess")
+@mock.patch("ska_sdp_piper.app.cli.run_dool")
+@mock.patch("ska_sdp_piper.app.cli.setup_dool")
 def test_should_raise_exception_if_dool_is_not_present(
-    subprocess_mock, os_mock
+    setup_dool_mock, run_dool_mock, os_mock
 ):
-
-    os_mock.path.dirname.return_value = "SCRIPT_DIR"
     os_mock.path.exists.return_value = False
-    os_mock.getenv.return_value = "OS_ENV"
+
     ctx = Mock(name="ctx")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(
+        RuntimeError, match="Dool not found, please run with `--setup` option"
+    ):
         benchmark(
             ctx,
-            command="test command additional params --option value",
+            command="test command --option value",
             setup=False,
-            output_path="output",
-            capture_interval=1,
         )
+
+    setup_dool_mock.assert_not_called()
+    run_dool_mock.assert_not_called()
