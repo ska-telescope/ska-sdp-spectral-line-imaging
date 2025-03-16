@@ -57,7 +57,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     "myst_parser",
-    "ska_sdp_piper.extensions.sphynx_stage"
+    "ska_sdp_piper.extensions.sphinx_stage",
+    "ska_sdp_piper.extensions.sphinx_stage_config",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -133,4 +134,27 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable", None),
     "python": ("https://docs.python.org/3", None),
     "xarray": ("https://docs.xarray.dev/en/stable", None),
+    "sphinx": ('https://www.sphinx-doc.org/en/master/', None),
 }
+
+
+## Options for Piper Stage Config generator extension
+# -----------------------------------------------------
+
+# NOTE: Using path to instance instead of importing the pipeline object, because
+# sphinx tries to pickle the pipeline instance, which fails due to
+# some local ArgumentParser instance issue
+stage_config_pipeline_instance = "ska_sdp_spectral_line_imaging.pipeline.spectral_line_imaging_pipeline"
+
+stage_config_header = """
+Stages and configurations
+#########################
+
+The descriptions of each stage are copied from the docstrings of stages.
+Refer to the `API page for stages <api/ska_sdp_spectral_line_imaging.stages.html>`_
+
+Each stage has parameters, which are defined in the YAML config file passed to the pipeline.
+""".strip()
+
+stage_config_output_path = os.path.join(os.path.dirname(__file__), "stage_config.rst")
+

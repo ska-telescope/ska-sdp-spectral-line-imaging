@@ -6,7 +6,8 @@ from docutils import nodes
 from sphinx.domains.python import PyFunction
 from sphinx.ext.autodoc import FunctionDocumenter
 
-from ska_sdp_piper.piper.stage import Stage
+from .. import __version__
+from ..piper.stage import Stage
 
 
 class StageDocumenter(FunctionDocumenter):
@@ -62,4 +63,4 @@ def setup(app):
     app.add_config_value("configurable_stage_prefix", "(stage)", True)
     app.connect("autodoc-skip-member", autodoc_skip_member_handler)
 
-    return {"parallel_read_safe": True}
+    return {"version": __version__, "parallel_read_safe": True}
