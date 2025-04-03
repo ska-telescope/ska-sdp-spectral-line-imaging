@@ -130,34 +130,31 @@ def generate_stage_config(
     None
     """
     dataframes = generate_config_dfs_per_stage(pipeline_definition)
+    # Header first
+    output_string = f"{header}\n\n"
+
+    for stage in pipeline_definition._stages:
+        name = stage.name
+        df = dataframes[name]
+        # Assuming that all stages have "Parameters" section
+        doc = stage.__doc__.split(sep="Parameters")[0].rstrip()
+
+        output_string += f"{name}\n{'*' * len(name)}\n{doc}\n{table_config}\n"
+
+        # Convert DataFrame to markdown string and write it to file
+        markdown = df.to_markdown(
+            index=False,
+            tablefmt="grid",
+            colalign=["left"] * len(df.columns),
+            maxcolwidths=[None, None, 40, 80],
+        )
+        indented_markdown = "\n".join(
+            indent + line for line in markdown.splitlines()
+        )
+
+        output_string += f"{indented_markdown}\n\n\n"
 
     with open(stage_config_path, "w") as f:
-        # Header first
-        output_string = f"{header}\n\n"
-
-        for stage in pipeline_definition._stages:
-            name = stage.name
-            df = dataframes[name]
-            # Assuming that all stages have "Parameters" section
-            doc = stage.__doc__.split(sep="Parameters")[0].rstrip()
-
-            output_string += (
-                f"{name}\n{'*' * len(name)}\n{doc}\n{table_config}\n"
-            )
-
-            # Convert DataFrame to markdown string and write it to file
-            markdown = df.to_markdown(
-                index=False,
-                tablefmt="grid",
-                colalign=["left"] * len(df.columns),
-                maxcolwidths=[None, None, 40, 80],
-            )
-            indented_markdown = "\n".join(
-                indent + line for line in markdown.splitlines()
-            )
-
-            output_string += f"{indented_markdown}\n\n\n"
-
         f.write(output_string)
 
 
